@@ -20,6 +20,9 @@ export default defineConfig(async () => ({
       ignored: ["**/src-tauri/**"],
     },
   },
+  worker: {
+    format: "es" as const,
+  },
   build: {
     rollupOptions: {
       input: {
