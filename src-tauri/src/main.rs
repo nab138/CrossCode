@@ -2,21 +2,22 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 #[macro_use]
-mod device;
-#[macro_use]
 mod templates;
 #[macro_use]
 mod windows;
 #[macro_use]
 mod builder;
 mod operation;
+#[macro_use]
 mod sideloader;
 #[macro_use]
 mod sourcekit_lsp;
-use device::refresh_idevice;
-use sideloader::apple_commands::{
-    delete_app_id, delete_stored_credentials, get_apple_email, get_certificates, list_app_ids,
-    reset_anisette, revoke_certificate,
+use sideloader::{
+    apple_commands::{
+        delete_app_id, delete_stored_credentials, get_apple_email, get_certificates, list_app_ids,
+        reset_anisette, revoke_certificate,
+    },
+    sideload::refresh_idevice,
 };
 use tauri::Emitter;
 use templates::create_template;

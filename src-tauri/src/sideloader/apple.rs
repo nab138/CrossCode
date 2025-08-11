@@ -1,4 +1,4 @@
-use icloud_auth::{AnisetteConfiguration, AppleAccount};
+use isideload::{developer_session::DeveloperSession, AnisetteConfiguration, AppleAccount};
 use once_cell::sync::OnceCell;
 use serde_json::Value;
 use std::{
@@ -7,14 +7,7 @@ use std::{
 };
 use tauri::{Emitter, Listener, Manager};
 
-use crate::{
-    device::DeviceInfo,
-    emit_error_and_return,
-    sideloader::{
-        apple_commands::{get_stored_credentials, store_credentials},
-        developer_session::{DeveloperDeviceType, DeveloperSession, DeveloperTeam},
-    },
-};
+use crate::sideloader::apple_commands::{get_stored_credentials, store_credentials};
 
 pub static APPLE_ACCOUNT: OnceCell<Mutex<Option<Arc<AppleAccount>>>> = OnceCell::new();
 
@@ -51,7 +44,7 @@ pub async fn get_developer_session(
         Err(e) => {
             // This code means we have been logged in for too long and we must relogin again
             let is_22411 = match &e {
-                icloud_auth::Error::AuthSrpWithMessage(code, _) => *code == -22411,
+                isideload::Error::Auth(code, _) => *code == -22411,
                 _ => false,
             };
             if is_22411 {
@@ -208,46 +201,10 @@ pub async fn login(
     }
     let account = Arc::new(account.unwrap());
     window
-        .emit("build-output", "Logged in successfully".to_string())
+        .emit("build-output", "Successfully logged in".to_string())
         .map_err(|e| e.to_string())?;
 
     Ok(account)
-}
-
-pub async fn ensure_device_registered(
-    dev_session: &DeveloperSession,
-    window: &tauri::Window,
-    team: &DeveloperTeam,
-    device: &DeviceInfo,
-) -> Result<(), String> {
-    let devices = dev_session
-        .list_devices(DeveloperDeviceType::Ios, team)
-        .await
-        .map_err(|e| {
-            emit_error_and_return::<()>(window, &format!("Failed to list devices: {:?}", e))
-                .err()
-                .unwrap()
-        })?;
-    if !devices.iter().any(|d| d.device_number == device.uuid) {
-        window
-            .emit(
-                "build-output",
-                "Device not found in your account".to_string(),
-            )
-            .ok();
-        // TODO: Actually test!
-        dev_session
-            .add_device(DeveloperDeviceType::Ios, team, &device.name, &device.uuid)
-            .await
-            .map_err(|e| format!("Failed to add device: {:?}", e))?;
-        window
-            .emit("build-output", "Device added to your account".to_string())
-            .ok();
-    }
-    window
-        .emit("build-output", "Device is a development device".to_string())
-        .ok();
-    Ok(())
 }
 
 pub fn invalidate_account() {

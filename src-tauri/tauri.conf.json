@@ -34,7 +34,7 @@
         "height": 700,
         "useHttpsScheme": true,
         "visible": true,
-        "url": "/onboarding"
+        "url": "/ide/%2Fhome%2Fnicholas%2FDocuments%2Fcoding%2FSwiftUITest"
       },
       {
         "title": "YCode (Loading)",

@@ -1,8 +1,9 @@
+use isideload::developer_session::{DeveloperDeviceType, ListAppIdsResponse};
 use keyring::{Entry, Error as KeyringError};
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 
-use crate::sideloader::{apple::APPLE_ACCOUNT, developer_session::ListAppIdsResponse};
+use crate::sideloader::apple::APPLE_ACCOUNT;
 
 pub fn store_credentials(email: &str, password: &str) -> Result<(), KeyringError> {
     let email_entry = Entry::new("y-code", "apple_id_email")?;
@@ -86,10 +87,7 @@ pub async fn get_certificates(
         .await
         .map_err(|e| format!("Failed to get developer team: {:?}", e))?;
     let certificates = dev_session
-        .list_all_development_certs(
-            crate::sideloader::developer_session::DeveloperDeviceType::Ios,
-            &team,
-        )
+        .list_all_development_certs(DeveloperDeviceType::Ios, &team)
         .await
         .map_err(|e| format!("Failed to get development certificates: {:?}", e))?;
     Ok(certificates
@@ -118,11 +116,7 @@ pub async fn revoke_certificate(
         .await
         .map_err(|e| format!("Failed to get developer team: {:?}", e))?;
     dev_session
-        .revoke_development_cert(
-            crate::sideloader::developer_session::DeveloperDeviceType::Ios,
-            &team,
-            &serial_number,
-        )
+        .revoke_development_cert(DeveloperDeviceType::Ios, &team, &serial_number)
         .await
         .map_err(|e| format!("Failed to revoke development certificates: {:?}", e))?;
     Ok(())
@@ -142,10 +136,7 @@ pub async fn list_app_ids(
         .await
         .map_err(|e| format!("Failed to get developer team: {:?}", e))?;
     let app_ids = dev_session
-        .list_app_ids(
-            crate::sideloader::developer_session::DeveloperDeviceType::Ios,
-            &team,
-        )
+        .list_app_ids(DeveloperDeviceType::Ios, &team)
         .await
         .map_err(|e| format!("Failed to list App IDs: {:?}", e))?;
     Ok(app_ids)
@@ -166,11 +157,7 @@ pub async fn delete_app_id(
         .await
         .map_err(|e| format!("Failed to get developer team: {:?}", e))?;
     dev_session
-        .delete_app_id(
-            crate::sideloader::developer_session::DeveloperDeviceType::Ios,
-            &team,
-            app_id_id,
-        )
+        .delete_app_id(DeveloperDeviceType::Ios, &team, app_id_id)
         .await
         .map_err(|e| format!("Failed to delete App ID: {:?}", e))?;
     Ok(())

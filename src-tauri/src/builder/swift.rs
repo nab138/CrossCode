@@ -6,9 +6,8 @@ use crate::{
         crossplatform::{linux_env, windows_path},
         packer::{pack, zip_ipa},
     },
-    device::DeviceInfo,
     emit_error_and_return,
-    sideloader::sideload::sideload_app,
+    sideloader::{device::DeviceInfo, sideload::sideload_app},
 };
 use serde::{Deserialize, Serialize};
 use std::{
