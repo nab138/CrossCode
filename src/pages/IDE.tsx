@@ -1,12 +1,12 @@
 import Splitter, { GutterTheme, SplitDirection } from "@devbookhq/splitter";
 import Tile from "../components/Tiles/Tile";
 import FileExplorer from "../components/Tiles/FileExplorer";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Editor from "../components/Tiles/Editor";
 import MenuBar from "../components/Menu/MenuBar";
 import "./IDE.css";
 import Console from "../components/Tiles/Console";
-import { useStore } from "../utilities/StoreContext";
+import { StoreContext, useStore } from "../utilities/StoreContext";
 import { useNavigate, useParams } from "react-router";
 import { useIDE } from "../utilities/IDEContext";
 import { registerFileSystemOverlay } from "@codingame/monaco-vscode-files-service-override";
@@ -34,6 +34,7 @@ type ProjectValidation =
   | "InvalidToolchain";
 
 export default () => {
+  const { storeInitialized, store } = useContext(StoreContext);
   const [openFile, setOpenFile] = useState<string | null>(null);
   const [openFiles, setOpenFiles] = useState<string[]>([]);
   const [saveFile, setSaveFile] = useState<(() => void) | null>(null);
@@ -60,6 +61,13 @@ export default () => {
     useState<ProjectValidation | null>(null);
 
   useEffect(() => {
+    if (
+      path === undefined ||
+      path === null ||
+      selectedToolchain === null ||
+      !initialized
+    )
+      return;
     setProjectValidation(null);
     (async () => {
       if (path) {
@@ -73,7 +81,7 @@ export default () => {
         }
       }
     })();
-  }, [path, selectedToolchain]);
+  }, [path, selectedToolchain, initialized]);
 
   useEffect(() => {
     setCallbacks({
@@ -110,14 +118,23 @@ export default () => {
   }, [path]);
 
   useEffect(() => {
-    if (
-      sourcekitStartup === null &&
-      hasIgnoredRam === false &&
-      hasLimitedRam === false
-    ) {
-      setSourcekitStartup(true);
-    }
-  }, [sourcekitStartup, hasIgnoredRam, hasLimitedRam]);
+    if (!store || !storeInitialized) return;
+    let autoEnable = async () => {
+      let hasAutoEnabledSourcekit = await store!.get(
+        "has-auto-enabled-sourcekit"
+      );
+      if (
+        storeInitialized &&
+        hasIgnoredRam === false &&
+        hasLimitedRam === false &&
+        hasAutoEnabledSourcekit === undefined
+      ) {
+        setSourcekitStartup(true);
+        await store!.set("has-auto-enabled-sourcekit", true);
+      }
+    };
+    autoEnable();
+  }, [hasIgnoredRam, hasLimitedRam, storeInitialized, store]);
 
   useEffect(() => {
     if (!sourcekitStartup || selectedToolchain == null) return;
@@ -160,6 +177,7 @@ export default () => {
         </Splitter>
       </Splitter>
       {initialized &&
+        selectedToolchain !== null &&
         projectValidation !== null &&
         projectValidation !== "Valid" && (
           <Modal
