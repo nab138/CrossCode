@@ -11,6 +11,8 @@ import { WebSocketMessageWriter } from "vscode-ws-jsonrpc";
 import { toSocket } from "vscode-ws-jsonrpc";
 import { MonacoLanguageClient } from "monaco-languageclient";
 import { Uri } from "vscode";
+import { Toolchain } from "./IDEContext";
+import { invoke } from "@tauri-apps/api/core";
 
 export const initWebSocketAndStartClient = (
   url: string,
@@ -52,4 +54,23 @@ const createLanguageClient = (
     },
     messageTransports,
   });
+};
+
+export const restartServer = async (
+  path: string,
+  selectedToolchain: Toolchain
+) => {
+  await invoke("ensure_lsp_config", {
+    projectPath: path || "",
+  });
+  try {
+    await invoke<number>("stop_sourcekit_server");
+  } catch (e) {
+    void e;
+  }
+  let port = await invoke<number>("start_sourcekit_server", {
+    toolchainPath: selectedToolchain?.path ?? "",
+    folder: path || "",
+  });
+  initWebSocketAndStartClient(`ws://localhost:${port}`, path || "");
 };

@@ -8,7 +8,7 @@ import { useStore } from "../../utilities/StoreContext";
 import { useToast } from "react-toast-plus";
 import { MenuItem } from "@mui/joy";
 import { invoke } from "@tauri-apps/api/core";
-import { initWebSocketAndStartClient } from "../../utilities/lsp-client";
+import { restartServer } from "../../utilities/lsp-client";
 
 export default [
   {
@@ -275,19 +275,10 @@ export default [
               return (
                 <MenuItem
                   onClick={async () => {
-                    try {
-                      await invoke<number>("stop_sourcekit_server");
-                    } catch (e) {
-                      void e;
-                    }
-                    let port = await invoke<number>("start_sourcekit_server", {
-                      toolchainPath: selectedToolchain?.path ?? "",
-                      folder: path || "",
+                    if (!selectedToolchain || !path) return;
+                    restartServer(path, selectedToolchain).catch((e) => {
+                      console.error("Failed to restart SourceKit-LSP:", e);
                     });
-                    initWebSocketAndStartClient(
-                      `ws://localhost:${port}`,
-                      path || ""
-                    );
                   }}
                   id="startLSPMenuBtn"
                 >

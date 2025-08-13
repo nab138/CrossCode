@@ -22,7 +22,7 @@ import {
 } from "@mui/joy";
 import { ErrorIcon, WarningIcon } from "react-toast-plus";
 import SwiftMenu from "../components/SwiftMenu";
-import { initWebSocketAndStartClient } from "../utilities/lsp-client";
+import { restartServer } from "../utilities/lsp-client";
 
 export interface IDEProps {}
 
@@ -120,20 +120,8 @@ export default () => {
   }, [sourcekitStartup, hasIgnoredRam, hasLimitedRam]);
 
   useEffect(() => {
-    if (!sourcekitStartup) return;
-    let startup = async () => {
-      try {
-        await invoke<number>("stop_sourcekit_server");
-      } catch (e) {
-        void e;
-      }
-      let port = await invoke<number>("start_sourcekit_server", {
-        toolchainPath: selectedToolchain?.path ?? "",
-        folder: path || "",
-      });
-      initWebSocketAndStartClient(`ws://localhost:${port}`, path || "");
-    };
-    startup().catch((e) => {
+    if (!sourcekitStartup || selectedToolchain == null) return;
+    restartServer(path, selectedToolchain).catch((e) => {
       console.error("Failed to start SourceKit-LSP:", e);
     });
   }, [sourcekitStartup, path, selectedToolchain]);
