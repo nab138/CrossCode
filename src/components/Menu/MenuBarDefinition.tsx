@@ -268,13 +268,18 @@ export default [
         label: "Start LSP",
         items: [
           {
-            name: "Start LSP (Testing)",
+            name: "Restart LSP",
             component: () => {
               const { path } = useParams<"path">();
               const { selectedToolchain } = useIDE();
               return (
                 <MenuItem
                   onClick={async () => {
+                    try {
+                      await invoke<number>("stop_sourcekit_server");
+                    } catch (e) {
+                      void e;
+                    }
                     let port = await invoke<number>("start_sourcekit_server", {
                       toolchainPath: selectedToolchain?.path ?? "",
                       folder: path || "",
@@ -286,19 +291,14 @@ export default [
                   }}
                   id="startLSPMenuBtn"
                 >
-                  Start LSP (Test)
+                  Restart LSP
                 </MenuItem>
               );
             },
             componentId: "startLSPMenuBtn",
           },
-        ],
-      },
-      {
-        label: "Stop LSP",
-        items: [
           {
-            name: "Stop LSP (Testing)",
+            name: "Stop LSP",
             component: () => {
               return (
                 <MenuItem
@@ -307,7 +307,7 @@ export default [
                   }}
                   id="stopLSPMenuBtn"
                 >
-                  Stop LSP (Test)
+                  Stop LSP
                 </MenuItem>
               );
             },

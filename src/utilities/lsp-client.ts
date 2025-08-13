@@ -39,7 +39,6 @@ const createLanguageClient = (
   messageTransports: MessageTransports,
   folder: string
 ): MonacoLanguageClient => {
-  console.log("Creating Monaco Language Client");
   return new MonacoLanguageClient({
     name: "Swift Language Client",
     clientOptions: {

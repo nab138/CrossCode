@@ -20,8 +20,9 @@ import {
   ModalDialog,
   Typography,
 } from "@mui/joy";
-import { ErrorIcon } from "react-toast-plus";
+import { ErrorIcon, WarningIcon } from "react-toast-plus";
 import SwiftMenu from "../components/SwiftMenu";
+import { initWebSocketAndStartClient } from "../utilities/lsp-client";
 
 export interface IDEProps {}
 
@@ -38,7 +39,16 @@ export default () => {
   const [saveFile, setSaveFile] = useState<(() => void) | null>(null);
   const [theme] = useStore<"light" | "dark">("appearance/theme", "light");
   const { path } = useParams<"path">();
-  const { openFolderDialog, selectedToolchain } = useIDE();
+  const { openFolderDialog, selectedToolchain, hasLimitedRam, initialized } =
+    useIDE();
+  const [sourcekitStartup, setSourcekitStartup] = useStore<boolean | null>(
+    "sourcekit/startup",
+    null
+  );
+  const [hasIgnoredRam, setHasIgnoredRam] = useStore<boolean>(
+    "has-ignored-ram",
+    false
+  );
 
   if (!path) {
     throw new Error("Path parameter is required in IDE component");
@@ -99,6 +109,35 @@ export default () => {
     };
   }, [path]);
 
+  useEffect(() => {
+    if (
+      sourcekitStartup === null &&
+      hasIgnoredRam === false &&
+      hasLimitedRam === false
+    ) {
+      setSourcekitStartup(true);
+    }
+  }, [sourcekitStartup, hasIgnoredRam, hasLimitedRam]);
+
+  useEffect(() => {
+    if (!sourcekitStartup) return;
+    let startup = async () => {
+      try {
+        await invoke<number>("stop_sourcekit_server");
+      } catch (e) {
+        void e;
+      }
+      let port = await invoke<number>("start_sourcekit_server", {
+        toolchainPath: selectedToolchain?.path ?? "",
+        folder: path || "",
+      });
+      initWebSocketAndStartClient(`ws://localhost:${port}`, path || "");
+    };
+    startup().catch((e) => {
+      console.error("Failed to start SourceKit-LSP:", e);
+    });
+  }, [sourcekitStartup, path, selectedToolchain]);
+
   const openNewFile = useCallback((file: string) => {
     setOpenFile(file);
     setOpenFiles((oF) => {
@@ -132,55 +171,110 @@ export default () => {
           <Console />
         </Splitter>
       </Splitter>
-      {projectValidation !== null && projectValidation !== "Valid" && (
-        <Modal
-          open={true}
-          onClose={() => {
-            setProjectValidation(null);
-          }}
-        >
-          <ModalDialog sx={{ minWidth: "40rem", maxWidth: "90vw" }}>
-            <ModalClose />
-            <div>
-              <div style={{ display: "flex", gap: "var(--padding-sm)" }}>
-                <div style={{ width: "1.25rem" }}>
-                  <ErrorIcon />
+      {initialized &&
+        projectValidation !== null &&
+        projectValidation !== "Valid" && (
+          <Modal
+            open={true}
+            onClose={() => {
+              setProjectValidation(null);
+            }}
+          >
+            <ModalDialog sx={{ maxWidth: "90vw" }}>
+              <ModalClose />
+              <div>
+                <div style={{ display: "flex", gap: "var(--padding-sm)" }}>
+                  <div style={{ width: "1.25rem" }}>
+                    <ErrorIcon />
+                  </div>
+                  <Typography level="h3">Failed to load project</Typography>
                 </div>
-                <Typography level="h3">Failed to load project</Typography>
+                <Typography level="body-lg">
+                  {getValidationMsg(projectValidation)} Some features may not
+                  work as expected.
+                </Typography>
               </div>
-              <Typography level="body-lg">
-                {getValidationMsg(projectValidation)} Some features may not work
-                as expected.
-              </Typography>
-            </div>
 
-            <Divider />
-            <div style={{ display: "flex", gap: "var(--padding-lg)" }}>
-              {projectValidation === "InvalidToolchain" && <SwiftMenu />}
-              {projectValidation !== "InvalidToolchain" && (
-                <>
-                  <Button
-                    onClick={() => {
-                      navigate("/new");
-                    }}
-                  >
-                    Create New
-                  </Button>
-                  <Button onClick={openFolderDialog}>Open Other Project</Button>
-                  <Button
-                    onClick={() => {
-                      setProjectValidation(null);
-                    }}
-                    variant="outlined"
-                  >
-                    Ignore
-                  </Button>
-                </>
-              )}
-            </div>
-          </ModalDialog>
-        </Modal>
-      )}
+              <Divider sx={{ mb: "var(--padding-xs)" }} />
+              <div style={{ display: "flex", gap: "var(--padding-lg)" }}>
+                {projectValidation === "InvalidToolchain" && <SwiftMenu />}
+                {projectValidation !== "InvalidToolchain" && (
+                  <>
+                    <Button
+                      onClick={() => {
+                        navigate("/new");
+                      }}
+                    >
+                      Create New
+                    </Button>
+                    <Button onClick={openFolderDialog}>
+                      Open Other Project
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setProjectValidation(null);
+                      }}
+                      variant="outlined"
+                    >
+                      Ignore
+                    </Button>
+                  </>
+                )}
+              </div>
+            </ModalDialog>
+          </Modal>
+        )}
+      {initialized &&
+        sourcekitStartup === null &&
+        hasIgnoredRam === false &&
+        hasLimitedRam && (
+          <Modal
+            open={true}
+            onClose={() => {
+              setHasIgnoredRam(true);
+            }}
+          >
+            <ModalDialog sx={{ maxWidth: "90vw" }}>
+              <ModalClose />
+              <div>
+                <div style={{ display: "flex", gap: "var(--padding-sm)" }}>
+                  <div style={{ width: "1.25rem" }}>
+                    <WarningIcon />
+                  </div>
+                  <Typography level="h3">Limited Memory</Typography>
+                </div>
+                <Typography level="body-lg">
+                  SourceKit-LSP is used to provide autocomplete, error
+                  reporting, and other language features. However, it is
+                  extremely memory hungry. Your device does not meet our
+                  recommended memory requirements. You can choose to enable it
+                  anyways, but it may cause crashes or instability.
+                </Typography>
+              </div>
+
+              <Divider sx={{ mb: "var(--padding-xs)" }} />
+              <div style={{ display: "flex", gap: "var(--padding-lg)" }}>
+                <Button
+                  onClick={() => {
+                    setSourcekitStartup(false);
+                    setHasIgnoredRam(true);
+                  }}
+                >
+                  Ok
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSourcekitStartup(true);
+                    setHasIgnoredRam(true);
+                  }}
+                  color="danger"
+                >
+                  Enable Anyway
+                </Button>
+              </div>
+            </ModalDialog>
+          </Modal>
+        )}
     </div>
   );
 };
