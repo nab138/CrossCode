@@ -1,3 +1,4 @@
+import { categoryOrder } from "./pages";
 import { PreferencePage, PreferenceCategory } from "./types";
 
 class PreferenceRegistry {
@@ -39,7 +40,9 @@ class PreferenceRegistry {
   }
 
   getAllCategories(): PreferenceCategory[] {
-    return Array.from(this.categories.values());
+    return Array.from(this.categories.values()).sort(
+      (a, b) => categoryOrder.indexOf(a.id) - categoryOrder.indexOf(b.id)
+    );
   }
 }
 

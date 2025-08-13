@@ -33,7 +33,7 @@ export default ({}: OnboardingProps) => {
     } else {
       setReady(false);
     }
-  }, [selectedToolchain, toolchains, hasWSL, isWindows]);
+  }, [selectedToolchain, toolchains, hasWSL, isWindows, hasDarwinSDK]);
 
   return (
     <div className="onboarding">

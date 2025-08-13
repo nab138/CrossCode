@@ -12,6 +12,8 @@ mod operation;
 mod sideloader;
 #[macro_use]
 mod sourcekit_lsp;
+use std::path::PathBuf;
+
 use sideloader::{
     apple_commands::{
         delete_app_id, delete_stored_credentials, get_apple_email, get_certificates, list_app_ids,
@@ -28,7 +30,10 @@ use builder::swift::{
     has_darwin_sdk, validate_toolchain,
 };
 use sourcekit_lsp::{get_server_status, start_sourcekit_server, stop_sourcekit_server};
+use sysinfo::System;
 use windows::{has_wsl, is_windows};
+
+use crate::builder::config::{ProjectConfig, ProjectValidation};
 
 fn main() {
     tauri::Builder::default()
@@ -61,6 +66,8 @@ fn main() {
             start_sourcekit_server,
             stop_sourcekit_server,
             get_server_status,
+            has_limited_ram,
+            validate_project,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -70,4 +77,16 @@ pub fn emit_error_and_return<T>(window: &tauri::Window, msg: &str) -> Result<T, 
     window.emit("build-output", msg.to_string()).ok();
     window.emit("build-output", "command.done.999").ok();
     Err(msg.to_string())
+}
+
+#[tauri::command]
+fn has_limited_ram() -> bool {
+    let s = System::new_all();
+    let mem_gib = s.total_memory() as f64 / (1024.0 * 1024.0 * 1024.0);
+    mem_gib < 12.0
+}
+
+#[tauri::command]
+fn validate_project(project_path: String, toolchain_path: String) -> ProjectValidation {
+    ProjectConfig::validate(PathBuf::from(project_path), &toolchain_path)
 }

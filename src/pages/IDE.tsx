@@ -11,8 +11,26 @@ import { useNavigate, useParams } from "react-router";
 import { useIDE } from "../utilities/IDEContext";
 import { registerFileSystemOverlay } from "@codingame/monaco-vscode-files-service-override";
 import TauriFileSystemProvider from "../utilities/TauriFileSystemProvider";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  Button,
+  Divider,
+  Modal,
+  ModalClose,
+  ModalDialog,
+  Typography,
+} from "@mui/joy";
+import { ErrorIcon } from "react-toast-plus";
+import SwiftMenu from "../components/SwiftMenu";
 
 export interface IDEProps {}
+
+type ProjectValidation =
+  | "Valid"
+  | "Invalid"
+  | "UnsupportedFormatVersion"
+  | "InvalidPackage"
+  | "InvalidToolchain";
 
 export default () => {
   const [openFile, setOpenFile] = useState<string | null>(null);
@@ -20,7 +38,7 @@ export default () => {
   const [saveFile, setSaveFile] = useState<(() => void) | null>(null);
   const [theme] = useStore<"light" | "dark">("appearance/theme", "light");
   const { path } = useParams<"path">();
-  const { openFolderDialog } = useIDE();
+  const { openFolderDialog, selectedToolchain } = useIDE();
 
   if (!path) {
     throw new Error("Path parameter is required in IDE component");
@@ -28,6 +46,24 @@ export default () => {
 
   const [callbacks, setCallbacks] = useState<Record<string, () => void>>({});
   const navigate = useNavigate();
+  const [projectValidation, setProjectValidation] =
+    useState<ProjectValidation | null>(null);
+
+  useEffect(() => {
+    setProjectValidation(null);
+    (async () => {
+      if (path) {
+        const toolchainPath = selectedToolchain?.path ?? "";
+        const validation = await invoke<ProjectValidation>("validate_project", {
+          projectPath: path,
+          toolchainPath: toolchainPath,
+        });
+        if (validation) {
+          setProjectValidation(validation);
+        }
+      }
+    })();
+  }, [path, selectedToolchain]);
 
   useEffect(() => {
     setCallbacks({
@@ -96,6 +132,70 @@ export default () => {
           <Console />
         </Splitter>
       </Splitter>
+      {projectValidation !== null && projectValidation !== "Valid" && (
+        <Modal
+          open={true}
+          onClose={() => {
+            setProjectValidation(null);
+          }}
+        >
+          <ModalDialog sx={{ minWidth: "40rem", maxWidth: "90vw" }}>
+            <ModalClose />
+            <div>
+              <div style={{ display: "flex", gap: "var(--padding-sm)" }}>
+                <div style={{ width: "1.25rem" }}>
+                  <ErrorIcon />
+                </div>
+                <Typography level="h3">Failed to load project</Typography>
+              </div>
+              <Typography level="body-lg">
+                {getValidationMsg(projectValidation)} Some features may not work
+                as expected.
+              </Typography>
+            </div>
+
+            <Divider />
+            <div style={{ display: "flex", gap: "var(--padding-lg)" }}>
+              {projectValidation === "InvalidToolchain" && <SwiftMenu />}
+              {projectValidation !== "InvalidToolchain" && (
+                <>
+                  <Button
+                    onClick={() => {
+                      navigate("/new");
+                    }}
+                  >
+                    Create New
+                  </Button>
+                  <Button onClick={openFolderDialog}>Open Other Project</Button>
+                  <Button
+                    onClick={() => {
+                      setProjectValidation(null);
+                    }}
+                    variant="outlined"
+                  >
+                    Ignore
+                  </Button>
+                </>
+              )}
+            </div>
+          </ModalDialog>
+        </Modal>
+      )}
     </div>
   );
 };
+
+function getValidationMsg(validation: ProjectValidation): string {
+  switch (validation) {
+    case "Invalid":
+      return "This does not appear to be a valid YCode project.";
+    case "InvalidPackage":
+      return "SwiftPM was unable to parse your package. Please check your Package.swift file.";
+    case "UnsupportedFormatVersion":
+      return "This project uses an unsupported config format version. You may need to update YCode.";
+    case "InvalidToolchain":
+      return "Your Swift toolchain appears to be invalid.";
+    default:
+      return "";
+  }
+}

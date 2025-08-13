@@ -31,6 +31,7 @@ export interface IDEContextType {
   isWindows: boolean;
   hasWSL: boolean;
   hasDarwinSDK: boolean;
+  hasLimitedRam: boolean;
   toolchains: ListToolchainResponse | null;
   selectedToolchain: Toolchain | null;
   devices: DeviceInfo[];
@@ -95,6 +96,8 @@ export const IDEProvider: React.FC<{
     "swift/selected-toolchain",
     null
   );
+
+  const [hasLimitedRam, setHasLimitedRam] = useState<boolean>(false);
 
   const checkSDK = useCallback(async () => {
     try {
@@ -165,6 +168,11 @@ export const IDEProvider: React.FC<{
         toolchainPath: selectedToolchain?.path ?? "",
       }).then((response) => {
         setHasDarwinSDK(response as boolean);
+      })
+    );
+    initPromises.push(
+      invoke("has_limited_ram").then((response) => {
+        setHasLimitedRam(response as boolean);
       })
     );
 
@@ -350,6 +358,7 @@ export const IDEProvider: React.FC<{
       hasDarwinSDK,
       checkSDK,
       startOperation,
+      hasLimitedRam,
     }),
     [
       isWindows,
@@ -367,6 +376,7 @@ export const IDEProvider: React.FC<{
       hasDarwinSDK,
       checkSDK,
       startOperation,
+      hasLimitedRam,
     ]
   );
 

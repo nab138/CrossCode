@@ -8,7 +8,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "{{projectName}}",
-            path: "src"
+            path: "Sources"
         ),
     ]
 )

@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::Command};
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
@@ -45,11 +45,21 @@ struct SwiftPackageTarget {
     name: String,
 }
 
+#[derive(Deserialize, Serialize)]
+pub enum ProjectValidation {
+    Valid,
+    Invalid,
+    UnsupportedFormatVersion,
+    InvalidPackage,
+    InvalidToolchain,
+}
+
 impl ProjectConfig {
     pub fn load(project_path: PathBuf, toolchain_path: &str) -> Result<Self, String> {
         let toml_config = TomlConfig::load_or_default(project_path.clone())?;
         let swift = SwiftBin::new(toolchain_path)?;
-        let raw_package = swift.command()
+        let raw_package = swift
+            .command()
             .arg("package")
             .arg("dump-package")
             .current_dir(&project_path)
@@ -61,7 +71,7 @@ impl ProjectConfig {
                 String::from_utf8_lossy(&raw_package.stderr)
             ));
         }
-        
+
         let package: SwiftPackageDump = serde_json::from_slice(&raw_package.stdout)
             .map_err(|e| format!("Failed to parse package dump: {}", e))?;
 
@@ -72,6 +82,53 @@ impl ProjectConfig {
             bundle_id: toml_config.project.bundle_id,
             project_path,
         })
+    }
+
+    pub fn validate(project_path: PathBuf, toolchain_path: &str) -> ProjectValidation {
+        if !project_path.exists() {
+            return ProjectValidation::Invalid;
+        }
+        if !project_path.join("Package.swift").exists() {
+            return ProjectValidation::Invalid;
+        }
+        if !project_path.join("ycode.toml").exists() {
+            return ProjectValidation::Invalid;
+        }
+        let config_res = TomlConfig::load(project_path.clone());
+        // make sure the error isn't unsupported format version
+        if let Err(e) = config_res {
+            if e.contains("Unsupported format version") {
+                return ProjectValidation::UnsupportedFormatVersion;
+            }
+        }
+
+        let swift = SwiftBin::new(toolchain_path);
+        if let Err(_) = swift {
+            return ProjectValidation::InvalidToolchain;
+        }
+        let swift = swift.unwrap();
+
+        let raw_package = swift
+            .command()
+            .arg("package")
+            .arg("dump-package")
+            .current_dir(&project_path)
+            .output();
+        if let Err(_) = raw_package {
+            return ProjectValidation::InvalidToolchain;
+        }
+        let raw_package = raw_package.unwrap();
+
+        if !raw_package.status.success() {
+            return ProjectValidation::InvalidPackage;
+        }
+
+        let package = serde_json::from_slice::<SwiftPackageDump>(&raw_package.stdout);
+        if let Err(_) = package {
+            return ProjectValidation::InvalidPackage;
+        }
+
+        ProjectValidation::Valid
     }
 }
 
