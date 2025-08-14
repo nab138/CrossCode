@@ -5,7 +5,6 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import Editor from "../components/Tiles/Editor";
 import MenuBar from "../components/Menu/MenuBar";
 import "./IDE.css";
-import Console from "../components/Tiles/Console";
 import { StoreContext, useStore } from "../utilities/StoreContext";
 import { useNavigate, useParams } from "react-router";
 import { useIDE } from "../utilities/IDEContext";
@@ -23,6 +22,7 @@ import {
 import { ErrorIcon, WarningIcon } from "react-toast-plus";
 import SwiftMenu from "../components/SwiftMenu";
 import { restartServer } from "../utilities/lsp-client";
+import BottomBar from "../components/Tiles/BottomBar";
 
 export interface IDEProps {}
 
@@ -173,7 +173,7 @@ export default () => {
             setSaveFile={setSaveFile}
             setOpenFiles={setOpenFiles}
           />
-          <Console />
+          <BottomBar />
         </Splitter>
       </Splitter>
       {initialized &&
@@ -274,6 +274,7 @@ export default () => {
                     setHasIgnoredRam(true);
                   }}
                   color="danger"
+                  variant="soft"
                 >
                   Enable Anyway
                 </Button>

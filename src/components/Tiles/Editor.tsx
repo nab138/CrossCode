@@ -73,6 +73,7 @@ export default ({
     <div className={"editor"}>
       <Tabs
         sx={{ height: "100%", overflow: "hidden" }}
+        size="sm"
         className={"editor-tabs"}
         value={focused ?? 0}
         onChange={(_, newValue) => {
@@ -82,7 +83,7 @@ export default ({
       >
         <TabList>
           {tabs.map((tab, index) => (
-            <Tab key={tab.file} value={index} indicatorPlacement="top">
+            <Tab key={tab.file} value={index} indicatorPlacement="bottom">
               {tab.name}
               {unsavedFiles.indexOf(tab.file) != -1 ? " •" : ""}
               <ListItemDecorator>

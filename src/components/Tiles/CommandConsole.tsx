@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import "./Console.css";
 import { listen } from "@tauri-apps/api/event";
 import Convert from "ansi-to-html";
 import { Virtuoso } from "react-virtuoso";
+import { useIDE } from "../../utilities/IDEContext";
 
 const convert = new Convert();
 
@@ -15,34 +16,28 @@ function escapeHtml(unsafe: string) {
     .replace(/'/g, "&#039;");
 }
 
-export default function Console({
-  channel,
-  jsonPrettyPrint,
-}: {
-  channel: string;
-  jsonPrettyPrint?: boolean;
-}) {
-  const [consoleLines, setConsoleLines] = useState<string[]>([]);
+export default function CommandConsole() {
+  const { consoleLines, setConsoleLines } = useIDE();
   const listenerAdded = useRef(false);
   const unlisten = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (!listenerAdded.current) {
       (async () => {
-        const unlistenFn = await listen(channel, (event) => {
+        const unlistenFn = await listen("build-output", (event) => {
           let line = event.payload as string;
-          if (jsonPrettyPrint) {
-            try {
-              let parsed = JSON.parse(line);
-              line = JSON.stringify(parsed, null, 2);
-            } catch (error) {
-              console.error(
-                "Failed to parse JSON where prettyPrint was enabled:",
-                error
-              );
+          if (line.includes("command.done")) {
+            if (line.split(".")[2] === "999") {
+              setConsoleLines((lines) => [...lines, "Command failed"]);
+            } else {
+              setConsoleLines((lines) => [
+                ...lines,
+                "Command finished with exit code: " + line.split(".")[2],
+              ]);
             }
+          } else {
+            setConsoleLines((lines) => [...lines, line]);
           }
-          setConsoleLines((lines) => [...lines, line]);
         });
         unlisten.current = unlistenFn;
       })();

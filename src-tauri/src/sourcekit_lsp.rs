@@ -2,6 +2,7 @@ use futures_util::{SinkExt, StreamExt};
 use serde::Serialize;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tauri::{Emitter, State, Window};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tokio::process::{Child, Command};
@@ -43,7 +44,8 @@ pub type ServerState = Arc<RwLock<SourceKitServer>>;
 
 #[tauri::command]
 pub async fn start_sourcekit_server(
-    state: tauri::State<'_, ServerState>,
+    window: Window,
+    state: State<'_, ServerState>,
     toolchain_path: String,
     folder: String,
 ) -> Result<u16, String> {
@@ -154,7 +156,9 @@ pub async fn start_sourcekit_server(
             match reader.read_exact(&mut content).await {
                 Ok(_) => {
                     let message = String::from_utf8_lossy(&content).to_string();
-                    println!("{}", message);
+                    window
+                        .emit("lsp-message", message.clone())
+                        .unwrap_or_default();
                     if let Err(_) = from_lsp_tx.send(message) {
                         // No receivers, continue
                     }
