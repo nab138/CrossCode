@@ -9,7 +9,5 @@
   max-height: 100%;
   overflow: hidden;
   position: relative;
-  position: fixed;
-  top: 4.45rem;
   /* transform: translate(0, -100%); */
 }
