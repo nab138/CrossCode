@@ -28,7 +28,7 @@ hex = "0.4.3"
 openssl = { version = "0.10", features = ["vendored"] }
 plist = { version = "1.7.2" }
 zip = { version = "4.1.0", default-features = false, features = ["deflate"] }
-isideload = { version = "0.1.4", features = ["vendored-botan", "vendored-openssl"] }
+isideload = { version = "0.1.5", features = ["vendored-botan", "vendored-openssl"] }
 uuid = "1.17.0"
 walkdir = "2.5.0"
 dircpy = "0.3.19"

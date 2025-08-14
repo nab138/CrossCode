@@ -2699,9 +2699,9 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
 name = "isideload"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e183c72b4657807a807e4cfffb81c59a197df636faf5490b490976542ae36450"
+checksum = "6f825a2890b96cf14be851419debce30b60ad7ed4c557f3923791f052fb53b9e"
 dependencies = [
  "futures",
  "hex",
