@@ -159,6 +159,9 @@ const CodeEditor = forwardRef<CodeEditorHandles, CodeEditorProps>(
         if (editor && file) {
           let uri = monaco.Uri.file(file);
           let modelRef = await monaco.editor.createModelReference(uri);
+          modelRef.object.onDidChangeDirty(() => {
+            setUnsaved(modelRef.object.isDirty());
+          });
 
           editor.setModel(modelRef.object.textEditorModel);
         }
