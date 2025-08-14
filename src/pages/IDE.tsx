@@ -172,6 +172,7 @@ export default () => {
             focusedFile={openFile}
             setSaveFile={setSaveFile}
             setOpenFiles={setOpenFiles}
+            openNewFile={openNewFile}
           />
           <BottomBar />
         </Splitter>

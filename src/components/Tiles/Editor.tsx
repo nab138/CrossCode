@@ -52,24 +52,12 @@ window.MonacoEnvironment = {
   },
 };
 
-await initialize({
-  ...getTextMateServiceOverride(),
-  ...getThemeServiceOverride(),
-  ...getLanguagesServiceOverride(),
-  ...getEditorServiceOverride((a, b, c) => {
-    return new Promise((resolve) => {
-      console.log(a, b, c);
-      resolve(undefined);
-    });
-  }),
-  ...getModelServiceOverride(),
-});
-
 export interface EditorProps {
   openFiles: string[];
   setOpenFiles: Dispatch<SetStateAction<string[]>>;
   focusedFile: string | null;
   setSaveFile: (save: () => void) => void;
+  openNewFile: (file: string) => void;
 }
 
 export default ({
@@ -77,6 +65,7 @@ export default ({
   focusedFile,
   setSaveFile,
   setOpenFiles,
+  openNewFile,
 }: EditorProps) => {
   const [tabs, setTabs] = useState<
     {
@@ -93,6 +82,60 @@ export default ({
   const { mode } = useColorScheme();
 
   const monacoEl = useRef(null);
+  const hasInitialized = useRef(false);
+  const currentTabsRef = useRef(tabs);
+  const setFocusedRef = useRef(setFocused);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const openNewFileRef = useRef(openNewFile);
+
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
+
+  useEffect(() => {
+    currentTabsRef.current = tabs;
+  }, [tabs]);
+
+  useEffect(() => {
+    setFocusedRef.current = setFocused;
+  }, [setFocused]);
+
+  useEffect(() => {
+    openNewFileRef.current = openNewFile;
+  }, [openNewFile]);
+
+  useEffect(() => {
+    const initializeEditor = async () => {
+      if (hasInitialized.current) return;
+
+      hasInitialized.current = true;
+      await initialize({
+        ...getTextMateServiceOverride(),
+        ...getThemeServiceOverride(),
+        ...getLanguagesServiceOverride(),
+        ...getEditorServiceOverride((modelRef) => {
+          return new Promise((resolve) => {
+            if (!editorRef.current) return resolve(undefined);
+            editorRef.current.setModel(modelRef.object.textEditorModel);
+            let path = editorRef.current.getModel()?.uri.fsPath;
+            if (!path) return resolve(undefined);
+            let tabIndex = currentTabsRef.current.findIndex(
+              (tab) => tab.file === path
+            );
+            if (tabIndex === -1) {
+              openNewFileRef.current(path);
+            }
+            setFocusedRef.current(tabIndex);
+            resolve(undefined);
+          });
+        }),
+        ...getModelServiceOverride(),
+      });
+      hasInitialized.current = true;
+    };
+
+    initializeEditor();
+  }, []);
 
   useEffect(() => {
     editors.current = editors.current.slice(0, openFiles.length);
