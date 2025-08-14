@@ -21,7 +21,11 @@
   "mainBinaryName": "YCode",
   "version": "0.0.0",
   "identifier": "me.nabdev.ycode",
-  "plugins": {},
+  "plugins": {
+    "fs": {
+      "requireLiteralLeadingDot": false
+    }
+  },
   "app": {
     "security": {
       "csp": null

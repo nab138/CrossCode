@@ -26,7 +26,8 @@
     "fs:allow-stat",
     {
       "identifier": "fs:scope",
-      "allow": ["**", ".*", "**/.*"]
+      "allow": ["**", ".*", "**/.*"],
+      "requireLiteralLeadingDot": false
     },
     "shell:allow-open",
     "dialog:allow-open",
