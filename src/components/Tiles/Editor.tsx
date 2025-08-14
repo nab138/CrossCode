@@ -14,7 +14,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import * as monaco from "monaco-editor";
 
-import { initialize } from "@codingame/monaco-vscode-api";
+import { initialize, ITextEditorOptions } from "@codingame/monaco-vscode-api";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
 import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-override";
 import getTextMateServiceOverride from "@codingame/monaco-vscode-textmate-service-override";
@@ -113,19 +113,43 @@ export default ({
         ...getTextMateServiceOverride(),
         ...getThemeServiceOverride(),
         ...getLanguagesServiceOverride(),
-        ...getEditorServiceOverride((modelRef) => {
+        ...getEditorServiceOverride((modelRef, _options) => {
           return new Promise((resolve) => {
             if (!editorRef.current) return resolve(undefined);
-            editorRef.current.setModel(modelRef.object.textEditorModel);
-            let path = editorRef.current.getModel()?.uri.fsPath;
+
+            let path = modelRef.object.textEditorModel.uri.fsPath;
+
             if (!path) return resolve(undefined);
             let tabIndex = currentTabsRef.current.findIndex(
               (tab) => tab.file === path
             );
             if (tabIndex === -1) {
               openNewFileRef.current(path);
+            } else {
+              setFocusedRef.current(tabIndex);
             }
-            setFocusedRef.current(tabIndex);
+            // not sure why this doesn't work...
+            // if (options !== undefined) {
+            //   const opts = options as ITextEditorOptions | undefined;
+            //   if (opts?.selection) {
+            //     editorRef.current.setSelection(
+            //       {
+            //         startLineNumber: opts.selection.startLineNumber,
+            //         startColumn: opts.selection.startColumn,
+            //         endLineNumber:
+            //           opts.selection.endLineNumber ??
+            //           opts.selection.startLineNumber,
+            //         endColumn:
+            //           opts.selection.endColumn ?? opts.selection.startColumn,
+            //       },
+            //       opts.selectionSource
+            //     );
+            //     editorRef.current.revealLineNearTop(
+            //       opts.selection.startLineNumber,
+            //       0
+            //     );
+            //   }
+            // }
             resolve(undefined);
           });
         }),
