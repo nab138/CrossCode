@@ -1,9 +1,9 @@
 import { path } from "@tauri-apps/api";
-import { CodeEditorHandles } from "../CodeEditor";
 import "./Editor.css";
 import { IconButton, useColorScheme } from "@mui/joy";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
+import CircleIcon from "@mui/icons-material/Circle";
 import * as monaco from "monaco-editor";
 
 import { initialize } from "@codingame/monaco-vscode-api";
@@ -72,7 +72,6 @@ export default ({
   );
 
   const [focused, setFocused] = useState<number>();
-  const editors = useRef<(CodeEditorHandles | null)[]>([]);
   const [editor, setEditor] =
     useState<monaco.editor.IStandaloneCodeEditor | null>(null);
 
@@ -80,10 +79,13 @@ export default ({
 
   const monacoEl = useRef(null);
   const hasInitialized = useRef(false);
+  const [initialized, setInitialized] = useState(false);
   const currentTabsRef = useRef(tabs);
   const setFocusedRef = useRef(setFocused);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const openNewFileRef = useRef(openNewFile);
+
+  let [hoveredOnBtn, setHoveredOnBtn] = useState<number | null>(null);
 
   useEffect(() => {
     editorRef.current = editor;
@@ -152,15 +154,11 @@ export default ({
         }),
         ...getModelServiceOverride(),
       });
-      hasInitialized.current = true;
+      setInitialized(true);
     };
 
     initializeEditor();
   }, []);
-
-  useEffect(() => {
-    editors.current = editors.current.slice(0, openFiles.length);
-  }, [openFiles]);
 
   useEffect(() => {
     if (focusedFile !== null) {
@@ -169,13 +167,6 @@ export default ({
       setFocused(i);
     }
   }, [focusedFile, openFiles]);
-
-  useEffect(() => {
-    if (focused === undefined) return;
-    let e = editors.current[focused];
-    if (e === undefined || e === null) return;
-    setSaveFile(() => e.saveFile);
-  }, [focused, tabs]);
 
   useEffect(() => {
     const fetchTabNames = async () => {
@@ -193,27 +184,39 @@ export default ({
   }, [openFiles]);
 
   useEffect(() => {
-    if (monacoEl.current && !editor) {
-      let colorScheme = mode;
-      if (colorScheme === "system") {
-        colorScheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
-      }
-
-      const newEditor = monaco.editor.create(monacoEl.current, {
-        value: "",
-        language: "plaintext",
-        theme: "vs-" + colorScheme,
-      });
-
-      setEditor(newEditor);
-
-      return () => {
-        newEditor.dispose();
-      };
+    if (!monacoEl.current || editor || !initialized) return;
+    let colorScheme = mode;
+    if (colorScheme === "system") {
+      colorScheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
     }
-  }, []);
+
+    const newEditor = monaco.editor.create(monacoEl.current, {
+      value: "",
+      language: "plaintext",
+      theme: "vs-" + colorScheme,
+    });
+
+    setEditor(newEditor);
+
+    return () => {
+      newEditor.dispose();
+    };
+  }, [mode, initialized]);
+
+  useEffect(() => {
+    if (!editor || !initialized) return;
+
+    let colorScheme = mode;
+    if (colorScheme === "system") {
+      colorScheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    }
+
+    monaco.editor.setTheme("vs-" + colorScheme);
+  }, [mode, editor, initialized]);
 
   useEffect(() => {
     if (!monacoEl.current || !editor) return;
@@ -342,6 +345,29 @@ export default ({
     setDropIndicatorIndex(null);
   };
 
+  useEffect(() => {
+    let switchFile = async () => {
+      if (!editor || focused === undefined || !tabs[focused]) return;
+      let file = monaco.Uri.file(tabs[focused]?.file || "");
+      let modelRef = await monaco.editor.createModelReference(file);
+      modelRef.object.onDidChangeDirty(() => {
+        setUnsavedFiles((files) => {
+          if (modelRef.object.isDirty()) {
+            return [...files, modelRef.object.textEditorModel.uri.fsPath];
+          } else {
+            return files.filter(
+              (f) => f !== modelRef.object.textEditorModel?.uri.fsPath
+            );
+          }
+        });
+      });
+      setSaveFile(() => modelRef.object.save.bind(modelRef.object));
+
+      editor.setModel(modelRef.object.textEditorModel);
+    };
+    switchFile();
+  }, [focused, editor, tabs]);
+
   return (
     <div className={"editor"}>
       <div
@@ -350,44 +376,59 @@ export default ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {tabs.map((tab, index) => (
-          <div key={tab.file} className="tab-wrapper">
-            {dropIndicatorIndex === index && <div className="drop-indicator" />}
-            <button
-              className={
-                "tab MuiTab-root MuiTab-horizontal MuiTab-variantPlain MuiTab-colorNeutral css-1uqmv8l-JoyTab-root" +
-                (focused === index ? " Mui-selected" : "") +
-                (draggedIndex === index ? " dragging" : "")
-              }
-              role="tab"
-              draggable={true}
-              onClick={() => setFocused(index)}
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragEnd={handleDragEnd}
-            >
-              {tab.name}
-              <IconButton
-                component="span"
-                size="xs"
-                sx={{ margin: "0px" }}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setTabs((tabs) => tabs.filter((_, i) => i !== index));
-                  setFocused((focused) => {
-                    if (focused === index) return 0;
-                    return focused;
-                  });
-                  setOpenFiles((openFiles) =>
-                    openFiles.filter((file) => file !== tab.file)
-                  );
+        {tabs.map((tab, index) => {
+          let unsaved = unsavedFiles.includes(tab.file);
+          return (
+            <div key={tab.file} className="tab-wrapper">
+              {dropIndicatorIndex === index && (
+                <div className="drop-indicator" />
+              )}
+              <button
+                className={
+                  "tab MuiTab-root MuiTab-horizontal MuiTab-variantPlain MuiTab-colorNeutral css-1uqmv8l-JoyTab-root" +
+                  (focused === index ? " Mui-selected" : "") +
+                  (draggedIndex === index ? " dragging" : "")
+                }
+                role="tab"
+                draggable={true}
+                onClick={() => {
+                  setFocused(index);
                 }}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
               >
-                <CloseIcon />
-              </IconButton>
-            </button>
-          </div>
-        ))}
+                {tab.name}
+                <IconButton
+                  component="span"
+                  onMouseEnter={() => setHoveredOnBtn(index)}
+                  onMouseLeave={() => setHoveredOnBtn(null)}
+                  size="xs"
+                  sx={{ margin: "0px", marginLeft: "2px" }}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setTabs((tabs) => tabs.filter((_, i) => i !== index));
+                    setFocused((focused) => {
+                      if (focused === index) return 0;
+                      return focused;
+                    });
+                    setOpenFiles((openFiles) =>
+                      openFiles.filter((file) => file !== tab.file)
+                    );
+                  }}
+                >
+                  {!unsaved || hoveredOnBtn === index ? (
+                    <CloseIcon />
+                  ) : (
+                    <CircleIcon
+                      sx={{ width: "10px", height: "10px", padding: "0 3px" }}
+                    />
+                  )}
+                </IconButton>
+              </button>
+            </div>
+          );
+        })}
         {dropIndicatorIndex === tabs.length && (
           <div className="drop-indicator drop-indicator-end" />
         )}

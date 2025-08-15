@@ -29,7 +29,7 @@
   font-size: 14px !important;
   min-height: 24px !important;
   padding: 2px 8px !important;
-  padding-bottom: 4px !important;
+  padding-right: 2px !important;
   cursor: grab;
   transition: opacity 0.2s ease;
 }
@@ -48,7 +48,7 @@
   height: 2px;
   background: currentColor;
   position: absolute;
-  bottom: 0;
+  bottom: -2px;
   left: 0;
   right: 0;
 }
