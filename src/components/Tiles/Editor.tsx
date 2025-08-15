@@ -1,15 +1,7 @@
 import { path } from "@tauri-apps/api";
-import CodeEditor, { CodeEditorHandles } from "../CodeEditor";
+import { CodeEditorHandles } from "../CodeEditor";
 import "./Editor.css";
-import {
-  IconButton,
-  ListItemDecorator,
-  Tab,
-  TabList,
-  TabPanel,
-  Tabs,
-  useColorScheme,
-} from "@mui/joy";
+import { IconButton, useColorScheme } from "@mui/joy";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import * as monaco from "monaco-editor";
@@ -74,6 +66,11 @@ export default ({
     }[]
   >([]);
   const [unsavedFiles, setUnsavedFiles] = useState<string[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropIndicatorIndex, setDropIndicatorIndex] = useState<number | null>(
+    null
+  );
+
   const [focused, setFocused] = useState<number>();
   const editors = useRef<(CodeEditorHandles | null)[]>([]);
   const [editor, setEditor] =
@@ -232,76 +229,174 @@ export default ({
     };
   }, [editor]);
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    if (draggedIndex === null) return;
+
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const midpoint = rect.left + rect.width / 2;
+    const mouseX = e.clientX;
+
+    let insertIndex;
+    if (mouseX < midpoint) {
+      insertIndex = index;
+    } else {
+      insertIndex = index + 1;
+    }
+
+    if (insertIndex === draggedIndex || insertIndex === draggedIndex + 1) {
+      setDropIndicatorIndex(null);
+    } else {
+      setDropIndicatorIndex(insertIndex);
+    }
+  };
+
+  const handleContainerDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    if (draggedIndex === null) return;
+
+    const container = e.currentTarget as HTMLElement;
+    const mouseX = e.clientX;
+
+    const lastTab = container.querySelector(".tab-wrapper:last-child");
+    if (lastTab) {
+      const lastTabRect = lastTab.getBoundingClientRect();
+      if (mouseX > lastTabRect.right) {
+        setDropIndicatorIndex(tabs.length);
+        return;
+      }
+    }
+
+    const firstTab = container.querySelector(".tab-wrapper:first-child");
+    if (firstTab) {
+      const firstTabRect = firstTab.getBoundingClientRect();
+      if (mouseX < firstTabRect.left) {
+        setDropIndicatorIndex(0);
+        return;
+      }
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const container = e.currentTarget as HTMLElement;
+    const relatedTarget = e.relatedTarget as Node;
+
+    if (!container.contains(relatedTarget)) {
+      setDropIndicatorIndex(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+
+    if (draggedIndex === null || dropIndicatorIndex === null) {
+      setDraggedIndex(null);
+      setDropIndicatorIndex(null);
+      return;
+    }
+
+    const newTabs = [...tabs];
+    const newOpenFiles = [...openFiles];
+
+    let actualDropIndex = dropIndicatorIndex;
+    if (draggedIndex < dropIndicatorIndex) {
+      actualDropIndex = dropIndicatorIndex - 1;
+    }
+
+    const draggedTab = newTabs.splice(draggedIndex, 1)[0];
+    const draggedFile = newOpenFiles.splice(draggedIndex, 1)[0];
+
+    newTabs.splice(actualDropIndex, 0, draggedTab);
+    newOpenFiles.splice(actualDropIndex, 0, draggedFile);
+
+    let newFocused = focused;
+    if (focused === draggedIndex) {
+      newFocused = actualDropIndex;
+    } else if (focused !== undefined) {
+      if (draggedIndex < focused && actualDropIndex >= focused) {
+        newFocused = focused - 1;
+      } else if (draggedIndex > focused && actualDropIndex <= focused) {
+        newFocused = focused + 1;
+      }
+    }
+
+    setTabs(newTabs);
+    setOpenFiles(newOpenFiles);
+    setFocused(newFocused);
+    setDraggedIndex(null);
+    setDropIndicatorIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDropIndicatorIndex(null);
+  };
+
   return (
     <div className={"editor"}>
-      <Tabs
-        sx={{ height: "100%", overflow: "hidden" }}
-        size="sm"
-        className={"editor-tabs"}
-        value={focused ?? 0}
-        onChange={(_, newValue) => {
-          if (newValue === null) return;
-          setFocused(newValue as number);
-        }}
+      <div
+        className="tabsContainer MuiTabList-sizeSm"
+        onDragOver={handleContainerDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
-        <TabList>
-          {tabs.map((tab, index) => (
-            <Tab key={tab.file} value={index} indicatorPlacement="bottom">
-              {tab.name}
-              {unsavedFiles.indexOf(tab.file) != -1 ? " •" : ""}
-              <ListItemDecorator>
-                <IconButton
-                  component="span"
-                  size="xs"
-                  sx={{ margin: "0px" }}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setTabs((tabs) => tabs.filter((_, i) => i !== index));
-                    setFocused((focused) => {
-                      if (focused === index) return 0;
-                      return focused;
-                    });
-                    setOpenFiles((openFiles) =>
-                      openFiles.filter((file) => file !== tab.file)
-                    );
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
-              </ListItemDecorator>
-            </Tab>
-          ))}
-        </TabList>
         {tabs.map((tab, index) => (
-          <TabPanel
-            value={index}
-            key={tab.file}
-            sx={{ padding: 0, width: 0, height: 0 }}
-          >
-            {editor && (
-              <CodeEditor
-                editor={editor}
-                ref={(el) => (editors.current[index] = el)}
-                key={tab.file}
-                file={tab.file}
-                setUnsaved={(unsaved: boolean) => {
-                  if (unsaved)
-                    setUnsavedFiles((unsaved) => [...unsaved, tab.file]);
-                  else
-                    setUnsavedFiles((unsaved) =>
-                      unsaved.filter((unsavedFile) => unsavedFile !== tab.file)
-                    );
+          <div key={tab.file} className="tab-wrapper">
+            {dropIndicatorIndex === index && <div className="drop-indicator" />}
+            <button
+              className={
+                "tab MuiTab-root MuiTab-horizontal MuiTab-variantPlain MuiTab-colorNeutral css-1uqmv8l-JoyTab-root" +
+                (focused === index ? " Mui-selected" : "") +
+                (draggedIndex === index ? " dragging" : "")
+              }
+              role="tab"
+              draggable={true}
+              onClick={() => setFocused(index)}
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
+            >
+              {tab.name}
+              <IconButton
+                component="span"
+                size="xs"
+                sx={{ margin: "0px" }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setTabs((tabs) => tabs.filter((_, i) => i !== index));
+                  setFocused((focused) => {
+                    if (focused === index) return 0;
+                    return focused;
+                  });
+                  setOpenFiles((openFiles) =>
+                    openFiles.filter((file) => file !== tab.file)
+                  );
                 }}
-              />
-            )}
-          </TabPanel>
+              >
+                <CloseIcon />
+              </IconButton>
+            </button>
+          </div>
         ))}
-        <div
-          className={"code-editor"}
-          ref={monacoEl}
-          style={tabs.length >= 1 ? {} : { display: "none" }}
-        />
-      </Tabs>
+        {dropIndicatorIndex === tabs.length && (
+          <div className="drop-indicator drop-indicator-end" />
+        )}
+      </div>
+      <div
+        className={"code-editor"}
+        ref={monacoEl}
+        style={tabs.length >= 1 ? {} : { display: "none" }}
+      />
     </div>
   );
 };

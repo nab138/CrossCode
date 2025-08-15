@@ -11,3 +11,61 @@
   position: relative;
   /* transform: translate(0, -100%); */
 }
+
+.tabsContainer {
+  display: flex;
+  padding-bottom: 1px;
+  position: relative;
+  width: 100%;
+}
+
+.tab-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.tab {
+  font-size: 14px !important;
+  min-height: 24px !important;
+  padding: 2px 8px !important;
+  padding-bottom: 4px !important;
+  cursor: grab;
+  transition: opacity 0.2s ease;
+}
+
+.tab:active {
+  cursor: grabbing;
+}
+
+.tab.dragging {
+  opacity: 0.5;
+}
+
+.tabsContainer .Mui-selected::after {
+  content: "";
+  display: block;
+  height: 2px;
+  background: currentColor;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.drop-indicator {
+  width: 2px;
+  height: 100%;
+  background: var(--joy-palette-neutral-300);
+  position: absolute;
+  z-index: 1000;
+  left: 0;
+}
+
+.drop-indicator-end {
+  position: relative;
+  left: auto;
+  margin-left: 0;
+  height: 32px;
+  align-self: stretch;
+}
