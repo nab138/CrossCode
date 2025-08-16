@@ -24,6 +24,7 @@
     "fs:allow-rename",
     "fs:allow-exists",
     "fs:allow-stat",
+    "fs:allow-watch",
     {
       "identifier": "fs:scope",
       "allow": ["**", ".*", "**/.*"],
