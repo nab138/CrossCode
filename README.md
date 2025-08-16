@@ -16,9 +16,7 @@ You can download the latest build from [actions](https://github.com/nab138/YCode
 
 - A darwin SDK is generated from a user provided copy of Xcode 16.3 (extracted with [unxip](https://github.com/saagarjha/unxip)) and darwin tools from [darwin-tools-linux-llvm](https://github.com/xtool-org/darwin-tools-linux-llvm)
 - Swift uses the darwin SDK to build an executable which is packaged into an .app bundle.
-- [apple-private-apis](https://github.com/SideStore/apple-private-apis) is used to login to the Apple Account. Heavy additions have been made to support actually accessing the Developer APIs
-- [ZSign](https://github.com/zhlynn/zsign) is used to sign the IPA with the certificate and provisioning profile acquired from the Apple Account
-- [idevice](https://github.com/jkcoxson/idevice) is used to install the IPA on the device.
+- The code to sigh and install apps onto a device has been removed from ycode's source and moved to a standalone package, [isideload](https://github.com/nab138/isideload). It was built on a lot of other libraries, so check out it's README for more info.
 
 Supports swift 6.1 and the swift package manager.
 
@@ -28,6 +26,7 @@ The app is currently functional but does not have all the features it should. Yo
 
 ## Credits
 
+- [idevice](https://github.com/jkcoxson/idevice) is used to communicate with iOS devices.
 - [xtool](https://xtool.sh) has been used as a reference for the implementation of the darwin SDK generation.
 - [Sideloader](https://github.com/Dadoum/Sideloader) has been heavily used as a reference for the implementation of the Apple Developer APIs and sideloading process.
 
