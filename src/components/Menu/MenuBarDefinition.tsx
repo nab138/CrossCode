@@ -21,7 +21,7 @@ export default [
             name: "New File...",
             shortcut: "Ctrl+N",
             callback: () => {
-              console.log("New File!");
+              alert("Not implemented yet :(");
             },
           },
           {
@@ -56,7 +56,7 @@ export default [
             name: "Save As...",
             shortcut: "Ctrl+Shift+S",
             callback: () => {
-              console.log("Save As!");
+              alert("Not implemented yet :(");
             },
           },
         ],
@@ -73,14 +73,14 @@ export default [
             name: "Undo",
             shortcut: "Ctrl+Z",
             callback: () => {
-              console.log("Undo!");
+              alert("Not implemented yet :(");
             },
           },
           {
             name: "Redo",
             shortcut: "Ctrl+Shift+Z",
             callback: () => {
-              console.log("Redo!");
+              alert("Not implemented yet :(");
             },
           },
         ],
