@@ -16,7 +16,7 @@ You can download the latest build from [actions](https://github.com/nab138/YCode
 
 - A darwin SDK is generated from a user provided copy of Xcode 16.3 (extracted with [unxip](https://github.com/saagarjha/unxip)) and darwin tools from [darwin-tools-linux-llvm](https://github.com/xtool-org/darwin-tools-linux-llvm)
 - Swift uses the darwin SDK to build an executable which is packaged into an .app bundle.
-- The code to sigh and install apps onto a device has been removed from ycode's source and moved to a standalone package, [isideload](https://github.com/nab138/isideload). It was built on a lot of other libraries, so check out it's README for more info.
+- The code to sign and install apps onto a device has been removed from YCode's source and moved to a standalone package, [isideload](https://github.com/nab138/isideload). It was built on a lot of other libraries, so check out its README for more info.
 
 Supports swift 6.1 and the swift package manager.
 
