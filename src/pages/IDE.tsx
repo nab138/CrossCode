@@ -23,6 +23,7 @@ import { ErrorIcon, WarningIcon } from "react-toast-plus";
 import SwiftMenu from "../components/SwiftMenu";
 import { restartServer } from "../utilities/lsp-client";
 import BottomBar from "../components/Tiles/BottomBar";
+import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 
 export interface IDEProps {}
 
@@ -84,15 +85,6 @@ export default () => {
   }, [path, selectedToolchain, initialized]);
 
   useEffect(() => {
-    setCallbacks({
-      save: saveFile ?? (() => {}),
-      openFolderDialog,
-      newProject: () => navigate("/new"),
-      welcomePage: () => navigate("/"),
-    });
-  }, [saveFile]);
-
-  useEffect(() => {
     if (openFiles.length === 0) {
       setOpenFile(null);
     }
@@ -150,6 +142,24 @@ export default () => {
       return oF;
     });
   }, []);
+
+  const selectFile = useCallback(async () => {
+    const file = await openFileDialog({ multiple: false, directory: false });
+    console.log(file);
+    if (file) {
+      openNewFile(file);
+    }
+  }, [openNewFile]);
+
+  useEffect(() => {
+    setCallbacks({
+      save: saveFile ?? (() => {}),
+      openFolderDialog,
+      newProject: () => navigate("/new"),
+      welcomePage: () => navigate("/"),
+      openFile: selectFile,
+    });
+  }, [saveFile, openFolderDialog, navigate, selectFile]);
 
   return (
     <div className="ide-container">

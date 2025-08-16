@@ -36,9 +36,7 @@ export default [
           {
             name: "Open File...",
             shortcut: "Ctrl+O",
-            callback: () => {
-              console.log("Open File!");
-            },
+            callbackName: "openFile",
           },
           {
             name: "Open Folder...",
