@@ -8,7 +8,8 @@ use crate::builder::config::{ProjectConfig, ProjectValidation};
 pub fn has_limited_ram() -> bool {
     let s = System::new_all();
     let mem_gib = s.total_memory() as f64 / (1024.0 * 1024.0 * 1024.0);
-    mem_gib < 12.0
+    // This is intended to be 16gb, however 16gb of physical ram does not always translate to 16gb of usable memory.
+    mem_gib < 14.0
 }
 
 #[tauri::command]

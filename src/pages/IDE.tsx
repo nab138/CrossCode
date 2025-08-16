@@ -242,6 +242,7 @@ export default () => {
           </Modal>
         )}
       {initialized &&
+        selectedToolchain !== null &&
         sourcekitStartup === null &&
         hasIgnoredRam === false &&
         hasLimitedRam && (
@@ -254,7 +255,7 @@ export default () => {
             <ModalDialog sx={{ maxWidth: "90vw" }}>
               <ModalClose />
               <div>
-                <div style={{ display: "flex", gap: "var(--padding-sm)" }}>
+                <div style={{ display: "flex", gap: "var(--padding-md)" }}>
                   <div style={{ width: "1.25rem" }}>
                     <WarningIcon />
                   </div>
@@ -262,10 +263,24 @@ export default () => {
                 </div>
                 <Typography level="body-lg">
                   SourceKit-LSP is used to provide autocomplete, error
-                  reporting, and other language features. However, it is
-                  extremely memory hungry. Your device does not meet our
+                  reporting, and other language features. However, it uses a
+                  large amount of memory. Your device does not meet our
                   recommended memory requirements. You can choose to enable it
                   anyways, but it may cause crashes or instability.
+                </Typography>
+                <Typography
+                  level="body-lg"
+                  style={{ marginTop: "var(--padding-sm)" }}
+                >
+                  You can change this at any time in Edit {">"} Preferences{" "}
+                  {">"} SourceKit LSP {">"} Auto-Launch SourceKit.
+                </Typography>
+                <Typography
+                  level="body-lg"
+                  style={{ marginTop: "var(--padding-sm)" }}
+                >
+                  You can also enable SourceKit temporarily with Build {">"}{" "}
+                  Restart LSP.
                 </Typography>
               </div>
 
@@ -277,7 +292,7 @@ export default () => {
                     setHasIgnoredRam(true);
                   }}
                 >
-                  Ok
+                  Keep disabled
                 </Button>
                 <Button
                   onClick={() => {
@@ -285,7 +300,7 @@ export default () => {
                     setHasIgnoredRam(true);
                   }}
                   color="danger"
-                  variant="soft"
+                  variant="outlined"
                 >
                   Enable Anyway
                 </Button>
