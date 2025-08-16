@@ -84,6 +84,7 @@ export default ({
   const setFocusedRef = useRef(setFocused);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const openNewFileRef = useRef(openNewFile);
+  const selectionOverrideRef = useRef<ITextEditorOptions | null>(null);
 
   let [hoveredOnBtn, setHoveredOnBtn] = useState<number | null>(null);
 
@@ -122,45 +123,19 @@ export default ({
             let tabIndex = currentTabsRef.current.findIndex(
               (tab) => tab.file === path
             );
+            if (options !== undefined) {
+              const opts = options as ITextEditorOptions | undefined;
+              if (opts?.selection) {
+                selectionOverrideRef.current = opts;
+              }
+            }
             if (tabIndex === -1) {
               openNewFileRef.current(path);
             } else {
               setFocusedRef.current(tabIndex);
             }
 
-            if (options !== undefined) {
-              const opts = options as ITextEditorOptions | undefined;
-              if (opts?.selection) {
-                setTimeout(() => {
-                  if (editorRef.current && opts.selection) {
-                    editorRef.current.setSelection(
-                      {
-                        startLineNumber: opts.selection.startLineNumber,
-                        startColumn: opts.selection.startColumn,
-                        endLineNumber:
-                          opts.selection.endLineNumber ??
-                          opts.selection.startLineNumber,
-                        endColumn:
-                          opts.selection.endColumn ??
-                          opts.selection.startColumn,
-                      },
-                      opts.selectionSource
-                    );
-                    editorRef.current.revealLineNearTop(
-                      opts.selection.startLineNumber,
-                      0
-                    );
-                  }
-                  resolve(undefined);
-                  // this is quite a yucky fix
-                  // but I can't figure out why I need it
-                }, 100);
-              } else {
-                resolve(undefined);
-              }
-            } else {
-              resolve(undefined);
-            }
+            resolve(undefined);
           });
         }),
         ...getModelServiceOverride(),
@@ -375,6 +350,34 @@ export default ({
       setSaveFile(() => modelRef.object.save.bind(modelRef.object));
 
       editor.setModel(modelRef.object.textEditorModel);
+
+      // I don't love doing it like this but it seems to improve consistency over just running it directly
+      requestAnimationFrame(() => {
+        if (
+          selectionOverrideRef.current &&
+          selectionOverrideRef.current.selection
+        ) {
+          editor.setSelection(
+            {
+              startLineNumber:
+                selectionOverrideRef.current.selection.startLineNumber,
+              startColumn: selectionOverrideRef.current.selection.startColumn,
+              endLineNumber:
+                selectionOverrideRef.current.selection.endLineNumber ??
+                selectionOverrideRef.current.selection.startLineNumber,
+              endColumn:
+                selectionOverrideRef.current.selection.endColumn ??
+                selectionOverrideRef.current.selection.startColumn,
+            },
+            selectionOverrideRef.current.selectionSource
+          );
+          editor.revealLineNearTop(
+            selectionOverrideRef.current.selection.startLineNumber,
+            0
+          );
+          selectionOverrideRef.current = null;
+        }
+      });
     };
     switchFile();
   }, [focused, editor, tabs]);
