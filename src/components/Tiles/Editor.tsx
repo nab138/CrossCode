@@ -50,6 +50,9 @@ export interface EditorProps {
   focusedFile: string | null;
   setSaveFile: (save: () => void) => void;
   openNewFile: (file: string) => void;
+  setEditorUpper: Dispatch<
+    SetStateAction<monaco.editor.IStandaloneCodeEditor | null>
+  >;
 }
 
 export default ({
@@ -58,6 +61,7 @@ export default ({
   setSaveFile,
   setOpenFiles,
   openNewFile,
+  setEditorUpper,
 }: EditorProps) => {
   const [tabs, setTabs] = useState<
     {
@@ -90,6 +94,7 @@ export default ({
 
   useEffect(() => {
     editorRef.current = editor;
+    setEditorUpper(editor);
   }, [editor]);
 
   useEffect(() => {

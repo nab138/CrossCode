@@ -24,6 +24,7 @@ import SwiftMenu from "../components/SwiftMenu";
 import { restartServer } from "../utilities/lsp-client";
 import BottomBar from "../components/Tiles/BottomBar";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+import { IStandaloneCodeEditor } from "@codingame/monaco-vscode-api/vscode/vs/editor/standalone/browser/standaloneCodeEditor";
 
 export interface IDEProps {}
 
@@ -60,6 +61,7 @@ export default () => {
   const navigate = useNavigate();
   const [projectValidation, setProjectValidation] =
     useState<ProjectValidation | null>(null);
+  const [editor, setEditor] = useState<IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
     if (
@@ -163,7 +165,7 @@ export default () => {
 
   return (
     <div className="ide-container">
-      <MenuBar callbacks={callbacks} />
+      <MenuBar callbacks={callbacks} editor={editor} />
       <Splitter
         gutterTheme={theme === "dark" ? GutterTheme.Dark : GutterTheme.Light}
         direction={SplitDirection.Horizontal}
@@ -183,6 +185,7 @@ export default () => {
             setSaveFile={setSaveFile}
             setOpenFiles={setOpenFiles}
             openNewFile={openNewFile}
+            setEditorUpper={setEditor}
           />
           <BottomBar />
         </Splitter>

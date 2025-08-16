@@ -1,8 +1,11 @@
+import { IKeyboardEvent, KeyCode } from "monaco-editor";
+
 export type Accelerator = "ctrl" | "alt" | "shift" | "super";
 
 export class Shortcut {
   accelerators: Accelerator[];
   key: string;
+  monacoKey: KeyCode;
 
   ctrl = false;
   alt = false;
@@ -18,6 +21,9 @@ export class Shortcut {
       if (acc === "super") this.super = true;
     }
     this.key = key;
+    this.monacoKey =
+      KeyCode[`Key${key.toUpperCase()}` as keyof typeof KeyCode] ||
+      KeyCode[key.toUpperCase() as keyof typeof KeyCode];
   }
 
   static fromString(shortcut: string): Shortcut {
@@ -42,8 +48,22 @@ export class Shortcut {
       event.key.toLowerCase() === this.key
     );
   }
+
+  pressedMonaco(event: IKeyboardEvent): boolean {
+    return (
+      this.ctrl === event.ctrlKey &&
+      this.alt === event.altKey &&
+      this.shift === event.shiftKey &&
+      this.super === event.metaKey &&
+      event.keyCode === this.monacoKey
+    );
+  }
 }
 
 export function acceleratorPresssed(event: KeyboardEvent): boolean {
+  return event.ctrlKey || event.altKey || event.shiftKey || event.metaKey;
+}
+
+export function acceleratorPresssedMonaco(event: IKeyboardEvent): boolean {
   return event.ctrlKey || event.altKey || event.shiftKey || event.metaKey;
 }
