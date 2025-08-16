@@ -6,7 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
 import * as monaco from "monaco-editor";
 
-import { initialize } from "@codingame/monaco-vscode-api";
+import { initialize, ITextEditorOptions } from "@codingame/monaco-vscode-api";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
 import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-override";
 import getTextMateServiceOverride from "@codingame/monaco-vscode-textmate-service-override";
@@ -112,7 +112,7 @@ export default ({
         ...getTextMateServiceOverride(),
         ...getThemeServiceOverride(),
         ...getLanguagesServiceOverride(),
-        ...getEditorServiceOverride((modelRef, _options) => {
+        ...getEditorServiceOverride((modelRef, options) => {
           return new Promise((resolve) => {
             if (!editorRef.current) return resolve(undefined);
 
@@ -127,29 +127,40 @@ export default ({
             } else {
               setFocusedRef.current(tabIndex);
             }
-            // not sure why this doesn't work...
-            // if (options !== undefined) {
-            //   const opts = options as ITextEditorOptions | undefined;
-            //   if (opts?.selection) {
-            //     editorRef.current.setSelection(
-            //       {
-            //         startLineNumber: opts.selection.startLineNumber,
-            //         startColumn: opts.selection.startColumn,
-            //         endLineNumber:
-            //           opts.selection.endLineNumber ??
-            //           opts.selection.startLineNumber,
-            //         endColumn:
-            //           opts.selection.endColumn ?? opts.selection.startColumn,
-            //       },
-            //       opts.selectionSource
-            //     );
-            //     editorRef.current.revealLineNearTop(
-            //       opts.selection.startLineNumber,
-            //       0
-            //     );
-            //   }
-            // }
-            resolve(undefined);
+
+            if (options !== undefined) {
+              const opts = options as ITextEditorOptions | undefined;
+              if (opts?.selection) {
+                setTimeout(() => {
+                  if (editorRef.current && opts.selection) {
+                    editorRef.current.setSelection(
+                      {
+                        startLineNumber: opts.selection.startLineNumber,
+                        startColumn: opts.selection.startColumn,
+                        endLineNumber:
+                          opts.selection.endLineNumber ??
+                          opts.selection.startLineNumber,
+                        endColumn:
+                          opts.selection.endColumn ??
+                          opts.selection.startColumn,
+                      },
+                      opts.selectionSource
+                    );
+                    editorRef.current.revealLineNearTop(
+                      opts.selection.startLineNumber,
+                      0
+                    );
+                  }
+                  resolve(undefined);
+                  // this is quite a yucky fix
+                  // but I can't figure out why I need it
+                }, 100);
+              } else {
+                resolve(undefined);
+              }
+            } else {
+              resolve(undefined);
+            }
           });
         }),
         ...getModelServiceOverride(),
