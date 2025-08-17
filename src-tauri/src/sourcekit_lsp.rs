@@ -1,11 +1,10 @@
 use futures_util::{SinkExt, StreamExt};
 use serde::Serialize;
-use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{Emitter, State, Window};
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
-use tokio::process::{Child, Command};
+use tokio::process::Child;
 use tokio::sync::{broadcast, mpsc, RwLock};
 use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
 

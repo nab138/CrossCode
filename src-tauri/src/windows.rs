@@ -1,10 +1,13 @@
 use std::process::{Command, Stdio};
+#[cfg(target_os = "windows")]
 use wslpath2::{convert, Conversion};
 
+#[cfg(target_os = "windows")]
 pub fn windows_to_wsl_path(path: &str) -> String {
     convert(path, None, Conversion::WindowsToWsl, false).unwrap()
 }
 
+#[cfg(target_os = "windows")]
 pub fn wsl_to_windows_path(path: &str) -> String {
     convert(path, None, Conversion::WslToWindows, false).unwrap()
 }

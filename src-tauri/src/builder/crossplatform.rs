@@ -1,10 +1,8 @@
 #[cfg(target_os = "windows")]
 use crate::windows::{has_wsl, windows_to_wsl_path, wsl_to_windows_path};
-use std::{
-    fs,
-    path::PathBuf,
-    process::{Command, Stdio},
-};
+#[cfg(target_os = "windows")]
+use std::process::{Command, Stdio};
+use std::{fs, path::PathBuf};
 
 pub fn symlink(target: &str, link: &str) -> std::io::Result<()> {
     #[cfg(not(target_os = "windows"))]
@@ -37,8 +35,8 @@ pub fn symlink(target: &str, link: &str) -> std::io::Result<()> {
                 ),
             ));
         }
+        return Ok(());
     }
-    Ok(())
 }
 
 pub fn read_link(path: &PathBuf) -> Result<PathBuf, String> {

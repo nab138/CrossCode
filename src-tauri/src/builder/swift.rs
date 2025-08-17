@@ -11,7 +11,6 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::File,
     io::{self, BufRead, BufReader},
     path::PathBuf,
     process::{Command, Output, Stdio},
@@ -411,7 +410,7 @@ pub async fn deploy_swift(
         return emit_error_and_return(&window, "Invalid Toolchain");
     }
 
-    let (app, config) =
+    let (app, _) =
         build_swift_internal(&window, &folder, &toolchain_path, build_settings, false).await?;
 
     sideload_app(&handle, &window, anisette_server, device, app)
