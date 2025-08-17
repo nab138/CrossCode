@@ -6,6 +6,9 @@ import { useIDE } from "../../utilities/IDEContext";
 import CommandButton from "../CommandButton";
 import { useStore } from "../../utilities/StoreContext";
 import { useToast } from "react-toast-plus";
+import { MenuItem } from "@mui/joy";
+import { invoke } from "@tauri-apps/api/core";
+import { restartServer } from "../../utilities/lsp-client";
 
 export default [
   {
@@ -18,7 +21,7 @@ export default [
             name: "New File...",
             shortcut: "Ctrl+N",
             callback: () => {
-              console.log("New File!");
+              alert("Not implemented yet :(");
             },
           },
           {
@@ -33,9 +36,7 @@ export default [
           {
             name: "Open File...",
             shortcut: "Ctrl+O",
-            callback: () => {
-              console.log("Open File!");
-            },
+            callbackName: "openFile",
           },
           {
             name: "Open Folder...",
@@ -55,7 +56,7 @@ export default [
             name: "Save As...",
             shortcut: "Ctrl+Shift+S",
             callback: () => {
-              console.log("Save As!");
+              alert("Not implemented yet :(");
             },
           },
         ],
@@ -71,15 +72,17 @@ export default [
           {
             name: "Undo",
             shortcut: "Ctrl+Z",
+            ignoreShortcutInMonaco: true,
             callback: () => {
-              console.log("Undo!");
+              alert("Not implemented yet :(");
             },
           },
           {
             name: "Redo",
             shortcut: "Ctrl+Shift+Z",
+            ignoreShortcutInMonaco: true,
             callback: () => {
-              console.log("Redo!");
+              alert("Not implemented yet :(");
             },
           },
         ],
@@ -258,6 +261,48 @@ export default [
               );
             },
             componentId: "cleanMenuBtn",
+          },
+        ],
+      },
+      {
+        label: "Start LSP",
+        items: [
+          {
+            name: "Restart LSP",
+            component: () => {
+              const { path } = useParams<"path">();
+              const { selectedToolchain } = useIDE();
+              return (
+                <MenuItem
+                  onClick={async () => {
+                    if (!selectedToolchain || !path) return;
+                    restartServer(path, selectedToolchain).catch((e) => {
+                      console.error("Failed to restart SourceKit-LSP:", e);
+                    });
+                  }}
+                  id="startLSPMenuBtn"
+                >
+                  Restart LSP
+                </MenuItem>
+              );
+            },
+            componentId: "startLSPMenuBtn",
+          },
+          {
+            name: "Stop LSP",
+            component: () => {
+              return (
+                <MenuItem
+                  onClick={async () => {
+                    await invoke<number>("stop_sourcekit_server");
+                  }}
+                  id="stopLSPMenuBtn"
+                >
+                  Stop LSP
+                </MenuItem>
+              );
+            },
+            componentId: "stopLSPMenuBtn",
           },
         ],
       },

@@ -1,7 +1,7 @@
 {
   "build": {
-    "beforeDevCommand": "bun run dev",
-    "beforeBuildCommand": "bun run build",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420"
   },
@@ -21,7 +21,11 @@
   "mainBinaryName": "YCode",
   "version": "0.0.0",
   "identifier": "me.nabdev.ycode",
-  "plugins": {},
+  "plugins": {
+    "fs": {
+      "requireLiteralLeadingDot": false
+    }
+  },
   "app": {
     "security": {
       "csp": null

@@ -1,0 +1,7 @@
+.bottom-container {
+  height: 100%;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #000;
+  box-sizing: border-box;
+}

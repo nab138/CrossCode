@@ -67,9 +67,11 @@ const AppIdsComponent = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: "var(--padding-lg)" }}>
-        You have {availableQuantity}/{maxQuantity} App IDs available.
-      </div>
+      {availableQuantity != null && maxQuantity != null && (
+        <div style={{ marginBottom: "var(--padding-lg)" }}>
+          You have {availableQuantity}/{maxQuantity} App IDs available.
+        </div>
+      )}
       <AccordionGroup
         sx={{ margin: 0, padding: 0, width: "calc(100% - var(--padding-xl))" }}
       >

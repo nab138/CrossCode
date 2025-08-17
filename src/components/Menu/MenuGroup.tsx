@@ -6,6 +6,7 @@ import { DeviceInfo } from "../../utilities/IDEContext";
 type BaseMenuItem = {
   name: string;
   shortcut?: string;
+  ignoreShortcutInMonaco?: boolean;
 };
 
 export type MenuItem = BaseMenuItem &

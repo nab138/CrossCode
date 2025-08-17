@@ -18,6 +18,7 @@ use std::{
     thread,
 };
 use tauri::{Emitter, Window};
+use tokio::process::Command as TokioCommand;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -45,6 +46,7 @@ struct SwiftlyConfig {
 #[derive(Debug, Clone)]
 pub struct SwiftBin {
     pub bin_path: String,
+    pub sourcekit_path: String,
 }
 
 impl SwiftBin {
@@ -68,9 +70,9 @@ impl SwiftBin {
                     String::from_utf8_lossy(&output.stderr)
                 ));
             }
-            let swift_path = &format!("{}/usr/bin/swift", toolchain_path);
             Ok(SwiftBin {
-                bin_path: swift_path.clone(),
+                bin_path: format!("{}/usr/bin/swift", toolchain_path),
+                sourcekit_path: format!("{}/usr/bin/sourcekit-lsp", toolchain_path),
             })
         }
         #[cfg(not(target_os = "windows"))]
@@ -85,8 +87,14 @@ impl SwiftBin {
             if !swift_path.exists() || !swift_path.is_file() {
                 return Err("Swift binary not found in toolchain".to_string());
             }
+
+            let sourcekit_path = path.join("usr").join("bin").join("sourcekit-lsp");
+            if !sourcekit_path.exists() || !sourcekit_path.is_file() {
+                return Err("SourceKit-LSP binary not found in toolchain".to_string());
+            }
             Ok(SwiftBin {
                 bin_path: swift_path.to_string_lossy().to_string(),
+                sourcekit_path: sourcekit_path.to_string_lossy().to_string(),
             })
         }
     }
@@ -124,6 +132,19 @@ impl SwiftBin {
         #[cfg(not(target_os = "windows"))]
         {
             Command::new(&self.bin_path)
+        }
+    }
+
+    pub fn sourcekitCommand(&self) -> TokioCommand {
+        #[cfg(target_os = "windows")]
+        {
+            let mut cmd = TokioCommand::new("wsl");
+            cmd.arg(&self.sourcekit_path);
+            cmd
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            TokioCommand::new(&self.sourcekit_path)
         }
     }
 }

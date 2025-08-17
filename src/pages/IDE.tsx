@@ -1,24 +1,57 @@
 import Splitter, { GutterTheme, SplitDirection } from "@devbookhq/splitter";
 import Tile from "../components/Tiles/Tile";
 import FileExplorer from "../components/Tiles/FileExplorer";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Editor from "../components/Tiles/Editor";
 import MenuBar from "../components/Menu/MenuBar";
 import "./IDE.css";
-import Console from "../components/Tiles/Console";
-import { useStore } from "../utilities/StoreContext";
+import { StoreContext, useStore } from "../utilities/StoreContext";
 import { useNavigate, useParams } from "react-router";
 import { useIDE } from "../utilities/IDEContext";
+import { registerFileSystemOverlay } from "@codingame/monaco-vscode-files-service-override";
+import TauriFileSystemProvider from "../utilities/TauriFileSystemProvider";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  Button,
+  Divider,
+  Modal,
+  ModalClose,
+  ModalDialog,
+  Typography,
+} from "@mui/joy";
+import { ErrorIcon, WarningIcon } from "react-toast-plus";
+import SwiftMenu from "../components/SwiftMenu";
+import { restartServer } from "../utilities/lsp-client";
+import BottomBar from "../components/Tiles/BottomBar";
+import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+import { IStandaloneCodeEditor } from "@codingame/monaco-vscode-api/vscode/vs/editor/standalone/browser/standaloneCodeEditor";
 
 export interface IDEProps {}
 
+type ProjectValidation =
+  | "Valid"
+  | "Invalid"
+  | "UnsupportedFormatVersion"
+  | "InvalidPackage"
+  | "InvalidToolchain";
+
 export default () => {
+  const { storeInitialized, store } = useContext(StoreContext);
   const [openFile, setOpenFile] = useState<string | null>(null);
   const [openFiles, setOpenFiles] = useState<string[]>([]);
   const [saveFile, setSaveFile] = useState<(() => void) | null>(null);
   const [theme] = useStore<"light" | "dark">("appearance/theme", "light");
   const { path } = useParams<"path">();
-  const { openFolderDialog } = useIDE();
+  const { openFolderDialog, selectedToolchain, hasLimitedRam, initialized } =
+    useIDE();
+  const [sourcekitStartup, setSourcekitStartup] = useStore<boolean | null>(
+    "sourcekit/startup",
+    null
+  );
+  const [hasIgnoredRam, setHasIgnoredRam] = useStore<boolean>(
+    "has-ignored-ram",
+    false
+  );
 
   if (!path) {
     throw new Error("Path parameter is required in IDE component");
@@ -26,15 +59,32 @@ export default () => {
 
   const [callbacks, setCallbacks] = useState<Record<string, () => void>>({});
   const navigate = useNavigate();
+  const [projectValidation, setProjectValidation] =
+    useState<ProjectValidation | null>(null);
+  const [editor, setEditor] = useState<IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
-    setCallbacks({
-      save: saveFile ?? (() => {}),
-      openFolderDialog,
-      newProject: () => navigate("/new"),
-      welcomePage: () => navigate("/"),
-    });
-  }, [saveFile]);
+    if (
+      path === undefined ||
+      path === null ||
+      selectedToolchain === null ||
+      !initialized
+    )
+      return;
+    setProjectValidation(null);
+    (async () => {
+      if (path) {
+        const toolchainPath = selectedToolchain?.path ?? "";
+        const validation = await invoke<ProjectValidation>("validate_project", {
+          projectPath: path,
+          toolchainPath: toolchainPath,
+        });
+        if (validation) {
+          setProjectValidation(validation);
+        }
+      }
+    })();
+  }, [path, selectedToolchain, initialized]);
 
   useEffect(() => {
     if (openFiles.length === 0) {
@@ -45,6 +95,48 @@ export default () => {
     }
   }, [openFiles]);
 
+  useEffect(() => {
+    let dispose = () => {};
+
+    if (path) {
+      const provider = new TauriFileSystemProvider(false);
+      const overlayDisposable = registerFileSystemOverlay(1, provider);
+      dispose = () => {
+        overlayDisposable.dispose();
+        provider.dispose();
+      };
+    }
+    return () => {
+      dispose();
+    };
+  }, [path]);
+
+  useEffect(() => {
+    if (!store || !storeInitialized) return;
+    let autoEnable = async () => {
+      let hasAutoEnabledSourcekit = await store!.get(
+        "has-auto-enabled-sourcekit"
+      );
+      if (
+        storeInitialized &&
+        hasIgnoredRam === false &&
+        hasLimitedRam === false &&
+        hasAutoEnabledSourcekit === undefined
+      ) {
+        setSourcekitStartup(true);
+        await store!.set("has-auto-enabled-sourcekit", true);
+      }
+    };
+    autoEnable();
+  }, [hasIgnoredRam, hasLimitedRam, storeInitialized, store]);
+
+  useEffect(() => {
+    if (!sourcekitStartup || selectedToolchain == null) return;
+    restartServer(path, selectedToolchain).catch((e) => {
+      console.error("Failed to start SourceKit-LSP:", e);
+    });
+  }, [sourcekitStartup, path, selectedToolchain]);
+
   const openNewFile = useCallback((file: string) => {
     setOpenFile(file);
     setOpenFiles((oF) => {
@@ -53,9 +145,27 @@ export default () => {
     });
   }, []);
 
+  const selectFile = useCallback(async () => {
+    const file = await openFileDialog({ multiple: false, directory: false });
+    console.log(file);
+    if (file) {
+      openNewFile(file);
+    }
+  }, [openNewFile]);
+
+  useEffect(() => {
+    setCallbacks({
+      save: saveFile ?? (() => {}),
+      openFolderDialog,
+      newProject: () => navigate("/new"),
+      welcomePage: () => navigate("/"),
+      openFile: selectFile,
+    });
+  }, [saveFile, openFolderDialog, navigate, selectFile]);
+
   return (
     <div className="ide-container">
-      <MenuBar callbacks={callbacks} />
+      <MenuBar callbacks={callbacks} editor={editor} />
       <Splitter
         gutterTheme={theme === "dark" ? GutterTheme.Dark : GutterTheme.Light}
         direction={SplitDirection.Horizontal}
@@ -74,10 +184,148 @@ export default () => {
             focusedFile={openFile}
             setSaveFile={setSaveFile}
             setOpenFiles={setOpenFiles}
+            openNewFile={openNewFile}
+            setEditorUpper={setEditor}
           />
-          <Console />
+          <BottomBar />
         </Splitter>
       </Splitter>
+      {initialized &&
+        selectedToolchain !== null &&
+        projectValidation !== null &&
+        projectValidation !== "Valid" && (
+          <Modal
+            open={true}
+            onClose={() => {
+              setProjectValidation(null);
+            }}
+          >
+            <ModalDialog sx={{ maxWidth: "90vw" }}>
+              <ModalClose />
+              <div>
+                <div style={{ display: "flex", gap: "var(--padding-sm)" }}>
+                  <div style={{ width: "1.25rem" }}>
+                    <ErrorIcon />
+                  </div>
+                  <Typography level="h3">Failed to load project</Typography>
+                </div>
+                <Typography level="body-lg">
+                  {getValidationMsg(projectValidation)} Some features may not
+                  work as expected.
+                </Typography>
+              </div>
+
+              <Divider sx={{ mb: "var(--padding-xs)" }} />
+              <div style={{ display: "flex", gap: "var(--padding-lg)" }}>
+                {projectValidation === "InvalidToolchain" && <SwiftMenu />}
+                {projectValidation !== "InvalidToolchain" && (
+                  <>
+                    <Button
+                      onClick={() => {
+                        navigate("/new");
+                      }}
+                    >
+                      Create New
+                    </Button>
+                    <Button onClick={openFolderDialog}>
+                      Open Other Project
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setProjectValidation(null);
+                      }}
+                      variant="outlined"
+                    >
+                      Ignore
+                    </Button>
+                  </>
+                )}
+              </div>
+            </ModalDialog>
+          </Modal>
+        )}
+      {initialized &&
+        selectedToolchain !== null &&
+        sourcekitStartup === null &&
+        hasIgnoredRam === false &&
+        hasLimitedRam && (
+          <Modal
+            open={true}
+            onClose={() => {
+              setHasIgnoredRam(true);
+            }}
+          >
+            <ModalDialog sx={{ maxWidth: "90vw" }}>
+              <ModalClose />
+              <div>
+                <div style={{ display: "flex", gap: "var(--padding-md)" }}>
+                  <div style={{ width: "1.25rem" }}>
+                    <WarningIcon />
+                  </div>
+                  <Typography level="h3">Limited Memory</Typography>
+                </div>
+                <Typography level="body-lg">
+                  SourceKit-LSP is used to provide autocomplete, error
+                  reporting, and other language features. However, it uses a
+                  large amount of memory. Your device does not meet our
+                  recommended memory requirements. You can choose to enable it
+                  anyways, but it may cause crashes or instability.
+                </Typography>
+                <Typography
+                  level="body-lg"
+                  style={{ marginTop: "var(--padding-sm)" }}
+                >
+                  You can change this at any time in Edit {">"} Preferences{" "}
+                  {">"} SourceKit LSP {">"} Auto-Launch SourceKit.
+                </Typography>
+                <Typography
+                  level="body-lg"
+                  style={{ marginTop: "var(--padding-sm)" }}
+                >
+                  You can also enable SourceKit temporarily with Build {">"}{" "}
+                  Restart LSP.
+                </Typography>
+              </div>
+
+              <Divider sx={{ mb: "var(--padding-xs)" }} />
+              <div style={{ display: "flex", gap: "var(--padding-lg)" }}>
+                <Button
+                  onClick={() => {
+                    setSourcekitStartup(false);
+                    setHasIgnoredRam(true);
+                  }}
+                >
+                  Keep disabled
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSourcekitStartup(true);
+                    setHasIgnoredRam(true);
+                  }}
+                  color="danger"
+                  variant="outlined"
+                >
+                  Enable Anyway
+                </Button>
+              </div>
+            </ModalDialog>
+          </Modal>
+        )}
     </div>
   );
 };
+
+function getValidationMsg(validation: ProjectValidation): string {
+  switch (validation) {
+    case "Invalid":
+      return "This does not appear to be a valid YCode project.";
+    case "InvalidPackage":
+      return "SwiftPM was unable to parse your package. Please check your Package.swift file.";
+    case "UnsupportedFormatVersion":
+      return "This project uses an unsupported config format version. You may need to update YCode.";
+    case "InvalidToolchain":
+      return "Your Swift toolchain appears to be invalid.";
+    default:
+      return "";
+  }
+}

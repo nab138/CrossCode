@@ -2,7 +2,11 @@
   "identifier": "migrated",
   "description": "permissions that were migrated from v1",
   "local": true,
-  "windows": ["main", "prefs", "splashscreen"],
+  "windows": [
+    "main",
+    "prefs",
+    "splashscreen"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-show",
@@ -23,9 +27,16 @@
     "fs:allow-remove",
     "fs:allow-rename",
     "fs:allow-exists",
+    "fs:allow-stat",
+    "fs:allow-watch",
     {
       "identifier": "fs:scope",
-      "allow": ["**", ".*", "**/.*"]
+      "allow": [
+        "**",
+        ".*",
+        "**/.*"
+      ],
+      "requireLiteralLeadingDot": false
     },
     "shell:allow-open",
     "dialog:allow-open",
@@ -37,7 +48,18 @@
     "opener:default",
     {
       "identifier": "opener:allow-reveal-item-in-dir",
-      "allow": [{ "path": "**" }, { "path": ".*" }, { "path": "**/.*" }]
-    }
+      "allow": [
+        {
+          "path": "**"
+        },
+        {
+          "path": ".*"
+        },
+        {
+          "path": "**/.*"
+        }
+      ]
+    },
+    "os:default"
   ]
 }

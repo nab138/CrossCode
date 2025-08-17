@@ -7,12 +7,14 @@ use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 use tauri::{AppHandle, Manager, Window};
 
-use crate::builder::swift::{SwiftBin, validate_toolchain};
-use crate::builder::crossplatform::{linux_path, linux_temp_dir, read_link, remove_dir_all, symlink};
+use crate::builder::crossplatform::{
+    linux_path, linux_temp_dir, read_link, remove_dir_all, symlink,
+};
+use crate::builder::swift::{validate_toolchain, SwiftBin};
 use crate::operation::Operation;
 
 #[cfg(target_os = "windows")]
-use crate::windows::{windows_to_wsl_path};
+use crate::windows::windows_to_wsl_path;
 
 const DARWIN_TOOLS_VERSION: &str = "1.0.1";
 
@@ -25,7 +27,9 @@ pub async fn install_sdk_operation(
 ) -> Result<(), String> {
     let op = Operation::new("install_sdk".to_string(), &window);
     op.start("create_stage")?;
-    let work_dir = op.fail_if_err("create_stage", linux_temp_dir())?.join("DarwinSDKBuild");
+    let work_dir = op
+        .fail_if_err("create_stage", linux_temp_dir())?
+        .join("DarwinSDKBuild");
     let res = install_sdk_internal(app, xcode_path, toolchain_path, work_dir.clone(), &op).await;
     op.start("cleanup")?;
     let cleanup_result = if work_dir.exists() {
@@ -274,13 +278,12 @@ async fn install_toolset(output_path: &PathBuf) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
         // I'm guessing this has to be done because I'm extracting the tar from windows into the wsl file system and windows doesn't play nice with permissions, but im too lazy to do this properly
-        let wsl_toolset_path = windows_to_wsl_path(&toolset_dir.join("bin").to_string_lossy().to_string());
+        let wsl_toolset_path =
+            windows_to_wsl_path(&toolset_dir.join("bin").to_string_lossy().to_string());
         let output = Command::new("wsl")
             .arg("chmod")
             .arg("+x")
-            .arg(format!("{}/*",
-                wsl_toolset_path
-            ))
+            .arg(format!("{}/*", wsl_toolset_path))
             .output()
             .map_err(|e| format!("Failed to run chmod: {}", e))?;
         if !output.status.success() {
@@ -411,12 +414,16 @@ async fn install_developer(
 
         for (name, target) in &links {
             let link_path = dest.join(name);
-            op.fail_if_err_map("copy_files", symlink(target, &link_path.to_string_lossy().to_string()), |e| {
-                format!(
-                    "Failed to create symlink {:?} -> {:?}: {}",
-                    link_path, target, e
-                )
-            })?;
+            op.fail_if_err_map(
+                "copy_files",
+                symlink(target, &link_path.to_string_lossy().to_string()),
+                |e| {
+                    format!(
+                        "Failed to create symlink {:?} -> {:?}: {}",
+                        link_path, target, e
+                    )
+                },
+            )?;
         }
     }
 
@@ -457,8 +464,11 @@ fn copy_developer(src: &Path, dst: &Path, rel: &Path) -> Result<(), String> {
                 fs::create_dir_all(parent)
                     .map_err(|e| format!("Failed to create parent dir: {}", e))?;
             }
-            symlink(&target.to_string_lossy().to_string(), &dst_path.to_string_lossy().to_string())
-                .map_err(|e| format!("Failed to create symlink: {}", e))?;
+            symlink(
+                &target.to_string_lossy().to_string(),
+                &dst_path.to_string_lossy().to_string(),
+            )
+            .map_err(|e| format!("Failed to create symlink: {}", e))?;
         } else if metadata.is_dir() {
             fs::create_dir_all(&dst_path).map_err(|e| format!("Failed to create dir: {}", e))?;
             copy_developer(&src_path, dst, &rel_path)?;
@@ -467,8 +477,7 @@ fn copy_developer(src: &Path, dst: &Path, rel: &Path) -> Result<(), String> {
                 fs::create_dir_all(parent)
                     .map_err(|e| format!("Failed to create parent dir: {}", e))?;
             }
-            fs::rename(&src_path, &dst_path)
-                .map_err(|e| format!("Failed to copy file: {}", e))?;
+            fs::rename(&src_path, &dst_path).map_err(|e| format!("Failed to copy file: {}", e))?;
         }
     }
     Ok(())

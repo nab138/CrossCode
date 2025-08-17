@@ -8,6 +8,7 @@ import { certificatesPage } from "./certificates";
 import { appIdsPage } from "./appIds";
 import { developerPage } from "./developer";
 import { swiftPage } from "./swift";
+import { sourceKitPage } from "./sourcekit";
 
 const generalCategory: PreferenceCategory = {
   id: "general",
@@ -24,7 +25,7 @@ const appleCategory: PreferenceCategory = {
 const swiftCategory: PreferenceCategory = {
   id: "swift",
   name: "Swift",
-  pages: [swiftPage],
+  pages: [swiftPage, sourceKitPage],
 };
 
 const advancedCategory: PreferenceCategory = {
@@ -38,4 +39,9 @@ preferenceRegistry.registerCategory(appleCategory);
 preferenceRegistry.registerCategory(swiftCategory);
 preferenceRegistry.registerCategory(advancedCategory);
 
-export { preferenceRegistry };
+// In theory, maps should preserve insertion order.
+// However, I couldn't get the advanced category to appear after the swift category for some reason.
+// So now its here.
+const categoryOrder = ["general", "apple", "swift", "advanced"];
+
+export { preferenceRegistry, categoryOrder };

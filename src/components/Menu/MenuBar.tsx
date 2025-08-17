@@ -4,7 +4,11 @@ import ListItem from "@mui/joy/ListItem";
 import { useCallback, useEffect, useRef, useState } from "react";
 import MenuBarButton from "./MenuBarButton";
 import MenuGroup from "./MenuGroup";
-import { Shortcut, acceleratorPresssed } from "../../utilities/Shortcut";
+import {
+  Shortcut,
+  acceleratorPresssed,
+  acceleratorPresssedMonaco,
+} from "../../utilities/Shortcut";
 import CommandButton from "../CommandButton";
 import {
   Construction,
@@ -18,11 +22,13 @@ import { DeviceInfo, useIDE } from "../../utilities/IDEContext";
 import { useStore } from "../../utilities/StoreContext";
 import { useToast } from "react-toast-plus";
 import bar from "./MenuBarDefinition";
+import { IStandaloneCodeEditor } from "@codingame/monaco-vscode-api/vscode/vs/editor/standalone/browser/standaloneCodeEditor";
 
 export interface MenuBarProps {
   callbacks: Record<string, () => void>;
+  editor: IStandaloneCodeEditor | null;
 }
-export default function MenuBar({ callbacks }: MenuBarProps) {
+export default function MenuBar({ callbacks, editor }: MenuBarProps) {
   const menus = useRef<Array<HTMLButtonElement>>([]);
   const [menuIndex, setMenuIndex] = useState<null | number>(null);
 
@@ -36,7 +42,11 @@ export default function MenuBar({ callbacks }: MenuBarProps) {
   const { addToast } = useToast();
 
   useEffect(() => {
-    const items: { shortcut: Shortcut; callback: () => void }[] = [];
+    const items: {
+      shortcut: Shortcut;
+      callback: () => void;
+      ignoreShortcutInMonaco: boolean;
+    }[] = [];
 
     for (const menu of bar) {
       for (const group of menu.items) {
@@ -64,7 +74,6 @@ export default function MenuBar({ callbacks }: MenuBarProps) {
                 const element = document.getElementById(
                   item.componentId as string
                 );
-                console.log(element);
                 if (element) {
                   (element as HTMLButtonElement).click();
                 }
@@ -75,6 +84,7 @@ export default function MenuBar({ callbacks }: MenuBarProps) {
             items.push({
               shortcut,
               callback,
+              ignoreShortcutInMonaco: item.ignoreShortcutInMonaco ?? false,
             });
           }
         }
@@ -94,10 +104,23 @@ export default function MenuBar({ callbacks }: MenuBarProps) {
 
     document.addEventListener("keydown", handleGlobalKeyDown);
 
+    const monacoItems = items.filter((item) => !item.ignoreShortcutInMonaco);
+    let dispose = editor?.onKeyDown((event) => {
+      if (!acceleratorPresssedMonaco(event)) return;
+
+      for (const item of monacoItems) {
+        if (item.shortcut.pressedMonaco(event)) {
+          event.preventDefault();
+          item.callback();
+        }
+      }
+    });
+
     return () => {
       document.removeEventListener("keydown", handleGlobalKeyDown);
+      dispose?.dispose();
     };
-  }, [bar, callbacks]);
+  }, [bar, callbacks, editor]);
 
   const openNextMenu = () => {
     if (typeof menuIndex === "number") {
