@@ -174,11 +174,11 @@ pub async fn login(
                 let code = code.trim_matches('"').to_string();
                 Ok(code)
             }
-            Err(RecvTimeoutError::Timeout) | Err(RecvTimeoutError::Disconnected) => {
-                window_clone
-                    .emit("build-output", "2FA cancelled or timed out".to_string())
-                    .ok();
+            Err(RecvTimeoutError::Timeout)=> {
                 Err("2FA cancelled or timed out".to_string())
+            }
+            Err(RecvTimeoutError::Disconnected) => {
+                Err("2FA disconnected".to_string())
             }
         }
     };
