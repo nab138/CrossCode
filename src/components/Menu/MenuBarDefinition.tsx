@@ -73,17 +73,13 @@ export default [
             name: "Undo",
             shortcut: "Ctrl+Z",
             ignoreShortcutInMonaco: true,
-            callback: () => {
-              alert("Not implemented yet :(");
-            },
+            callbackName: "undo",
           },
           {
             name: "Redo",
             shortcut: "Ctrl+Shift+Z",
             ignoreShortcutInMonaco: true,
-            callback: () => {
-              alert("Not implemented yet :(");
-            },
+            callbackName: "redo",
           },
         ],
       },

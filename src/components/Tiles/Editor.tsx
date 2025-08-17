@@ -49,7 +49,9 @@ export interface EditorProps {
   openFiles: string[];
   setOpenFiles: Dispatch<SetStateAction<string[]>>;
   focusedFile: string | null;
-  setSaveFile: (save: () => void) => void;
+  setSaveFile: Dispatch<SetStateAction<(() => void) | null>>;
+  setUndo: Dispatch<SetStateAction<(() => void) | null>>;
+  setRedo: Dispatch<SetStateAction<(() => void) | null>>;
   openNewFile: (file: string) => void;
   setEditorUpper: Dispatch<
     SetStateAction<monaco.editor.IStandaloneCodeEditor | null>
@@ -60,6 +62,8 @@ export default ({
   openFiles,
   focusedFile,
   setSaveFile,
+  setUndo,
+  setRedo,
   setOpenFiles,
   openNewFile,
   setEditorUpper,
@@ -185,6 +189,14 @@ export default ({
       value: "",
       language: "plaintext",
       theme: mode === "dark" ? "vs-dark" : "vs",
+    });
+
+    setUndo(() => () => {
+      newEditor.trigger("keyboard", "undo", null);
+    });
+
+    setRedo(() => () => {
+      newEditor.trigger("keyboard", "redo", null);
     });
 
     setEditor(newEditor);

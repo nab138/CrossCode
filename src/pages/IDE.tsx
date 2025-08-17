@@ -40,6 +40,8 @@ export default () => {
   const [openFile, setOpenFile] = useState<string | null>(null);
   const [openFiles, setOpenFiles] = useState<string[]>([]);
   const [saveFile, setSaveFile] = useState<(() => void) | null>(null);
+  const [undo, setUndo] = useState<(() => void) | null>(null);
+  const [redo, setRedo] = useState<(() => void) | null>(null);
   const [theme] = useStore<"light" | "dark">("appearance/theme", "light");
   const { path } = useParams<"path">();
   const { openFolderDialog, selectedToolchain, hasLimitedRam, initialized } =
@@ -160,8 +162,10 @@ export default () => {
       newProject: () => navigate("/new"),
       welcomePage: () => navigate("/"),
       openFile: selectFile,
+      undo: undo ?? (() => {}),
+      redo: redo ?? (() => {}),
     });
-  }, [saveFile, openFolderDialog, navigate, selectFile]);
+  }, [saveFile, openFolderDialog, navigate, selectFile, undo, redo]);
 
   return (
     <div className="ide-container">
@@ -183,6 +187,8 @@ export default () => {
             openFiles={openFiles}
             focusedFile={openFile}
             setSaveFile={setSaveFile}
+            setUndo={setUndo}
+            setRedo={setRedo}
             setOpenFiles={setOpenFiles}
             openNewFile={openNewFile}
             setEditorUpper={setEditor}
