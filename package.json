@@ -32,6 +32,7 @@
     "@tauri-apps/plugin-fs": "~2",
     "@tauri-apps/plugin-opener": "~2",
     "@tauri-apps/plugin-os": "^2.3.0",
+    "@tauri-apps/plugin-process": "^2.3.0",
     "@tauri-apps/plugin-shell": "~2",
     "@tauri-apps/plugin-store": "~2",
     "ansi-to-html": "^0.7.2",

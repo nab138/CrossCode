@@ -14,7 +14,7 @@ const ThemeSelector = () => {
   const { store } = useContext(StoreContext);
   const storeExists = store !== null && store !== undefined;
   const storeKey = `appearance/theme`.toLowerCase();
-  const [value, setValue] = useStore(storeKey, "light");
+  const [value, setValue] = useStore(storeKey, "dark");
   const [error, setError] = useState<string | null>(null);
   const { setMode } = useColorScheme();
 
@@ -40,8 +40,8 @@ const ThemeSelector = () => {
             disabled={!storeExists}
             onChange={(_, newValue) => handleChange(newValue)}
           >
-            <Option value={"light"}>Light</Option>
             <Option value={"dark"}>Dark</Option>
+            <Option value={"light"}>Light</Option>
           </Select>
         </div>
       </div>

@@ -52,6 +52,7 @@
         }
       ]
     },
-    "os:default"
+    "os:default",
+    "process:allow-restart"
   ]
 }

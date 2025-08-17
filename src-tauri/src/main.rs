@@ -42,6 +42,7 @@ use tauri_plugin_cli::CliExt;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_os::init())
         .manage(sourcekit_lsp::create_server_state())

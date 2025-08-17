@@ -1,4 +1,7 @@
+import { invoke } from "@tauri-apps/api/core";
 import { createItems, createPreferencePage } from "../helpers";
+import { load } from "@tauri-apps/plugin-store";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 export const developerPage = createPreferencePage(
   "developer",
@@ -8,6 +11,22 @@ export const developerPage = createPreferencePage(
       "delete-app-ids",
       "Allow deleting app IDs",
       "Reveal the delete button in the app ID page (note: they will still count towards your limit!)"
+    ),
+    createItems.button(
+      "reset-all",
+      "Reset All Stored Data",
+      "Reset all stored data. This action is irreversible! The app will restart after.",
+      "danger",
+      "solid",
+      async () => {
+        await invoke("delete_stored_credentials");
+        await invoke("reset_anisette");
+
+        let storeInstance = await load("preferences.json");
+        await storeInstance.clear();
+
+        await relaunch();
+      }
     ),
   ],
   {

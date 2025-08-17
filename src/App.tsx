@@ -40,7 +40,7 @@ const theme = extendTheme({
 
 // Layout with IDE-related providers
 const IDELayout = () => {
-  const [appTheme] = useStore("appearance/theme", "light");
+  const [appTheme] = useStore("appearance/theme", "dark");
   return (
     <ToastProvider
       toastOptions={{ placement: "bottom-right" }}

@@ -43,6 +43,7 @@ tokio-tungstenite = "0.27.0"
 futures-util = "0.3.31"
 sysinfo = "0.37.0"
 tauri-plugin-os = "2"
+tauri-plugin-process = "2"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

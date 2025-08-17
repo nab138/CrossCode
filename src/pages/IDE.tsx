@@ -42,7 +42,7 @@ export default () => {
   const [saveFile, setSaveFile] = useState<(() => void) | null>(null);
   const [undo, setUndo] = useState<(() => void) | null>(null);
   const [redo, setRedo] = useState<(() => void) | null>(null);
-  const [theme] = useStore<"light" | "dark">("appearance/theme", "light");
+  const [theme] = useStore<"light" | "dark">("appearance/theme", "dark");
   const { path } = useParams<"path">();
   const { openFolderDialog, selectedToolchain, hasLimitedRam, initialized } =
     useIDE();

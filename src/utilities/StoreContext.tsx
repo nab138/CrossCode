@@ -37,10 +37,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({
       setStore(storeInstance);
 
       let theme = await storeInstance.get("appearance/theme");
-      if (theme !== undefined) {
-        await setTheme(theme as "light" | "dark");
-        setMode(theme as "light" | "dark");
-      }
+      if (theme === undefined) theme = "dark";
+      await setTheme(theme as "light" | "dark");
+      setMode(theme as "light" | "dark");
 
       storeInstance.set("isYCodePrefs", true);
 
