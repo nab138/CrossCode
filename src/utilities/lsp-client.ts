@@ -19,7 +19,7 @@ export const initWebSocketAndStartClient = async (
   folder: string
 ): Promise<WebSocket> => {
   const webSocket = new WebSocket(url);
-  let workspaceFolder = await invoke<string>("linux_path", {path: folder});
+  let workspaceFolder = await invoke<string>("linux_path", { path: folder });
   webSocket.onopen = () => {
     const socket = toSocket(webSocket);
     const reader = new WebSocketMessageReader(socket);
@@ -51,6 +51,19 @@ const createLanguageClient = (
         closed: () => ({ action: CloseAction.DoNotRestart }),
       },
       initializationOptions: {},
+      middleware: {
+        workspace: {
+          configuration: () => {
+            return [
+              {
+                swiftPM: {
+                  swiftSDK: "arm64-apple-ios",
+                },
+              },
+            ];
+          },
+        },
+      },
     },
     messageTransports,
   });
@@ -60,9 +73,10 @@ export const restartServer = async (
   path: string,
   selectedToolchain: Toolchain
 ) => {
-  await invoke("ensure_lsp_config", {
-    projectPath: path || "",
-  });
+  // this has been replaced with the middleware above
+  // await invoke("ensure_lsp_config", {
+  //   projectPath: path || "",
+  // });
   try {
     await invoke<number>("stop_sourcekit_server");
   } catch (e) {
