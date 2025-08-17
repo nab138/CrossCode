@@ -103,6 +103,8 @@ export const createItems = {
     id: string,
     name: string,
     description: string,
+    color: "primary" | "danger" | "neutral" | "success" | "warning" = "primary",
+    variant: "solid" | "outlined" | "soft" | "plain" = "soft",
     onClick: () => void | Promise<void>
   ): PreferenceItem => ({
     id,
@@ -110,6 +112,8 @@ export const createItems = {
     description,
     type: "button",
     onChange: onClick,
+    color,
+    variant,
   }),
 
   number: (

@@ -15,6 +15,8 @@ export interface PreferenceItem {
   onChange?: (value: any) => void | Promise<void>;
   validation?: (value: any) => string | null;
   customComponent?: React.ComponentType;
+  color?: "primary" | "danger" | "neutral" | "success" | "warning";
+  variant?: "solid" | "outlined" | "soft" | "plain";
 }
 
 export interface PreferencePage {

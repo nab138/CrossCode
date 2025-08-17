@@ -134,7 +134,8 @@ export default function PreferenceItemRenderer({
 
           {item.type === "button" && (
             <Button
-              variant="soft"
+              variant={item.variant || "soft"}
+              color={item.color || "primary"}
               disabled={!storeExists}
               onClick={() => handleChange("")}
             >

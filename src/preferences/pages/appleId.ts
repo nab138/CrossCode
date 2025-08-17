@@ -11,8 +11,11 @@ export const appleIdPage = createPreferencePage(
       [
         { label: "Sidestore (.io)", value: "ani.sidestore.io" },
         { label: "Sidestore (.app)", value: "ani.sidestore.app" },
+        { label: "Sidestore (.zip)", value: "ani.sidestore.zip" },
+        { label: "Sidestore (.xyz)", value: "ani.846969.xyz" },
+        { label: "nythepegasus", value: "ani.npeg.us" },
       ],
-      "Select an anisette server to use for Apple ID authentication.",
+      "The remote anisette server used. Change this if you are having issues logging in.",
       "ani.sidestore.io"
     ),
     {
@@ -29,6 +32,8 @@ export const appleIdPage = createPreferencePage(
       "reset-anisette",
       "Reset Anisette",
       "Remove all anisette data (will require 2fa again)",
+      "danger",
+      "soft",
       async () => {
         await invoke("reset_anisette");
       }
@@ -36,9 +41,12 @@ export const appleIdPage = createPreferencePage(
     createItems.button(
       "reset-credentials",
       "Reset Saved Credentials",
-      "Remove saved Apple ID credentials",
+      "Remove saved Apple ID credentials and anisette data",
+      "danger",
+      "soft",
       async () => {
         await invoke("delete_stored_credentials");
+        await invoke("reset_anisette");
       }
     ),
   ],
