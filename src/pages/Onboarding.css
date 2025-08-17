@@ -35,3 +35,9 @@
 .disabled-button {
   cursor: not-allowed;
 }
+
+.onboarding-version {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

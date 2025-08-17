@@ -2,6 +2,7 @@ import { Button, FormControl, Radio, RadioGroup, Typography } from "@mui/joy";
 import { Toolchain, useIDE } from "../utilities/IDEContext";
 import { useMemo } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import ErrorIcon from "@mui/icons-material/Error";
 
 export default () => {
   const {
@@ -41,6 +42,20 @@ export default () => {
         gap: "var(--padding-md)",
       }}
     >
+      {!selectedToolchain && (
+        <Typography
+          level="body-md"
+          color="danger"
+          sx={{
+            alignContent: "center",
+            display: "flex",
+            gap: "var(--padding-xs)",
+          }}
+        >
+          <ErrorIcon />
+          No toolchain selected
+        </Typography>
+      )}
       <Typography level="body-sm">
         {toolchains === null
           ? "Checking for Swift..."

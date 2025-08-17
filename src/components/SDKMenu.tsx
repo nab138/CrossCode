@@ -5,6 +5,8 @@ import { useToast } from "react-toast-plus";
 import { useCallback, useEffect } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { installSdkOperation } from "../utilities/operations";
+import ErrorIcon from "@mui/icons-material/Error";
+import WarningIcon from "@mui/icons-material/Warning";
 
 export default () => {
   const {
@@ -59,12 +61,31 @@ export default () => {
         gap: "var(--padding-md)",
       }}
     >
-      <Typography level="body-md" color={hasDarwinSDK ? "success" : "danger"}>
-        {isWindowsReady
-          ? hasDarwinSDK
-            ? "Darwin SDK is installed!"
-            : "Darwin SDK is not installed."
-          : "Install WSL and Swift first."}
+      <Typography
+        level="body-md"
+        color={
+          hasDarwinSDK ? "success" : selectedToolchain ? "danger" : "warning"
+        }
+        sx={{
+          alignContent: "center",
+          display: "flex",
+          gap: "var(--padding-xs)",
+        }}
+      >
+        {isWindowsReady ? (
+          hasDarwinSDK ? (
+            "Darwin SDK is installed!"
+          ) : (
+            <>
+              {selectedToolchain ? <ErrorIcon /> : <WarningIcon />}
+              {selectedToolchain
+                ? "Darwin SDK is not installed"
+                : "Select a swift toolchain first"}
+            </>
+          )
+        ) : (
+          "Install WSL and Swift first."
+        )}
       </Typography>
       <div
         style={{

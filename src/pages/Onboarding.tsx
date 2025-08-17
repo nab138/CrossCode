@@ -8,6 +8,8 @@ import { useNavigate } from "react-router";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import SwiftMenu from "../components/SwiftMenu";
 import SDKMenu from "../components/SDKMenu";
+import ErrorIcon from "@mui/icons-material/Error";
+import WarningIcon from "@mui/icons-material/Warning";
 
 export interface OnboardingProps {}
 
@@ -47,8 +49,17 @@ export default ({}: OnboardingProps) => {
         </div>
       </div>
       <div>
-        <Typography level="h3" className="onboarding-version" color="warning">
-          ⚠️ Early Access Version ⚠️
+        <Typography
+          level="h3"
+          sx={{
+            alignContent: "center",
+            display: "flex",
+            gap: "var(--padding-sm)",
+          }}
+          color="warning"
+        >
+          <WarningIcon sx={{ width: "1.5rem" }} /> Early Access Version{" "}
+          <WarningIcon sx={{ width: "1.5rem" }} />
         </Typography>
         <Typography level="body-md">
           This is an early access version of YCode. Expect bugs. Please report
@@ -83,10 +94,23 @@ export default ({}: OnboardingProps) => {
         </Button>
       </div>
 
-      <Typography level="body-sm">
-        {ready
-          ? "Use the cards below to manage your YCode setup"
-          : "Use the cards below to get setup before using YCode!"}
+      <Typography
+        level={ready ? "body-sm" : "body-md"}
+        sx={{
+          alignContent: "center",
+          display: "flex",
+          gap: "var(--padding-xs)",
+        }}
+        color={ready ? undefined : "danger"}
+      >
+        {ready ? (
+          "Use the cards below to manage your YCode setup"
+        ) : (
+          <>
+            <ErrorIcon />
+            One or more issues need to be resolved before you can use YCode
+          </>
+        )}
       </Typography>
       <div className="onboarding-cards">
         {isWindows && (
