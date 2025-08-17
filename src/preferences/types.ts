@@ -14,6 +14,7 @@ export interface PreferenceItem {
   defaultValue?: any;
   onChange?: (value: any) => void | Promise<void>;
   validation?: (value: any) => string | null;
+  customComponent?: React.ComponentType;
 }
 
 export interface PreferencePage {

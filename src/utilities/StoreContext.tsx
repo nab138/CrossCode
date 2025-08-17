@@ -8,7 +8,8 @@ import React, {
 } from "react";
 import { load, Store } from "@tauri-apps/plugin-store";
 import { emit, listen } from "@tauri-apps/api/event";
-import { getAllWindows } from "@tauri-apps/api/window";
+import { setTheme } from "@tauri-apps/api/app";
+import { useColorScheme } from "@mui/joy";
 
 export const StoreContext = createContext<{
   storeValues: { [key: string]: any };
@@ -28,6 +29,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({
   const [storeValues, setStoreValues] = useState<{ [key: string]: any }>({});
   const [store, setStore] = useState<Store | null>(null);
   const [storeInitialized, setStoreInitialized] = useState(false);
+  const { setMode } = useColorScheme();
 
   useEffect(() => {
     const initializeStore = async () => {
@@ -36,10 +38,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({
 
       let theme = await storeInstance.get("appearance/theme");
       if (theme !== undefined) {
-        let windows = await getAllWindows();
-        for (const win of windows) {
-          await win.setTheme(theme as "light" | "dark");
-        }
+        await setTheme(theme as "light" | "dark");
+        setMode(theme as "light" | "dark");
       }
 
       storeInstance.set("isYCodePrefs", true);

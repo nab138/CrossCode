@@ -25,7 +25,8 @@ import { platform } from "@tauri-apps/plugin-os";
 
 export default class TauriFileSystemProvider
   extends Disposable
-  implements IFileSystemProviderWithFileReadWriteCapability {
+  implements IFileSystemProviderWithFileReadWriteCapability
+{
   private _onDidChangeFile: Emitter<readonly IFileChange[]>;
 
   capabilities: FileSystemProviderCapabilities;
@@ -46,7 +47,6 @@ export default class TauriFileSystemProvider
     }
   }
   async readFile(resource: URI): Promise<Uint8Array> {
-    console.log("read", resource, await this.path(resource))
     return await fs.readFile(await this.path(resource));
   }
   async writeFile(resource: URI, content: Uint8Array, opts: IFileWriteOptions) {

@@ -36,9 +36,9 @@ use builder::crossplatform::{linux_path, windows_path};
 use lsp_utils::{ensure_lsp_config, has_limited_ram, validate_project};
 use windows::{has_wsl, is_windows};
 
+use serde_json::Value;
 use tauri::Manager;
 use tauri_plugin_cli::CliExt;
-use serde_json::Value;
 
 fn main() {
     tauri::Builder::default()
@@ -57,7 +57,6 @@ fn main() {
                         if arg.value == Value::Bool(true) {
                             let window = app.get_webview_window("main").unwrap();
                             window.show().unwrap();
-                            window.set_focus().unwrap();
                         }
                     }
                 }

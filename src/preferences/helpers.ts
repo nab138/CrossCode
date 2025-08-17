@@ -126,4 +126,15 @@ export const createItems = {
     defaultValue,
     onChange,
   }),
+
+  custom: (
+    id: string,
+    name: string,
+    customComponent: React.ComponentType
+  ): PreferenceItem => ({
+    name,
+    id,
+    type: "custom",
+    customComponent,
+  }),
 };

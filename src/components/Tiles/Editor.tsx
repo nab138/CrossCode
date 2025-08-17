@@ -123,7 +123,10 @@ export default ({
           return new Promise((resolve) => {
             if (!editorRef.current) return resolve(undefined);
 
-            let path = platform() === "windows" ? modelRef.object.textEditorModel.uri.path : modelRef.object.textEditorModel.uri.fsPath;
+            let path =
+              platform() === "windows"
+                ? modelRef.object.textEditorModel.uri.path
+                : modelRef.object.textEditorModel.uri.fsPath;
 
             if (!path) return resolve(undefined);
             let tabIndex = currentTabsRef.current.findIndex(
@@ -177,17 +180,11 @@ export default ({
 
   useEffect(() => {
     if (!monacoEl.current || editor || !initialized) return;
-    let colorScheme = mode;
-    if (colorScheme === "system") {
-      colorScheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-    }
 
     const newEditor = monaco.editor.create(monacoEl.current, {
       value: "",
       language: "plaintext",
-      theme: "vs-" + colorScheme,
+      theme: mode === "dark" ? "vs-dark" : "vs",
     });
 
     setEditor(newEditor);
@@ -195,19 +192,12 @@ export default ({
     return () => {
       newEditor.dispose();
     };
-  }, [mode, initialized]);
+  }, [initialized]);
 
   useEffect(() => {
     if (!editor || !initialized) return;
 
-    let colorScheme = mode;
-    if (colorScheme === "system") {
-      colorScheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-    }
-
-    monaco.editor.setTheme("vs-" + colorScheme);
+    monaco.editor.setTheme(mode === "dark" ? "vs-dark" : "vs");
   }, [mode, editor, initialized]);
 
   useEffect(() => {
@@ -348,9 +338,7 @@ export default ({
           if (modelRef.object.isDirty()) {
             return [...files, tabs[focused]?.file];
           } else {
-            return files.filter(
-              (f) => f !== tabs[focused]?.file
-            );
+            return files.filter((f) => f !== tabs[focused]?.file);
           }
         });
       });

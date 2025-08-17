@@ -60,6 +60,11 @@ export default function PreferenceItemRenderer({
     );
   }
 
+  if (item.type === "custom" && item.customComponent) {
+    const CustomComponent = item.customComponent;
+    return <CustomComponent />;
+  }
+
   const handleChange = async (newValue: any) => {
     if (item.validation) {
       const validationError = item.validation(newValue);

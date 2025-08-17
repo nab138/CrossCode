@@ -1,5 +1,5 @@
 .console-tile {
-  background-color: #000;
+  background-color: var(--joy-background-popup);
   font-size: smaller;
   height: 100%;
   min-width: 100%;
@@ -8,7 +8,7 @@
 .console-container {
   height: 100%;
   padding: 0 var(--padding-md);
-  background-color: #000;
+  background-color: var(--joy-background-popup);
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: #888 #000;
