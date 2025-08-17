@@ -135,7 +135,7 @@ impl SwiftBin {
         }
     }
 
-    pub fn sourcekitCommand(&self) -> TokioCommand {
+    pub fn sourcekit_command(&self) -> TokioCommand {
         #[cfg(target_os = "windows")]
         {
             let mut cmd = TokioCommand::new("wsl");

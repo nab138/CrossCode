@@ -27,6 +27,7 @@
     "@mui/joy": "^5.0.0-beta.52",
     "@mui/material": "^7.0.2",
     "@tauri-apps/api": "~2",
+    "@tauri-apps/plugin-cli": "^2.4.0",
     "@tauri-apps/plugin-dialog": "~2",
     "@tauri-apps/plugin-fs": "~2",
     "@tauri-apps/plugin-opener": "~2",

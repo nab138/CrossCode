@@ -61,7 +61,7 @@ pub async fn start_sourcekit_server(
 
     let swift_bin = SwiftBin::new(&toolchain_path)?;
     let mut child = swift_bin
-        .sourcekitCommand()
+        .sourcekit_command()
         .current_dir(folder)
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())

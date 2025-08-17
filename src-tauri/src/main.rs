@@ -32,12 +32,17 @@ use builder::swift::{
 };
 use sourcekit_lsp::{get_server_status, start_sourcekit_server, stop_sourcekit_server};
 
-use builder::crossplatform::{windows_path, linux_path};
+use builder::crossplatform::{linux_path, windows_path};
 use lsp_utils::{ensure_lsp_config, has_limited_ram, validate_project};
 use windows::{has_wsl, is_windows};
 
+use tauri::Manager;
+use tauri_plugin_cli::CliExt;
+use serde_json::Value;
+
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_os::init())
         .manage(sourcekit_lsp::create_server_state())
         .plugin(tauri_plugin_opener::init())
@@ -45,6 +50,21 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
+        .setup(|app| {
+            match app.cli().matches() {
+                Ok(matches) => {
+                    if let Some(arg) = matches.args.get("showMainWindow") {
+                        if arg.value == Value::Bool(true) {
+                            let window = app.get_webview_window("main").unwrap();
+                            window.show().unwrap();
+                            window.set_focus().unwrap();
+                        }
+                    }
+                }
+                Err(_) => {}
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             is_windows,
             has_wsl,
