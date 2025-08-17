@@ -1,11 +1,15 @@
 #[cfg(target_os = "windows")]
-use crate::windows::{has_wsl, wsl_to_windows_path, windows_to_wsl_path};
-use std::{fs, path::PathBuf, process::{Command, Stdio}};
+use crate::windows::{has_wsl, windows_to_wsl_path, wsl_to_windows_path};
+use std::{
+    fs,
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
 pub fn symlink(target: &str, link: &str) -> std::io::Result<()> {
     #[cfg(not(target_os = "windows"))]
     {
-        return std::os::unix::fs::symlink(target, link); 
+        return std::os::unix::fs::symlink(target, link);
     }
     #[cfg(target_os = "windows")]
     {
@@ -27,7 +31,10 @@ pub fn symlink(target: &str, link: &str) -> std::io::Result<()> {
         if !output.status.success() {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("failed to create symlink: {}", String::from_utf8_lossy(&output.stderr)),
+                format!(
+                    "failed to create symlink: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ),
             ));
         }
     }
@@ -94,6 +101,7 @@ pub fn linux_env(key: &str) -> Result<String, String> {
     }
 }
 
+#[tauri::command]
 pub fn windows_path(path: &str) -> String {
     #[cfg(not(target_os = "windows"))]
     {
@@ -108,6 +116,7 @@ pub fn windows_path(path: &str) -> String {
     }
 }
 
+#[tauri::command]
 pub fn linux_path(path: &str) -> String {
     #[cfg(not(target_os = "windows"))]
     {

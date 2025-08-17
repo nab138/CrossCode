@@ -20,11 +20,12 @@ import {
   Event,
 } from "@codingame/monaco-vscode-api/vscode/vs/base/common/event";
 import * as fs from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
+import { platform } from "@tauri-apps/plugin-os";
 
 export default class TauriFileSystemProvider
   extends Disposable
-  implements IFileSystemProviderWithFileReadWriteCapability
-{
+  implements IFileSystemProviderWithFileReadWriteCapability {
   private _onDidChangeFile: Emitter<readonly IFileChange[]>;
 
   capabilities: FileSystemProviderCapabilities;
@@ -45,10 +46,11 @@ export default class TauriFileSystemProvider
     }
   }
   async readFile(resource: URI): Promise<Uint8Array> {
-    return await fs.readFile(resource.fsPath);
+    console.log("read", resource, await this.path(resource))
+    return await fs.readFile(await this.path(resource));
   }
   async writeFile(resource: URI, content: Uint8Array, opts: IFileWriteOptions) {
-    await fs.writeFile(resource.fsPath, content, {
+    await fs.writeFile(await this.path(resource), content, {
       create: opts.create,
       createNew: !opts.overwrite,
     });
@@ -61,7 +63,7 @@ export default class TauriFileSystemProvider
   }
 
   async stat(resource: URI): Promise<IStat> {
-    let stat = await fs.stat(resource.path);
+    let stat = await fs.stat(await this.path(resource));
     let type = stat.isFile ? FileType.File : FileType.Directory;
     if (stat.isSymlink) {
       type = FileType.SymbolicLink;
@@ -78,28 +80,30 @@ export default class TauriFileSystemProvider
 
   watch(resource: URI, opts: IWatchOptions): IDisposable {
     let disposed = false;
-    fs.watchImmediate(
-      resource.fsPath,
-      () => {
-        if (!disposed) {
-          // TODO: Exclude files based on opts.excludes and look into how recursive watch actually works
-          this._onDidChangeFile.fire([
-            {
-              type: FileChangeType.UPDATED,
-              resource,
-            },
-          ]);
+    (async () => {
+      fs.watchImmediate(
+        await this.path(resource),
+        () => {
+          if (!disposed) {
+            // TODO: Exclude files based on opts.excludes and look into how recursive watch actually works
+            this._onDidChangeFile.fire([
+              {
+                type: FileChangeType.UPDATED,
+                resource,
+              },
+            ]);
+          }
+        },
+        {
+          recursive: opts.recursive,
         }
-      },
-      {
-        recursive: opts.recursive,
-      }
-    ).then((unwatch) => {
-      if (disposed) {
-        unwatch();
-      }
-      (disposable as any)._unwatch = unwatch;
-    });
+      ).then((unwatch) => {
+        if (disposed) {
+          unwatch();
+        }
+        (disposable as any)._unwatch = unwatch;
+      });
+    })();
 
     const disposable: IDisposable = {
       dispose: () => {
@@ -131,5 +135,12 @@ export default class TauriFileSystemProvider
   // @ts-ignore
   rename(from: URI, to: URI, opts: IFileOverwriteOptions): Promise<void> {
     throw new Error("Rename not implemented.");
+  }
+
+  private async path(resource: URI): Promise<string> {
+    if (platform() === "windows") {
+      return await invoke<string>("windows_path", { path: resource.path });
+    }
+    return resource.fsPath;
   }
 }

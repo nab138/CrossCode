@@ -32,11 +32,13 @@ use builder::swift::{
 };
 use sourcekit_lsp::{get_server_status, start_sourcekit_server, stop_sourcekit_server};
 
+use builder::crossplatform::{windows_path, linux_path};
 use lsp_utils::{ensure_lsp_config, has_limited_ram, validate_project};
 use windows::{has_wsl, is_windows};
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .manage(sourcekit_lsp::create_server_state())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -69,6 +71,8 @@ fn main() {
             has_limited_ram,
             validate_project,
             ensure_lsp_config,
+            linux_path,
+            windows_path
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

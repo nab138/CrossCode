@@ -14,23 +14,23 @@ import { Uri } from "vscode";
 import { Toolchain } from "./IDEContext";
 import { invoke } from "@tauri-apps/api/core";
 
-export const initWebSocketAndStartClient = (
+export const initWebSocketAndStartClient = async (
   url: string,
   folder: string
-): WebSocket => {
+): Promise<WebSocket> => {
   const webSocket = new WebSocket(url);
+  let workspaceFolder = await invoke<string>("linux_path", {path: folder});
   webSocket.onopen = () => {
-    // creating messageTransport
     const socket = toSocket(webSocket);
     const reader = new WebSocketMessageReader(socket);
     const writer = new WebSocketMessageWriter(socket);
-    // creating language client
+
     const languageClient = createLanguageClient(
       {
         reader,
         writer,
       },
-      folder
+      workspaceFolder
     );
     languageClient.start();
     reader.onClose(() => languageClient.stop());
@@ -72,5 +72,5 @@ export const restartServer = async (
     toolchainPath: selectedToolchain?.path ?? "",
     folder: path || "",
   });
-  initWebSocketAndStartClient(`ws://localhost:${port}`, path || "");
+  await initWebSocketAndStartClient(`ws://localhost:${port}`, path || "");
 };

@@ -19,6 +19,8 @@ import { path } from "@tauri-apps/api";
 import * as fs from "@tauri-apps/plugin-fs";
 import { ClickAwayListener } from "@mui/material";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { invoke } from "@tauri-apps/api/core";
+import { platform } from "@tauri-apps/plugin-os";
 
 interface FileItemProps {
   filePath: string;
@@ -35,8 +37,12 @@ const FileItem: React.FC<FileItemProps> = ({
   openDefault = false,
   refresh = 0,
 }) => {
-  const handleOpenFile = useCallback(() => {
-    setOpenFile(filePath);
+  const handleOpenFile = useCallback(async () => {
+    if (platform() === "windows") {
+      setOpenFile(await invoke<string>("linux_path", { path: filePath }));
+    } else {
+      setOpenFile(filePath);
+    }
   }, [filePath]);
 
   const [children, setChildren] = useState<
@@ -168,10 +174,10 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
         setContextMenu(
           contextMenu === null
             ? {
-                mouseX: event.clientX + 2,
-                mouseY: event.clientY - 6,
-                filePath: path,
-              }
+              mouseX: event.clientX + 2,
+              mouseY: event.clientY - 6,
+              filePath: path,
+            }
             : null
         );
       }
@@ -218,16 +224,16 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
           anchorEl={
             contextMenu !== null
               ? ({
-                  getBoundingClientRect: () =>
-                    ({
-                      top: contextMenu.mouseY,
-                      left: contextMenu.mouseX,
-                      right: contextMenu.mouseX,
-                      bottom: contextMenu.mouseY,
-                      width: 0,
-                      height: 0,
-                    } as DOMRect),
-                } as any)
+                getBoundingClientRect: () =>
+                ({
+                  top: contextMenu.mouseY,
+                  left: contextMenu.mouseX,
+                  right: contextMenu.mouseX,
+                  bottom: contextMenu.mouseY,
+                  width: 0,
+                  height: 0,
+                } as DOMRect),
+              } as any)
               : undefined
           }
           placement="bottom-start"

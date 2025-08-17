@@ -9,7 +9,7 @@ use tokio::process::{Child, Command};
 use tokio::sync::{broadcast, mpsc, RwLock};
 use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
 
-use crate::builder::swift::validate_toolchain;
+use crate::builder::swift::{validate_toolchain, SwiftBin};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ServerStatus {
@@ -59,13 +59,9 @@ pub async fn start_sourcekit_server(
         return Err(format!("Invalid toolchain path: {}", toolchain_path));
     }
 
-    let sourcekit_bin = PathBuf::from(toolchain_path)
-        .join("usr")
-        .join("bin")
-        .join("sourcekit-lsp")
-        .to_string_lossy()
-        .to_string();
-    let mut child = Command::new(sourcekit_bin)
+    let swift_bin = SwiftBin::new(&toolchain_path)?;
+    let mut child = swift_bin
+        .sourcekitCommand()
         .current_dir(folder)
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
@@ -86,7 +82,7 @@ pub async fn start_sourcekit_server(
         .port();
 
     let (to_lsp_tx, mut to_lsp_rx) = mpsc::unbounded_channel::<String>();
-    let (from_lsp_tx, _from_lsp_rx) = broadcast::channel::<String>(100); // Fix: use broadcast::channel
+    let (from_lsp_tx, _from_lsp_rx) = broadcast::channel::<String>(100);
 
     let state_clone = state.inner().clone();
 
@@ -123,23 +119,20 @@ pub async fn start_sourcekit_server(
         loop {
             buffer.clear();
 
-            // Read headers
             let mut content_length = 0;
             loop {
                 buffer.clear();
                 match reader.read_line(&mut buffer).await {
-                    Ok(0) => return, // EOF
+                    Ok(0) => return,
                     Ok(_) => {
                         let line = buffer.trim();
                         if line.is_empty() {
-                            // Empty line indicates end of headers
                             break;
                         } else if line.starts_with("Content-Length:") {
                             if let Some(length_str) = line.strip_prefix("Content-Length:") {
                                 content_length = length_str.trim().parse::<usize>().unwrap_or(0);
                             }
                         }
-                        // Ignore other headers like Content-Type
                     }
                     Err(e) => {
                         eprintln!("Failed to read LSP headers: {}", e);

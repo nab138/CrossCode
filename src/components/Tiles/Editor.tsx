@@ -15,6 +15,7 @@ import getModelServiceOverride from "@codingame/monaco-vscode-model-service-over
 import "@codingame/monaco-vscode-swift-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import "vscode/localExtensionHost";
+import { platform } from "@tauri-apps/plugin-os";
 
 // adding worker
 export type WorkerLoader = () => Worker;
@@ -122,7 +123,7 @@ export default ({
           return new Promise((resolve) => {
             if (!editorRef.current) return resolve(undefined);
 
-            let path = modelRef.object.textEditorModel.uri.fsPath;
+            let path = platform() === "windows" ? modelRef.object.textEditorModel.uri.path : modelRef.object.textEditorModel.uri.fsPath;
 
             if (!path) return resolve(undefined);
             let tabIndex = currentTabsRef.current.findIndex(
@@ -339,15 +340,16 @@ export default ({
   useEffect(() => {
     let switchFile = async () => {
       if (!editor || focused === undefined || !tabs[focused]) return;
-      let file = monaco.Uri.file(tabs[focused]?.file || "");
+      let filePath = tabs[focused]?.file;
+      let file = monaco.Uri.file(filePath);
       let modelRef = await monaco.editor.createModelReference(file);
       modelRef.object.onDidChangeDirty(() => {
         setUnsavedFiles((files) => {
           if (modelRef.object.isDirty()) {
-            return [...files, modelRef.object.textEditorModel.uri.fsPath];
+            return [...files, tabs[focused]?.file];
           } else {
             return files.filter(
-              (f) => f !== modelRef.object.textEditorModel?.uri.fsPath
+              (f) => f !== tabs[focused]?.file
             );
           }
         });
