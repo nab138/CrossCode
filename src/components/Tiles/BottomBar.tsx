@@ -15,6 +15,10 @@ const tabs = [
       <Console key="lsp-message" channel="lsp-message" jsonPrettyPrint />
     ),
   },
+  {
+    name: "Console",
+    component: <Console key="syslog" channel="syslog-message" />,
+  },
   { name: "Terminal", component: <div>Terminal is coming soon!</div> },
 ];
 

@@ -4,17 +4,9 @@ import { listen } from "@tauri-apps/api/event";
 import Convert from "ansi-to-html";
 import { Virtuoso } from "react-virtuoso";
 import { useIDE } from "../../utilities/IDEContext";
+import { escapeHtml } from "./Console";
 
 const convert = new Convert();
-
-function escapeHtml(unsafe: string) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
 
 export default function CommandConsole() {
   const { consoleLines, setConsoleLines } = useIDE();

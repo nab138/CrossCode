@@ -6,7 +6,7 @@ import { Virtuoso } from "react-virtuoso";
 
 const convert = new Convert();
 
-function escapeHtml(unsafe: string) {
+export function escapeHtml(unsafe: string) {
   return unsafe
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -57,7 +57,7 @@ export default function Console({
     <div className="console-container">
       <Virtuoso
         className="console-tile"
-        atBottomThreshold={20}
+        atBottomThreshold={30}
         followOutput={"auto"}
         data={consoleLines}
         itemContent={(_, line) => (

@@ -15,43 +15,46 @@ mod sourcekit_lsp;
 #[macro_use]
 mod lsp_utils;
 
+use builder::crossplatform::{linux_path, windows_path};
+use builder::sdk::install_sdk_operation;
+use builder::swift::{
+    build_swift, clean_swift, deploy_swift, get_swiftly_toolchains, get_toolchain_info,
+    has_darwin_sdk, validate_toolchain,
+};
+use lsp_utils::{ensure_lsp_config, has_limited_ram, validate_project};
+use serde_json::Value;
 use sideloader::{
     apple_commands::{
         delete_app_id, delete_stored_credentials, get_apple_email, get_certificates, list_app_ids,
         reset_anisette, revoke_certificate,
     },
     sideload::refresh_idevice,
-};
-use tauri::Emitter;
-use templates::create_template;
-
-use builder::sdk::install_sdk_operation;
-use builder::swift::{
-    build_swift, clean_swift, deploy_swift, get_swiftly_toolchains, get_toolchain_info,
-    has_darwin_sdk, validate_toolchain,
+    syslog::{start_stream_syslog, stop_stream_syslog, SyslogStream},
 };
 use sourcekit_lsp::{get_server_status, start_sourcekit_server, stop_sourcekit_server};
-
-use builder::crossplatform::{linux_path, windows_path};
-use lsp_utils::{ensure_lsp_config, has_limited_ram, validate_project};
-use windows::{has_wsl, is_windows};
-
-use serde_json::Value;
+use std::sync::Arc;
+use tauri::Emitter;
 use tauri::Manager;
 use tauri_plugin_cli::CliExt;
 use tauri_plugin_store::StoreExt;
+use templates::create_template;
+use tokio::sync::Mutex;
+use windows::{has_wsl, is_windows};
 
 fn main() {
+    let syslog_stream: SyslogStream = Arc::new(Mutex::new(None));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_os::init())
-        .manage(sourcekit_lsp::create_server_state())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
+        .manage(sourcekit_lsp::create_server_state())
+        .manage(syslog_stream)
         .setup(|app| {
             match app.cli().matches() {
                 Ok(matches) => {
@@ -114,7 +117,9 @@ fn main() {
             validate_project,
             ensure_lsp_config,
             linux_path,
-            windows_path
+            windows_path,
+            start_stream_syslog,
+            stop_stream_syslog
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

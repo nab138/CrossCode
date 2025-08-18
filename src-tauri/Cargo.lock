@@ -2564,11 +2564,12 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "idevice"
-version = "0.1.37"
+version = "0.1.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b9d40e2753062fba4cac48cb459987dd9f66f6b777d90c546548f053bdd03c0"
+checksum = "ba0b622e87f6d44f62d976219e2581f9dce0f554f070c48ba44419bcdc3ee2fb"
 dependencies = [
  "base64 0.22.1",
+ "bytes",
  "chrono",
  "env_logger",
  "log",
@@ -2736,9 +2737,9 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
 name = "isideload"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f825a2890b96cf14be851419debce30b60ad7ed4c557f3923791f052fb53b9e"
+checksum = "bcd16157835ce49a4cfd974ec1dd87fe5ec715df79173e252cfa9be052405616"
 dependencies = [
  "futures",
  "hex",
@@ -7700,6 +7701,7 @@ dependencies = [
  "tauri-plugin-store",
  "tokio",
  "tokio-tungstenite",
+ "tokio-util",
  "toml 0.9.5",
  "uuid",
  "walkdir",

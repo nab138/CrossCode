@@ -19,7 +19,7 @@ tauri-plugin-fs = { version = "2", features= ["watch"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-store = "2"
 tauri-plugin-opener = "2"
-idevice = { version = "0.1.37", features = ["usbmuxd"] }
+idevice = { version = "0.1.39", features = ["usbmuxd", "syslog_relay"] }
 futures = "0.3.31"
 keyring = "2"
 once_cell = "1.21.3"
@@ -28,7 +28,7 @@ hex = "0.4.3"
 openssl = { version = "0.10", features = ["vendored"] }
 plist = { version = "1.7.2" }
 zip = { version = "4.1.0", default-features = false, features = ["deflate"] }
-isideload = { version = "0.1.5", features = ["vendored-botan", "vendored-openssl"] }
+isideload = { version = "0.1.6", features = ["vendored-botan", "vendored-openssl"] }
 uuid = "1.17.0"
 walkdir = "2.5.0"
 dircpy = "0.3.19"
@@ -44,6 +44,7 @@ futures-util = "0.3.31"
 sysinfo = "0.37.0"
 tauri-plugin-os = "2"
 tauri-plugin-process = "2"
+tokio-util = "0.7.16"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

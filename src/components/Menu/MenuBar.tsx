@@ -15,6 +15,8 @@ import {
   PhonelinkSetup,
   Refresh,
   CleaningServices,
+  Terminal,
+  StopCircle,
 } from "@mui/icons-material";
 import { useParams } from "react-router-dom";
 import { Divider, Option, Select } from "@mui/joy";
@@ -236,6 +238,32 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
           </ListItem>
         ))}
       <CommandButton
+        disabled={!selectedDevice}
+        tooltip="Start syslog"
+        variant="plain"
+        command="start_stream_syslog"
+        icon={<Terminal />}
+        parameters={{
+          device: selectedDevice,
+        }}
+        validate={() => {
+          if (!selectedDevice) {
+            addToast.error("Please select a device to stream the syslog from");
+            return false;
+          }
+          return true;
+        }}
+        sx={{ marginLeft: "auto", marginRight: 0 }}
+      />
+      <CommandButton
+        tooltip="Stop syslog"
+        variant="plain"
+        command="stop_stream_syslog"
+        icon={<StopCircle />}
+        sx={{ marginRight: 0 }}
+      />
+      <Divider orientation="vertical" />
+      <CommandButton
         variant="plain"
         command="clean_swift"
         icon={<CleaningServices />}
@@ -244,7 +272,7 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
           toolchainPath: selectedToolchain?.path ?? "",
         }}
         tooltip="Clean"
-        sx={{ marginLeft: "auto", marginRight: 0 }}
+        sx={{ marginRight: 0 }}
       />
       <CommandButton
         variant="plain"

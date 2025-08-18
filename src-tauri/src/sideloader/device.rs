@@ -44,7 +44,7 @@ pub async fn list_devices() -> Result<Vec<DeviceInfo>, String> {
             };
 
             let device_name = lockdown_client
-                .get_value("DeviceName", None)
+                .get_value(Some("DeviceName"), None)
                 .await
                 .expect("Failed to get device name")
                 .as_string()
