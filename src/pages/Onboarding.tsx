@@ -10,6 +10,7 @@ import SwiftMenu from "../components/SwiftMenu";
 import SDKMenu from "../components/SDKMenu";
 import ErrorIcon from "@mui/icons-material/Error";
 import WarningIcon from "@mui/icons-material/Warning";
+import { getVersion } from "@tauri-apps/api/app";
 
 export interface OnboardingProps {}
 
@@ -23,6 +24,7 @@ export default ({}: OnboardingProps) => {
     hasDarwinSDK,
   } = useIDE();
   const [ready, setReady] = useState(false);
+  const [version, setVersion] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,12 +39,29 @@ export default ({}: OnboardingProps) => {
     }
   }, [selectedToolchain, toolchains, hasWSL, isWindows, hasDarwinSDK]);
 
+  useEffect(() => {
+    const fetchVersion = async () => {
+      const version = await getVersion();
+      setVersion(version);
+    };
+    fetchVersion();
+  }, []);
+
   return (
     <div className="onboarding">
       <div className="onboarding-header">
         <img src={logo} alt="YCode Logo" className="onboarding-logo" />
         <div>
-          <Typography level="h1">Welcome to YCode!</Typography>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              gap: "var(--padding-sm)",
+            }}
+          >
+            <Typography level="h1">Welcome to YCode!</Typography>
+            {version && <Typography level="body-sm">v{version}</Typography>}
+          </div>
           <Typography level="body-sm">
             IDE for iOS Development on Windows and Linux
           </Typography>

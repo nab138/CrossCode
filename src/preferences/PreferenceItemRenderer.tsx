@@ -40,13 +40,10 @@ export default function PreferenceItemRenderer({
     return (
       <FormControl className="prefs-setting">
         <div className="prefs-setting-row">
-          <div className="prefs-label">{item.name}: </div>
-          <Typography
-            level="body-sm"
-            sx={{ color: "var(--joy-palette-neutral-500)" }}
-          >
-            {info}
+          <Typography level="body-md" className="prefs-label">
+            {item.name}:
           </Typography>
+          <Typography level="body-md">{info}</Typography>
         </div>
         {item.description && (
           <Typography
@@ -87,7 +84,9 @@ export default function PreferenceItemRenderer({
     <FormControl className="prefs-setting" error={!!error}>
       <div className="prefs-setting-row">
         {item.type !== "button" && (
-          <div className="prefs-label">{item.name}</div>
+          <Typography level="body-md" className="prefs-label">
+            {item.name}:
+          </Typography>
         )}
 
         <div className="prefs-input">
