@@ -39,6 +39,7 @@ use windows::{has_wsl, is_windows};
 use serde_json::Value;
 use tauri::Manager;
 use tauri_plugin_cli::CliExt;
+use tauri_plugin_store::StoreExt;
 
 fn main() {
     tauri::Builder::default()
@@ -63,6 +64,27 @@ fn main() {
                 }
                 Err(_) => {}
             }
+
+            let store = app.store("preferences.json")?;
+
+            let open_last = if store.has("general/startup") {
+                store.get("general/startup").unwrap().as_str().unwrap() == "open-last"
+            } else {
+                true
+            };
+
+            if open_last {
+                if let Some(last_project) = store.get("last-opened-project") {
+                    if last_project.is_string() {
+                        let path = last_project.as_str().unwrap();
+                        let url_str = format!("/ide/{}", path);
+                        app.get_webview_window("main")
+                            .unwrap()
+                            .eval(&format!("window.location.replace('{}')", url_str))?;
+                    }
+                }
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

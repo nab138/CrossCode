@@ -1,4 +1,4 @@
-import { createPreferencePage } from "../helpers";
+import { createItems, createPreferencePage } from "../helpers";
 import { getVersion } from "@tauri-apps/api/app";
 
 export const generalPage = createPreferencePage(
@@ -14,6 +14,22 @@ export const generalPage = createPreferencePage(
         return await getVersion();
       },
     },
+    createItems.select(
+      "startup",
+      "Startup Behavior",
+      [
+        {
+          label: "Open last project",
+          value: "open-last",
+        },
+        {
+          label: "Show welcome page",
+          value: "welcome",
+        },
+      ],
+      "What to do when the app starts.",
+      "open-last"
+    ),
   ],
   {
     description: "General application settings",

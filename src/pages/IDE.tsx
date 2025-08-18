@@ -66,6 +66,13 @@ export default () => {
   const [editor, setEditor] = useState<IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
+    (async () => {
+      if (!store || !storeInitialized || !path) return;
+      await store.set("last-opened-project", encodeURIComponent(path!));
+    })();
+  }, [path, store, storeInitialized]);
+
+  useEffect(() => {
     if (
       path === undefined ||
       path === null ||
