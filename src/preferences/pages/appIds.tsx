@@ -1,6 +1,6 @@
 import { createCustomPreferencePage } from "../helpers";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "../../utilities/StoreContext";
 import {
   Accordion,
@@ -38,9 +38,12 @@ const AppIdsComponent = () => {
     "ani.sidestore.io"
   );
   const [canDelete] = useStore<boolean>("developer/delete-app-ids", false);
+  const loadingRef = useRef<boolean>(false);
 
   useEffect(() => {
     let fetch = async () => {
+      if (loadingRef.current) return;
+      loadingRef.current = true;
       let ids = await invoke<AppIdsResponse>("list_app_ids", {
         anisetteServer,
       });
@@ -48,6 +51,7 @@ const AppIdsComponent = () => {
       setMaxQuantity(ids.max_quantity);
       setAvailableQuantity(ids.available_quantity);
       setLoading(false);
+      loadingRef.current = false;
     };
     fetch().catch((e) => {
       console.error("Failed to fetch certificates:", e);
@@ -55,6 +59,7 @@ const AppIdsComponent = () => {
         "Failed to load certificates: " + e + "\nPlease try again later."
       );
       setLoading(false);
+      loadingRef.current = false;
     });
   }, []);
 

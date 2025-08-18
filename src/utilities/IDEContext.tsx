@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Window } from "@tauri-apps/api/window";
+import { getCurrentWindow, Window } from "@tauri-apps/api/window";
 import { emit, listen } from "@tauri-apps/api/event";
 import * as dialog from "@tauri-apps/plugin-dialog";
 import { useToast } from "react-toast-plus";
@@ -25,6 +25,8 @@ import { useCommandRunner } from "./Command";
 import { useStore } from "./StoreContext";
 import { Operation, OperationState, OperationUpdate } from "./operations";
 import OperationView from "../components/OperationView";
+
+let isMainWindow = getCurrentWindow().label === "main";
 
 export interface IDEContextType {
   initialized: boolean;
@@ -240,8 +242,12 @@ export const IDEProvider: React.FC<{
   useEffect(() => {
     if (!listener2Added.current) {
       (async () => {
-        const unlistenFn = await listen("2fa-required", () => {
-          setTfaOpen(true);
+        const unlistenFn = await listen("2fa-required", async () => {
+          if (isMainWindow) {
+            setTfaOpen(true);
+          } else {
+            addToast.info("Please complete 2FA in the main window.");
+          }
         });
         unlisten2fa.current = unlistenFn;
       })();
@@ -256,7 +262,11 @@ export const IDEProvider: React.FC<{
     if (!listener3Added.current) {
       (async () => {
         const unlistenFn = await listen("apple-id-required", () => {
-          setAppleIdOpen(true);
+          if (isMainWindow) {
+            setAppleIdOpen(true);
+          } else {
+            addToast.info("Please login to your Apple ID in the main window.");
+          }
         });
         unlistenAppleid.current = unlistenFn;
       })();

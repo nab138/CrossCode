@@ -1,6 +1,6 @@
 import { createCustomPreferencePage } from "../helpers";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "../../utilities/StoreContext";
 import { Button, Typography } from "@mui/joy";
 
@@ -19,13 +19,17 @@ const CertificatesComponent = () => {
     "apple-id/anisette-server",
     "ani.sidestore.io"
   );
+  const loadingRef = useRef<boolean>(false);
   useEffect(() => {
     let fetch = async () => {
+      if (loadingRef.current) return;
+      loadingRef.current = true;
       let certs = await invoke<Certificate[]>("get_certificates", {
         anisetteServer,
       });
       setCertificates(certs);
       setLoading(false);
+      loadingRef.current = false;
     };
     fetch().catch((e) => {
       console.error("Failed to fetch certificates:", e);
@@ -33,6 +37,7 @@ const CertificatesComponent = () => {
         "Failed to load certificates: " + e + "\nPlease try again later."
       );
       setLoading(false);
+      loadingRef.current = false;
     });
   }, []);
 
