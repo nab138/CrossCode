@@ -1,4 +1,15 @@
-# CrossCode
+
+<img align="left" width="120" height="120" src="/logo.png"> 
+
+<div id="user-content-toc">
+  <ul style="list-style: none;">
+    <summary>
+      <h1>Crosscode</h1>
+    </summary>
+  </ul>
+</div>
+
+---
 
 [![Build CrossCode](https://github.com/nab138/CrossCode/actions/workflows/build.yml/badge.svg)](https://github.com/nab138/CrossCode/actions/workflows/build.yml)
 
