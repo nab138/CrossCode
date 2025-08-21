@@ -4,7 +4,7 @@
 <div id="user-content-toc">
   <ul style="list-style: none;">
     <summary>
-      <h1>Crosscode</h1>
+      <h1>CrossCode</h1>
     </summary>
   </ul>
 </div>
