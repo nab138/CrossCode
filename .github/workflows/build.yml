@@ -30,9 +30,9 @@ jobs:
             ~/.cargo/git
             src-tauri/target
             node_modules
-          key: ${{ runner.os }}-tauri-${{ hashFiles('**/Cargo.lock', 'package-lock.json') }}
+          key: ${{ runner.os }}-crosscode-${{ hashFiles('**/Cargo.lock', 'package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-tauri-
+            ${{ runner.os }}-crosscode-
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
