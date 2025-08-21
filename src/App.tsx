@@ -12,6 +12,7 @@ import { CommandProvider } from "./utilities/Command";
 import { ToastProvider } from "react-toast-plus";
 import New from "./pages/New";
 import NewTemplate from "./pages/NewTemplate";
+import "vscode/localExtensionHost";
 
 declare module "@mui/joy/IconButton" {
   interface IconButtonPropsSizeOverrides {

@@ -14,14 +14,14 @@
   },
   "dependencies": {
     "@codingame/esbuild-import-meta-url-plugin": "^1.0.3",
-    "@codingame/monaco-vscode-api": "18.1.0",
-    "@codingame/monaco-vscode-languages-service-override": "18.1.0",
-    "@codingame/monaco-vscode-model-service-override": "18.1.0",
-    "@codingame/monaco-vscode-swift-default-extension": "18.1.0",
-    "@codingame/monaco-vscode-textmate-service-override": "18.1.0",
-    "@codingame/monaco-vscode-theme-defaults-default-extension": "18.1.0",
-    "@codingame/monaco-vscode-theme-service-override": "18.1.0",
-    "@codingame/monaco-vscode-views-service-override": "^18.1.0",
+    "@codingame/monaco-vscode-api": "~20.2.1",
+    "@codingame/monaco-vscode-languages-service-override": "~20.2.1",
+    "@codingame/monaco-vscode-model-service-override": "~20.2.1",
+    "@codingame/monaco-vscode-swift-default-extension": "~20.2.1",
+    "@codingame/monaco-vscode-textmate-service-override": "~20.2.1",
+    "@codingame/monaco-vscode-theme-defaults-default-extension": "~20.2.1",
+    "@codingame/monaco-vscode-theme-service-override": "~20.2.1",
+    "@codingame/monaco-vscode-views-service-override": "~20.2.1",
     "@devbookhq/splitter": "^1.4.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -40,7 +40,7 @@
     "@tauri-apps/plugin-store": "~2",
     "ansi-to-html": "^0.7.2",
     "async-mutex": "^0.5.0",
-    "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@18.1.0",
+    "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@~20.2.1",
     "monaco-languageclient": "^9.8.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -48,7 +48,7 @@
     "react-router-dom": "^7.5.1",
     "react-toast-plus": "^0.1.2",
     "react-virtuoso": "^4.12.6",
-    "vscode": "npm:@codingame/monaco-vscode-extension-api@18.1.0",
+    "vscode": "npm:@codingame/monaco-vscode-extension-api@~20.2.1",
     "vscode-ws-jsonrpc": "^3.4.0"
   },
   "devDependencies": {
@@ -59,18 +59,5 @@
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.0.2",
     "vite": "^7.0.0"
-  },
-  "overrides": {
-    "monaco-languageclient": {
-      "@codingame/monaco-vscode-api": "18.1.0",
-      "@codingame/monaco-vscode-configuration-service-override@": "18.1.0",
-      "@codingame/monaco-vscode-editor-api": "18.1.0",
-      "@codingame/monaco-vscode-editor-service-override": "18.1.0",
-      "@codingame/monaco-vscode-extension-api": "18.1.0",
-      "@codingame/monaco-vscode-localization-service-override": "18.1.0",
-      "@codingame/monaco-vscode-log-service-override": "18.1.0",
-      "@codingame/monaco-vscode-model-service-override": "18.1.0",
-      "vscode": "@codingame/monaco-vscode-extension-api@18.1.0"
-    }
   }
 }

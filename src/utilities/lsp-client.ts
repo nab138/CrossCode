@@ -10,9 +10,9 @@ import {
 import { WebSocketMessageWriter } from "vscode-ws-jsonrpc";
 import { toSocket } from "vscode-ws-jsonrpc";
 import { MonacoLanguageClient } from "monaco-languageclient";
-import { Uri } from "vscode";
 import { Toolchain } from "./IDEContext";
 import { invoke } from "@tauri-apps/api/core";
+import { Uri } from "monaco-editor";
 
 export const initWebSocketAndStartClient = async (
   url: string,

@@ -21,6 +21,8 @@ use builder::swift::{
     build_swift, clean_swift, deploy_swift, get_swiftly_toolchains, get_toolchain_info,
     has_darwin_sdk, validate_toolchain,
 };
+use idevice::provider::IdeviceProvider;
+use idevice::usbmuxd::UsbmuxdConnection;
 use lsp_utils::{ensure_lsp_config, has_limited_ram, validate_project};
 use serde_json::Value;
 use sideloader::{
@@ -32,6 +34,7 @@ use sideloader::{
     syslog::{start_stream_syslog, stop_stream_syslog, SyslogStream},
 };
 use sourcekit_lsp::{get_server_status, start_sourcekit_server, stop_sourcekit_server};
+use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use tauri::Emitter;
 use tauri::Manager;

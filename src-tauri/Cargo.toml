@@ -18,7 +18,9 @@ tauri-plugin-shell = "2"
 tauri-plugin-fs = { version = "2", features= ["watch"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-store = "2"
-tauri-plugin-opener = "2"
+tauri-plugin-opener = "2.5"
+tauri-plugin-os = "2"
+tauri-plugin-process = "2"
 idevice = { version = "0.1.39", features = ["usbmuxd", "syslog_relay"] }
 futures = "0.3.31"
 keyring = "2"
@@ -42,8 +44,6 @@ tokio = { version = "1.47.0", features = ["process"] }
 tokio-tungstenite = "0.27.0"
 futures-util = "0.3.31"
 sysinfo = "0.37.0"
-tauri-plugin-os = "2"
-tauri-plugin-process = "2"
 tokio-util = "0.7.16"
 
 [features]

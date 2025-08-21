@@ -5,7 +5,6 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
 import * as monaco from "monaco-editor";
-
 import { initialize, ITextEditorOptions } from "@codingame/monaco-vscode-api";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
 import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-override";
@@ -14,10 +13,8 @@ import getEditorServiceOverride from "@codingame/monaco-vscode-editor-service-ov
 import getModelServiceOverride from "@codingame/monaco-vscode-model-service-override";
 import "@codingame/monaco-vscode-swift-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
-import "vscode/localExtensionHost";
 import { platform } from "@tauri-apps/plugin-os";
 
-// adding worker
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
   TextEditorWorker: () =>
