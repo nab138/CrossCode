@@ -59,7 +59,7 @@ export default function Console({
         className="console-tile"
         atBottomThreshold={30}
         followOutput={"auto"}
-        data={consoleLines.filter((l) => l.toLowerCase().includes("banana"))}
+        data={consoleLines}
         itemContent={(_, line) => (
           <pre
             style={{ margin: 0, width: "fit-content", padding: 0 }}
