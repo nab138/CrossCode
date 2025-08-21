@@ -9,6 +9,7 @@ import { useToast } from "react-toast-plus";
 import { MenuItem } from "@mui/joy";
 import { invoke } from "@tauri-apps/api/core";
 import { restartServer } from "../../utilities/lsp-client";
+import { open } from "@tauri-apps/plugin-dialog";
 
 export default [
   {
@@ -80,6 +81,50 @@ export default [
             shortcut: "Ctrl+Shift+Z",
             ignoreShortcutInMonaco: true,
             callbackName: "redo",
+          },
+        ],
+      },
+      {
+        label: "Icon",
+        items: [
+          {
+            name: "Import Icon",
+            component: () => {
+              const { path } = useParams<"path">();
+              const { addToast } = useToast();
+              return (
+                <MenuItem
+                  onClick={async () => {
+                    if (!path) return;
+                    const iconPath = await open({
+                      title: "Select Icon",
+                      multiple: false,
+                      directory: false,
+                      filters: [
+                        {
+                          name: "Images",
+                          extensions: ["png", "jpg", "jpeg", "gif"],
+                        },
+                      ],
+                    });
+                    addToast.promise(
+                      invoke("import_icon", {
+                        projectPath: path,
+                        iconPath: iconPath,
+                      }),
+                      {
+                        pending: "Importing icon...",
+                        success: "Successfully imported icon!",
+                        error: "Failed to import icon",
+                      }
+                    );
+                  }}
+                  id="startLSPMenuBtn"
+                >
+                  Import Icon
+                </MenuItem>
+              );
+            },
           },
         ],
       },

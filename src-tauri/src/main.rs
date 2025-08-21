@@ -16,6 +16,7 @@ mod sourcekit_lsp;
 mod lsp_utils;
 
 use builder::crossplatform::{linux_path, windows_path};
+use builder::icon::import_icon;
 use builder::sdk::install_sdk_operation;
 use builder::swift::{
     build_swift, clean_swift, deploy_swift, get_swiftly_toolchains, get_toolchain_info,
@@ -127,7 +128,8 @@ fn main() {
             linux_path,
             windows_path,
             start_stream_syslog,
-            stop_stream_syslog
+            stop_stream_syslog,
+            import_icon,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
