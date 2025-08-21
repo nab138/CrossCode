@@ -58,6 +58,15 @@ export interface EditorProps {
   >;
 }
 
+let globalInitialized = false;
+let globalEditorServiceCallbacks = {
+  currentTabsRef: { current: [] as { name: string; file: string }[] },
+  setFocusedRef: { current: (() => {}) as any },
+  openNewFileRef: { current: (() => {}) as any },
+  editorRef: { current: null as monaco.editor.IStandaloneCodeEditor | null },
+  selectionOverrideRef: { current: null as ITextEditorOptions | null },
+};
+
 export default ({
   openFiles,
   focusedFile,
@@ -87,15 +96,23 @@ export default ({
   const { mode } = useColorScheme();
 
   const monacoEl = useRef(null);
-  const hasInitialized = useRef(false);
   const [initialized, setInitialized] = useState(false);
   const currentTabsRef = useRef(tabs);
   const setFocusedRef = useRef(setFocused);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const openNewFileRef = useRef(openNewFile);
   const selectionOverrideRef = useRef<ITextEditorOptions | null>(null);
+  const hasInitializedRef = useRef(false);
 
   let [hoveredOnBtn, setHoveredOnBtn] = useState<number | null>(null);
+
+  useEffect(() => {
+    globalEditorServiceCallbacks.currentTabsRef = currentTabsRef;
+    globalEditorServiceCallbacks.setFocusedRef = setFocusedRef;
+    globalEditorServiceCallbacks.editorRef = editorRef;
+    globalEditorServiceCallbacks.openNewFileRef = openNewFileRef;
+    globalEditorServiceCallbacks.selectionOverrideRef = selectionOverrideRef;
+  });
 
   useEffect(() => {
     editorRef.current = editor;
@@ -116,16 +133,21 @@ export default ({
 
   useEffect(() => {
     const initializeEditor = async () => {
-      if (hasInitialized.current) return;
+      if (globalInitialized && !hasInitializedRef.current) {
+        setInitialized(true);
+        hasInitializedRef.current = true;
+        return;
+      }
 
-      hasInitialized.current = true;
+      globalInitialized = true;
       await initialize({
         ...getTextMateServiceOverride(),
         ...getThemeServiceOverride(),
         ...getLanguagesServiceOverride(),
         ...getEditorServiceOverride((modelRef, options) => {
           return new Promise((resolve) => {
-            if (!editorRef.current) return resolve(undefined);
+            if (!globalEditorServiceCallbacks.editorRef.current)
+              return resolve(undefined);
 
             let path =
               platform() === "windows"
@@ -133,19 +155,21 @@ export default ({
                 : modelRef.object.textEditorModel.uri.fsPath;
 
             if (!path) return resolve(undefined);
-            let tabIndex = currentTabsRef.current.findIndex(
-              (tab) => tab.file === path
-            );
+            let tabIndex =
+              globalEditorServiceCallbacks.currentTabsRef.current.findIndex(
+                (tab) => tab.file === path
+              );
             if (options !== undefined) {
               const opts = options as ITextEditorOptions | undefined;
               if (opts?.selection) {
-                selectionOverrideRef.current = opts;
+                globalEditorServiceCallbacks.selectionOverrideRef.current =
+                  opts;
               }
             }
             if (tabIndex === -1) {
-              openNewFileRef.current(path);
+              globalEditorServiceCallbacks.openNewFileRef.current(path);
             } else {
-              setFocusedRef.current(tabIndex);
+              globalEditorServiceCallbacks.setFocusedRef.current(tabIndex);
             }
 
             resolve(undefined);
@@ -154,6 +178,7 @@ export default ({
         ...getModelServiceOverride(),
       });
       setInitialized(true);
+      hasInitializedRef.current = true;
     };
 
     initializeEditor();
