@@ -156,7 +156,6 @@ export default () => {
 
   const selectFile = useCallback(async () => {
     const file = await openFileDialog({ multiple: false, directory: false });
-    console.log(file);
     if (file) {
       openNewFile(file);
     }

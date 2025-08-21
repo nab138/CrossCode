@@ -21,6 +21,7 @@ import { ClickAwayListener } from "@mui/material";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { invoke } from "@tauri-apps/api/core";
 import { platform } from "@tauri-apps/plugin-os";
+import { useToast } from "react-toast-plus";
 
 interface FileItemProps {
   filePath: string;
@@ -158,6 +159,8 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
     isFolder: boolean;
   } | null>(null);
 
+  const { addToast } = useToast();
+
   const [refresh, setRefresh] = useState(0);
 
   const [renameOpen, setRenameOpen] = useState(false);
@@ -176,8 +179,6 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
       const path = event.target.getAttribute("data-path");
       if (path) {
         event.preventDefault();
-
-        console.log(event.target);
 
         setContextMenu(
           contextMenu === null
@@ -220,6 +221,10 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
   const handleNewFile = async () => {
     if (!newTarget) return;
     const newPath = await path.resolve(newTarget, newValue);
+    if (await fs.exists(newPath)) {
+      addToast.error("File already exists!");
+      return;
+    }
     await fs.writeTextFile(newPath, "");
     setNewOpen(false);
     setNewTarget(null);

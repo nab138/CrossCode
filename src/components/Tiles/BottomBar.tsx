@@ -74,7 +74,6 @@ export default function BottomBar() {
                 return false;
               }
               setFocused(2);
-              console.log("valid!");
               return true;
             }}
             label="Start Syslog"
