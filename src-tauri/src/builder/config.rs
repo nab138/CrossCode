@@ -155,8 +155,8 @@ impl TomlConfig {
     }
 
     fn load(project_path: PathBuf) -> Result<Self, String> {
-        let content =
-            std::fs::read_to_string(project_path.join("crosscode.toml")).map_err(|e| e.to_string())?;
+        let content = std::fs::read_to_string(project_path.join("crosscode.toml"))
+            .map_err(|e| e.to_string())?;
         let config: TomlConfig = toml::from_str(&content).map_err(|e| e.to_string())?;
         if config.format_version != FORMAT_VERSION {
             return Err(format!(
