@@ -30,7 +30,7 @@ pub async fn start_stream_syslog(
         .await
         .map_err(|e| format!("Failed to get device: {}", e))?;
 
-    let provider = device_info.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "y-code");
+    let provider = device_info.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "crosscode");
 
     let mut relay_client = SyslogRelayClient::connect(&provider)
         .await

@@ -14,7 +14,7 @@ pub fn pack(
     config: &ProjectConfig,
     build_settings: &BuildSettings,
 ) -> Result<PathBuf, String> {
-    let workdir = project_path.join(".ycode").join("Payload");
+    let workdir = project_path.join(".crosscode").join("Payload");
     if !workdir.exists() {
         std::fs::create_dir_all(&workdir)
             .map_err(|e| format!("Failed to create work directory: {}", e))?;

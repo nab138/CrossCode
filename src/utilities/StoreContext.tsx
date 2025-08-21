@@ -41,7 +41,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({
       await setTheme(theme as "light" | "dark");
       setMode(theme as "light" | "dark");
 
-      storeInstance.set("isYCodePrefs", true);
+      storeInstance.set("isCrossCodePrefs", true);
 
       const keys = await storeInstance.keys();
       const values: { [key: string]: any } = {};

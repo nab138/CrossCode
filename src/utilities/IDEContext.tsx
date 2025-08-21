@@ -452,7 +452,8 @@ export const IDEProvider: React.FC<{
           <Typography level="body-xs">
             Your credentials will only be sent to apple. In general, never trust
             a third-party app with your Apple ID. We recommend using a burner
-            account with YCode and other sideloaders. (YCode is not very secure)
+            account with CrossCode and other sideloaders. (CrossCode is not very
+            secure)
           </Typography>
           <form
             onSubmit={() => {

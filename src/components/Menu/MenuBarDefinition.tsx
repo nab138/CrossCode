@@ -308,18 +308,18 @@ export default [
     label: "Help",
     items: [
       {
-        label: "About YCode",
+        label: "About CrossCode",
         items: [
           {
             name: "View Github",
             callback: () => {
-              openUrl("https://github.com/nab138/YCode");
+              openUrl("https://github.com/nab138/CrossCode");
             },
           },
           {
             name: "Report Issue",
             callback: () => {
-              openUrl("https://github.com/nab138/YCode/issues");
+              openUrl("https://github.com/nab138/CrossCode/issues");
             },
           },
         ],

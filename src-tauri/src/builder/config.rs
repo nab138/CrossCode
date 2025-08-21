@@ -91,7 +91,7 @@ impl ProjectConfig {
         if !project_path.join("Package.swift").exists() {
             return ProjectValidation::Invalid;
         }
-        if !project_path.join("ycode.toml").exists() {
+        if !project_path.join("crosscode.toml").exists() {
             return ProjectValidation::Invalid;
         }
         let config_res = TomlConfig::load(project_path.clone());
@@ -156,7 +156,7 @@ impl TomlConfig {
 
     fn load(project_path: PathBuf) -> Result<Self, String> {
         let content =
-            std::fs::read_to_string(project_path.join("ycode.toml")).map_err(|e| e.to_string())?;
+            std::fs::read_to_string(project_path.join("crosscode.toml")).map_err(|e| e.to_string())?;
         let config: TomlConfig = toml::from_str(&content).map_err(|e| e.to_string())?;
         if config.format_version != FORMAT_VERSION {
             return Err(format!(
@@ -169,7 +169,7 @@ impl TomlConfig {
 
     pub fn save(&self, project_path: PathBuf) -> Result<(), String> {
         let content = toml::to_string(self).map_err(|e| e.to_string())?;
-        std::fs::write(project_path.join("ycode.toml"), content).map_err(|e| e.to_string())?;
+        std::fs::write(project_path.join("crosscode.toml"), content).map_err(|e| e.to_string())?;
         Ok(())
     }
 }

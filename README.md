@@ -1,6 +1,6 @@
-# YCode
+# CrossCode
 
-[![Build YCode](https://github.com/nab138/YCode/actions/workflows/build.yml/badge.svg)](https://github.com/nab138/YCode/actions/workflows/build.yml)
+[![Build CrossCode](https://github.com/nab138/CrossCode/actions/workflows/build.yml/badge.svg)](https://github.com/nab138/CrossCode/actions/workflows/build.yml)
 
 iOS Development IDE for linux and windows, built with [Tauri](https://tauri.app/).
 
@@ -8,15 +8,15 @@ Coming soon...
 
 ## Installation
 
-YCode is currently in development and not recommended for use. However, if you want to try it out, your feedback would be greatly appreciated!
+CrossCode is currently in development and not recommended for use. However, if you want to try it out, your feedback would be greatly appreciated!
 
-You can download the latest build from [actions](https://github.com/nab138/YCode/actions/workflows/build.yml).
+You can download the latest build from [actions](https://github.com/nab138/CrossCode/actions/workflows/build.yml).
 
 ## How it works
 
 - A darwin SDK is generated from a user provided copy of Xcode 16.3 (extracted with [unxip](https://github.com/saagarjha/unxip)) and darwin tools from [darwin-tools-linux-llvm](https://github.com/xtool-org/darwin-tools-linux-llvm)
 - Swift uses the darwin SDK to build an executable which is packaged into an .app bundle.
-- The code to sign and install apps onto a device has been removed from YCode's source and moved to a standalone package, [isideload](https://github.com/nab138/isideload). It was built on a lot of other libraries, so check out its README for more info.
+- The code to sign and install apps onto a device has been removed from CrossCode's source and moved to a standalone package, [isideload](https://github.com/nab138/isideload). It was built on a lot of other libraries, so check out its README for more info.
 
 Supports swift 6.1 and the swift package manager.
 

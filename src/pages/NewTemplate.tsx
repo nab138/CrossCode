@@ -49,7 +49,7 @@ export default () => {
   return (
     <div className="onboarding">
       <div className="onboarding-header">
-        <img src={logo} alt="YCode Logo" className="onboarding-logo" />
+        <img src={logo} alt="CrossCode Logo" className="onboarding-logo" />
         <div>
           <Typography level="h1">{template.name}</Typography>
           <Typography level="body-sm">{template.description}</Typography>

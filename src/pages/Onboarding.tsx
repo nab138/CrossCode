@@ -50,7 +50,7 @@ export default ({}: OnboardingProps) => {
   return (
     <div className="onboarding">
       <div className="onboarding-header">
-        <img src={logo} alt="YCode Logo" className="onboarding-logo" />
+        <img src={logo} alt="CrossCode Logo" className="onboarding-logo" />
         <div>
           <div
             style={{
@@ -59,7 +59,7 @@ export default ({}: OnboardingProps) => {
               gap: "var(--padding-sm)",
             }}
           >
-            <Typography level="h1">Welcome to YCode!</Typography>
+            <Typography level="h1">Welcome to CrossCode!</Typography>
             {version && <Typography level="body-sm">v{version}</Typography>}
           </div>
           <Typography level="body-sm">
@@ -81,13 +81,13 @@ export default ({}: OnboardingProps) => {
           <WarningIcon sx={{ width: "1.5rem" }} />
         </Typography>
         <Typography level="body-md">
-          This is an early access version of YCode. Expect bugs. Please report
-          any issues you find on{" "}
+          This is an early access version of CrossCode. Expect bugs. Please
+          report any issues you find on{" "}
           <Link
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              open("https://github.com/nab138/ycode/issues");
+              open("https://github.com/nab138/CrossCode/issues");
             }}
           >
             github
@@ -123,11 +123,11 @@ export default ({}: OnboardingProps) => {
         color={ready ? undefined : "danger"}
       >
         {ready ? (
-          "Use the cards below to manage your YCode setup"
+          "Use the cards below to manage your CrossCode setup"
         ) : (
           <>
             <ErrorIcon />
-            One or more issues need to be resolved before you can use YCode
+            One or more issues need to be resolved before you can use CrossCode
           </>
         )}
       </Typography>
@@ -136,7 +136,7 @@ export default ({}: OnboardingProps) => {
           <Card variant="soft">
             <Typography level="h3">Windows Subsystem for Linux</Typography>
             <Typography level="body-sm">
-              Windows Subsystem for Linux (WSL) is required to use YCode on
+              Windows Subsystem for Linux (WSL) is required to use CrossCode on
               Windows. Learn more about WSL on{" "}
               <Link
                 href="#"
@@ -148,8 +148,8 @@ export default ({}: OnboardingProps) => {
                 microsoft.com
               </Link>
               . We recommended installing WSL 2 and Ubuntu. Other distributions
-              may work, but are not officially supported. YCode will use your
-              default WSL distribution.
+              may work, but are not officially supported. CrossCode will use
+              your default WSL distribution.
             </Typography>
             <Divider />
             <CardContent>
@@ -183,8 +183,9 @@ export default ({}: OnboardingProps) => {
         <Card variant="soft">
           <Typography level="h3">Swift</Typography>
           <Typography level="body-sm">
-            You will need a Swift 6.1 toolchain to use YCode. It is recommended
-            to install it using swiftly, but you can also install it manually.
+            You will need a Swift 6.1 toolchain to use CrossCode. It is
+            recommended to install it using swiftly, but you can also install it
+            manually.
           </Typography>
           <Divider />
           <CardContent>
@@ -194,7 +195,7 @@ export default ({}: OnboardingProps) => {
         <Card variant="soft">
           <Typography level="h3">Darwin SDK</Typography>
           <Typography level="body-sm">
-            YCode requires a special swift SDK to build apps for iOS. It can be
+            CrossCode requires a special swift SDK to build apps for iOS. It can be
             generated from a copy of Xcode 16 or later. To install it, download
             Xcode.xip using the link below, click the "Install SDK" button, then
             select the downloaded file.

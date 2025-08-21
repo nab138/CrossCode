@@ -17,10 +17,10 @@
       "icons/icon.ico"
     ]
   },
-  "productName": "YCode",
-  "mainBinaryName": "YCode",
+  "productName": "CrossCode",
+  "mainBinaryName": "CrossCode",
   "version": "0.0.1",
-  "identifier": "me.nabdev.ycode",
+  "identifier": "me.nabdev.crosscode",
   "plugins": {
     "fs": {
       "requireLiteralLeadingDot": false
@@ -39,7 +39,7 @@
     },
     "windows": [
       {
-        "title": "YCode",
+        "title": "CrossCode",
         "label": "main",
         "width": 1000,
         "height": 700,
@@ -48,7 +48,7 @@
         "url": "/"
       },
       {
-        "title": "YCode (Loading)",
+        "title": "CrossCode (Loading)",
         "label": "splashscreen",
         "url": "/splash.html",
         "width": 200,

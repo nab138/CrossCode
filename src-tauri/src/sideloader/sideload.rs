@@ -46,9 +46,9 @@ pub async fn sideload_app(
     let config = SideloadConfiguration::new()
         .set_store_dir(store_dir.clone())
         .set_logger(Box::new(logger))
-        .set_machine_name("YCode".to_string());
+        .set_machine_name("CrossCode".to_string());
 
-    let provider = device.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "y-code");
+    let provider = device.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "CrossCode");
     sideload::sideload_app(&provider, &dev_session, app_path, config)
         .await
         .map_err(|e| e.to_string())?;

@@ -185,7 +185,7 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
     <List
       size="sm"
       orientation="horizontal"
-      aria-label="YCode menu bar"
+      aria-label="CrossCode menu bar"
       role="menubar"
       sx={{
         bgcolor: "background.body",

@@ -6,16 +6,16 @@ use tauri::Manager;
 use crate::sideloader::apple::APPLE_ACCOUNT;
 
 pub fn store_credentials(email: &str, password: &str) -> Result<(), KeyringError> {
-    let email_entry = Entry::new("y-code", "apple_id_email")?;
+    let email_entry = Entry::new("crosscode", "apple_id_email")?;
     email_entry.set_password(email)?;
-    let pass_entry = Entry::new("y-code", email)?;
+    let pass_entry = Entry::new("crosscode", email)?;
     pass_entry.set_password(password)
 }
 
 pub fn get_stored_credentials() -> Option<(String, String)> {
-    let email_entry = Entry::new("y-code", "apple_id_email").ok()?;
+    let email_entry = Entry::new("crosscode", "apple_id_email").ok()?;
     let email = email_entry.get_password().ok()?;
-    let pass_entry = Entry::new("y-code", &email).ok()?;
+    let pass_entry = Entry::new("crosscode", &email).ok()?;
     let password = pass_entry.get_password().ok()?;
     Some((email, password))
 }
@@ -33,14 +33,14 @@ pub fn get_apple_email() -> String {
 #[tauri::command]
 pub fn delete_stored_credentials() -> Result<(), String> {
     let email_entry =
-        Entry::new("y-code", "apple_id_email").map_err(|e| format!("Keyring error: {:?}", e))?;
+        Entry::new("crosscode", "apple_id_email").map_err(|e| format!("Keyring error: {:?}", e))?;
     let email = match email_entry.get_password() {
         Ok(email) => email,
         Err(_) => {
             return Ok(());
         }
     };
-    let pass_entry = Entry::new("y-code", &email).map_err(|e| format!("Keyring error: {:?}", e))?;
+    let pass_entry = Entry::new("crosscode", &email).map_err(|e| format!("Keyring error: {:?}", e))?;
 
     let _ = pass_entry.delete_password();
     email_entry

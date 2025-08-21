@@ -61,7 +61,7 @@ export default () => {
           ? "Checking for Swift..."
           : toolchains.swiftlyInstalled
           ? `Swiftly Detected: ${toolchains.swiftlyVersion}`
-          : "YCode was unable to detect Swiftly."}
+          : "CrossCode was unable to detect Swiftly."}
       </Typography>
       {!isWindowsReady && toolchains !== null && allToolchains.length === 0 && (
         <Typography level="body-md" color="danger">

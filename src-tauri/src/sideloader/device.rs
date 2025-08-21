@@ -28,7 +28,7 @@ pub async fn list_devices() -> Result<Vec<DeviceInfo>, String> {
     let device_info_futures: Vec<_> = devs
         .iter()
         .map(|d| async move {
-            let provider = d.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "y-code");
+            let provider = d.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "crosscode");
             let device_uid = d.device_id;
 
             let mut lockdown_client = match LockdownClient::connect(&provider).await {

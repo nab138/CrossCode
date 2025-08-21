@@ -1,5 +1,5 @@
 [package]
-name = "y-code"
+name = "crosscode"
 version = "0.0.1"
 description = "Cross platform iOS IDE"
 authors = ["nab138"]

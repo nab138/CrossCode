@@ -8,7 +8,7 @@ export const generalPage = createPreferencePage(
     {
       id: "app-version",
       name: "App Version",
-      description: "The current version of YCode.",
+      description: "The current version of CrossCode.",
       type: "info",
       defaultValue: async () => {
         return await getVersion();

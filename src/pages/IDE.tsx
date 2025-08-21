@@ -331,11 +331,11 @@ export default () => {
 function getValidationMsg(validation: ProjectValidation): string {
   switch (validation) {
     case "Invalid":
-      return "This does not appear to be a valid YCode project.";
+      return "This does not appear to be a valid CrossCode project.";
     case "InvalidPackage":
       return "SwiftPM was unable to parse your package. Please check your Package.swift file.";
     case "UnsupportedFormatVersion":
-      return "This project uses an unsupported config format version. You may need to update YCode.";
+      return "This project uses an unsupported config format version. You may need to update CrossCode.";
     case "InvalidToolchain":
       return "Your Swift toolchain appears to be invalid.";
     default:
