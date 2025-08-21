@@ -94,6 +94,7 @@ const FileItem: React.FC<FileItemProps> = ({
           slotProps={{
             button: {
               "data-path": filePath,
+              "data-is-folder": true,
             },
           }}
         >
@@ -123,6 +124,7 @@ const FileItem: React.FC<FileItemProps> = ({
   } else {
     return (
       <Button
+        data-is-folder={false}
         size="sm"
         onClick={handleOpenFile}
         variant="plain"
@@ -153,6 +155,7 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
     mouseX: number;
     mouseY: number;
     filePath: string;
+    isFolder: boolean;
   } | null>(null);
 
   const [refresh, setRefresh] = useState(0);
@@ -160,6 +163,9 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [renameTarget, setRenameTarget] = useState<string | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
+  const [newValue, setNewValue] = useState("");
+  const [newTarget, setNewTarget] = useState<string | null>(null);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -171,13 +177,17 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
       if (path) {
         event.preventDefault();
 
+        console.log(event.target);
+
         setContextMenu(
           contextMenu === null
             ? {
-              mouseX: event.clientX + 2,
-              mouseY: event.clientY - 6,
-              filePath: path,
-            }
+                mouseX: event.clientX + 2,
+                mouseY: event.clientY - 6,
+                filePath: path,
+                isFolder:
+                  event.target.getAttribute("data-is-folder") === "true",
+              }
             : null
         );
       }
@@ -207,6 +217,16 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
     setRefresh((r) => r + 1);
   };
 
+  const handleNewFile = async () => {
+    if (!newTarget) return;
+    const newPath = await path.resolve(newTarget, newValue);
+    await fs.writeTextFile(newPath, "");
+    setNewOpen(false);
+    setNewTarget(null);
+    setNewValue("");
+    setRefresh((r) => r + 1);
+  };
+
   return (
     <div className={"file-explorer"} onContextMenu={handleContextMenu}>
       <FileItem
@@ -224,16 +244,16 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
           anchorEl={
             contextMenu !== null
               ? ({
-                getBoundingClientRect: () =>
-                ({
-                  top: contextMenu.mouseY,
-                  left: contextMenu.mouseX,
-                  right: contextMenu.mouseX,
-                  bottom: contextMenu.mouseY,
-                  width: 0,
-                  height: 0,
-                } as DOMRect),
-              } as any)
+                  getBoundingClientRect: () =>
+                    ({
+                      top: contextMenu.mouseY,
+                      left: contextMenu.mouseX,
+                      right: contextMenu.mouseX,
+                      bottom: contextMenu.mouseY,
+                      width: 0,
+                      height: 0,
+                    } as DOMRect),
+                } as any)
               : undefined
           }
           placement="bottom-start"
@@ -242,6 +262,19 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
             pb: 0,
           }}
         >
+          {contextMenu?.isFolder && (
+            <MenuItem
+              onClick={async () => {
+                handleClose();
+                setNewTarget(contextMenu!.filePath);
+                setNewValue("");
+                setNewOpen(true);
+              }}
+            >
+              New File
+            </MenuItem>
+          )}
+          {contextMenu?.isFolder && <Divider />}
           <MenuItem
             onClick={async () => {
               handleClose();
@@ -273,6 +306,60 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
           </MenuItem>
         </Menu>
       </ClickAwayListener>
+
+      {/* New File Modal */}
+      <Modal open={newOpen} onClose={() => setNewOpen(false)}>
+        <ModalDialog>
+          <Typography level="h4" component="h2" sx={{ mb: 2 }}>
+            New File
+          </Typography>
+          <Input
+            autoFocus
+            value={newValue}
+            onChange={(e) => setNewValue(e.target.value)}
+            onKeyDown={async (e) => {
+              if (e.key === "Enter") {
+                await handleNewFile();
+              }
+            }}
+          />
+          <Box
+            sx={{ display: "flex", gap: 1, justifyContent: "flex-end", mt: 2 }}
+          >
+            <Button onClick={() => setNewOpen(false)}>Cancel</Button>
+            <Button onClick={handleNewFile} disabled={!newValue.trim()}>
+              Create
+            </Button>
+          </Box>
+        </ModalDialog>
+      </Modal>
+
+      {/* Rename Modal */}
+      <Modal open={renameOpen} onClose={() => setRenameOpen(false)}>
+        <ModalDialog>
+          <Typography level="h4" component="h2" sx={{ mb: 2 }}>
+            Rename
+          </Typography>
+          <Input
+            autoFocus
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={async (e) => {
+              if (e.key === "Enter") {
+                await handleRename();
+              }
+            }}
+          />
+          <Box
+            sx={{ display: "flex", gap: 1, justifyContent: "flex-end", mt: 2 }}
+          >
+            <Button onClick={() => setRenameOpen(false)}>Cancel</Button>
+            <Button onClick={handleRename} disabled={!renameValue.trim()}>
+              Rename
+            </Button>
+          </Box>
+        </ModalDialog>
+      </Modal>
 
       {/* Rename Modal */}
       <Modal open={renameOpen} onClose={() => setRenameOpen(false)}>

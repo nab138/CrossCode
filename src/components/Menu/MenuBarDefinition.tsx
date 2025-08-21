@@ -17,13 +17,13 @@ export default [
       {
         label: "New",
         items: [
-          {
-            name: "New File...",
-            shortcut: "Ctrl+N",
-            callback: () => {
-              alert("Not implemented yet :(");
-            },
-          },
+          // {
+          //   name: "New File...",
+          //   shortcut: "Ctrl+N",
+          //   callback: () => {
+          //     alert("Not implemented yet :(");
+          //   },
+          // },
           {
             name: "New Project...",
             callbackName: "newProject",
