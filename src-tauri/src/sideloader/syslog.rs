@@ -38,10 +38,7 @@ pub async fn start_stream_syslog(
 
     let cancellation_token = CancellationToken::new();
 
-    {
-        let mut stream_guard = stream.lock().await;
-        *stream_guard = Some(cancellation_token.clone());
-    }
+    *stream_guard = Some(cancellation_token.clone());
 
     let stream_clone = stream.inner().clone();
 

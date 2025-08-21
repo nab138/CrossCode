@@ -15,12 +15,10 @@ import {
   PhonelinkSetup,
   Refresh,
   CleaningServices,
-  Terminal,
-  StopCircle,
 } from "@mui/icons-material";
 import { useParams } from "react-router-dom";
 import { Divider, Option, Select } from "@mui/joy";
-import { DeviceInfo, useIDE } from "../../utilities/IDEContext";
+import { useIDE } from "../../utilities/IDEContext";
 import { useStore } from "../../utilities/StoreContext";
 import { useToast } from "react-toast-plus";
 import bar from "./MenuBarDefinition";
@@ -36,7 +34,8 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
 
   const resetMenuIndex = useCallback(() => setMenuIndex(null), []);
   const { path } = useParams<"path">();
-  const { devices, selectedToolchain } = useIDE();
+  const { devices, selectedToolchain, selectedDevice, setSelectedDevice } =
+    useIDE();
   const [anisetteServer] = useStore<string>(
     "apple-id/anisette-server",
     "ani.sidestore.io"
@@ -171,8 +170,6 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
       }
     };
 
-  const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
-
   useEffect(() => {
     if (devices.length > 0) {
       setSelectedDevice(devices[0]);
@@ -238,32 +235,6 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
           </ListItem>
         ))}
       <CommandButton
-        disabled={!selectedDevice}
-        tooltip="Start syslog"
-        variant="plain"
-        command="start_stream_syslog"
-        icon={<Terminal />}
-        parameters={{
-          device: selectedDevice,
-        }}
-        validate={() => {
-          if (!selectedDevice) {
-            addToast.error("Please select a device to stream the syslog from");
-            return false;
-          }
-          return true;
-        }}
-        sx={{ marginLeft: "auto", marginRight: 0 }}
-      />
-      <CommandButton
-        tooltip="Stop syslog"
-        variant="plain"
-        command="stop_stream_syslog"
-        icon={<StopCircle />}
-        sx={{ marginRight: 0 }}
-      />
-      <Divider orientation="vertical" />
-      <CommandButton
         variant="plain"
         command="clean_swift"
         icon={<CleaningServices />}
@@ -272,7 +243,7 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
           toolchainPath: selectedToolchain?.path ?? "",
         }}
         tooltip="Clean"
-        sx={{ marginRight: 0 }}
+        sx={{ marginRight: 0, marginLeft: "auto" }}
       />
       <CommandButton
         variant="plain"

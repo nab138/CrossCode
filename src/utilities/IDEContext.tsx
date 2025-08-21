@@ -50,6 +50,8 @@ export interface IDEContextType {
   setSelectedToolchain: (
     value: Toolchain | ((oldValue: Toolchain | null) => Toolchain | null) | null
   ) => void;
+  selectedDevice: DeviceInfo | null;
+  setSelectedDevice: React.Dispatch<React.SetStateAction<DeviceInfo | null>>;
 }
 
 export type DeviceInfo = {
@@ -100,6 +102,8 @@ export const IDEProvider: React.FC<{
   );
 
   const [hasLimitedRam, setHasLimitedRam] = useState<boolean>(false);
+
+  const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
 
   const checkSDK = useCallback(async () => {
     try {
@@ -224,7 +228,6 @@ export const IDEProvider: React.FC<{
       (async () => {
         const unlistenFn = await listen("idevices", (event) => {
           let devices = event.payload as DeviceInfo[];
-          console.log("Received devices:", devices);
           setDevices(devices);
           if (devices.length === 0) {
             addToast.info("No devices found");
@@ -369,6 +372,8 @@ export const IDEProvider: React.FC<{
       checkSDK,
       startOperation,
       hasLimitedRam,
+      selectedDevice,
+      setSelectedDevice,
     }),
     [
       isWindows,
@@ -387,6 +392,8 @@ export const IDEProvider: React.FC<{
       checkSDK,
       startOperation,
       hasLimitedRam,
+      selectedDevice,
+      setSelectedDevice,
     ]
   );
 

@@ -74,7 +74,16 @@ export default function CommandButton({
       }}
       id={id}
     >
-      {label == "" || label == undefined ? icon : label}
+      <div
+        style={{
+          display: "flex",
+          gap: "var(--padding-xs)",
+          alignItems: "center",
+        }}
+      >
+        {icon !== undefined && icon}
+        {label != "" && label != undefined && label}
+      </div>
       {shortcut !== undefined && " "}
       {shortcut}
     </Component>
