@@ -1,5 +1,4 @@
-
-<img align="left" width="120" height="120" src="/logo.png"> 
+<img align="left" width="120" height="120" src="/logo.png">
 
 <div id="user-content-toc">
   <ul style="list-style: none;">
@@ -13,15 +12,17 @@
 
 [![Build CrossCode](https://github.com/nab138/CrossCode/actions/workflows/build.yml/badge.svg)](https://github.com/nab138/CrossCode/actions/workflows/build.yml)
 
-iOS Development IDE for linux and windows, built with [Tauri](https://tauri.app/).
-
-Coming soon...
+iOS Development IDE for windows/linux
 
 ## Installation
 
 CrossCode is currently in development and not recommended for use. However, if you want to try it out, your feedback would be greatly appreciated!
 
 You can download the latest build from [actions](https://github.com/nab138/CrossCode/actions/workflows/build.yml).
+
+## Future plans
+
+The app is currently functional but does not have all the features it should. You can see a tentative plan for the future [on trello](https://trello.com/b/QYQFfOvm/ycode)
 
 ## How it works
 
@@ -31,10 +32,6 @@ You can download the latest build from [actions](https://github.com/nab138/Cross
 
 Supports swift 6.1 and the swift package manager.
 
-## Progress
-
-The app is currently functional but does not have all the features it should. You can see a tentative plan for the future [on trello](https://trello.com/b/QYQFfOvm/ycode)
-
 ## Credits
 
 - [idevice](https://github.com/jkcoxson/idevice) is used to communicate with iOS devices.
@@ -43,5 +40,4 @@ The app is currently functional but does not have all the features it should. Yo
 
 ### AI Usage
 
-- Generated the logo (I'm sorry, its only temporary I promise)
 - Helped port small sections of code from [Sideloader](https://github.com/Dadoum/Sideloader) because I'm not familiar with dlang syntax
