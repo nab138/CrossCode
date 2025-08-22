@@ -10,6 +10,8 @@ import { MenuItem } from "@mui/joy";
 import { invoke } from "@tauri-apps/api/core";
 import { restartServer } from "../../utilities/lsp-client";
 import { open } from "@tauri-apps/plugin-dialog";
+import { useContext } from "react";
+import { UpdateContext } from "../../utilities/UpdateContext";
 
 export default [
   {
@@ -365,6 +367,27 @@ export default [
             name: "Report Issue",
             callback: () => {
               openUrl("https://github.com/nab138/CrossCode/issues");
+            },
+          },
+        ],
+      },
+      {
+        label: "Updates",
+        items: [
+          {
+            name: "Check for Updates",
+            component: () => {
+              const { checkForUpdates } = useContext(UpdateContext);
+              return (
+                <MenuItem
+                  onClick={async () => {
+                    await checkForUpdates();
+                  }}
+                  id="checkForUpdatesMenuBtn"
+                >
+                  Check for Updates
+                </MenuItem>
+              );
             },
           },
         ],

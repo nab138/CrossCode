@@ -13,6 +13,7 @@ import { ToastProvider } from "react-toast-plus";
 import New from "./pages/New";
 import NewTemplate from "./pages/NewTemplate";
 import "vscode/localExtensionHost";
+import { UpdateProvider } from "./utilities/UpdateContext";
 
 declare module "@mui/joy/IconButton" {
   interface IconButtonPropsSizeOverrides {
@@ -51,11 +52,13 @@ const IDELayout = () => {
           : {}
       }
     >
-      <CommandProvider>
-        <IDEProvider>
-          <Outlet />
-        </IDEProvider>
-      </CommandProvider>
+      <UpdateProvider>
+        <CommandProvider>
+          <IDEProvider>
+            <Outlet />
+          </IDEProvider>
+        </CommandProvider>
+      </UpdateProvider>
     </ToastProvider>
   );
 };

@@ -26,9 +26,7 @@ import { useCommandRunner } from "./Command";
 import { StoreContext, useStore } from "./StoreContext";
 import { Operation, OperationState, OperationUpdate } from "./operations";
 import OperationView from "../components/OperationView";
-import { check } from "@tauri-apps/plugin-updater";
-import { getVersion } from "@tauri-apps/api/app";
-import { relaunch } from "@tauri-apps/plugin-process";
+import { UpdateContext } from "./UpdateContext";
 
 let isMainWindow = getCurrentWindow().label === "main";
 
@@ -105,11 +103,12 @@ export const IDEProvider: React.FC<{
     null
   );
 
-  const { storeInitialized, store } = useContext(StoreContext);
-
   const [hasLimitedRam, setHasLimitedRam] = useState<boolean>(false);
 
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
+
+  const { checkForUpdates } = useContext(UpdateContext);
+  const { store, storeInitialized } = useContext(StoreContext);
 
   const checkSDK = useCallback(async () => {
     try {
@@ -213,63 +212,20 @@ export const IDEProvider: React.FC<{
   }, [initialized]);
 
   useEffect(() => {
-    if (!initialized || !storeInitialized) return;
-    let checkUpdates = async () => {
-      if (!store) return;
+    if (!store || !storeInitialized || !initialized || !checkForUpdates) return;
+
+    let check = async () => {
       if (
         (await store.has("general/check-updates")) &&
         (await store.get("general/check-updates")) === "manual"
       )
         return;
 
-      const update = await check();
-      if (!update) return;
-
-      let shouldUpdate = dialog.ask(
-        "A new update (" +
-          (await getVersion()) +
-          " -> " +
-          update.version +
-          ") is available. Would you like to install it?",
-        {
-          title: "Update Available",
-        }
-      );
-
-      if (!shouldUpdate) return;
-
-      let downloadPromise = update.download();
-
-      addToast.promise(downloadPromise, {
-        pending: "Downloading update...",
-        success: "Update downloaded",
-        error: "Failed to download update",
-      });
-
-      await downloadPromise;
-
-      let installPromise = update.install();
-      addToast.promise(installPromise, {
-        pending: "Installing update...",
-        success: "Update installed",
-        error: "Failed to install update",
-      });
-      await installPromise;
-
-      const shouldRelaunch = await dialog.ask(
-        "The update has been installed. Would you like to relaunch the application?",
-        {
-          title: "Relaunch Required",
-        }
-      );
-
-      if (shouldRelaunch) {
-        await relaunch();
-      }
+      checkForUpdates();
     };
 
-    checkUpdates();
-  }, [initialized, storeInitialized]);
+    check();
+  }, [initialized, checkForUpdates, store, storeInitialized]);
 
   const listenerAdded = useRef(false);
   const listener2Added = useRef(false);
