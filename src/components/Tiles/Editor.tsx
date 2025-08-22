@@ -14,6 +14,7 @@ import getModelServiceOverride from "@codingame/monaco-vscode-model-service-over
 import "@codingame/monaco-vscode-swift-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import { platform } from "@tauri-apps/plugin-os";
+import { TabLike } from "../TabLike";
 
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
@@ -428,9 +429,8 @@ export default ({
               {dropIndicatorIndex === index && (
                 <div className="drop-indicator" />
               )}
-              <button
+              <TabLike
                 className={
-                  "tab MuiTab-root MuiTab-horizontal MuiTab-variantPlain MuiTab-colorNeutral css-1uqmv8l-JoyTab-root" +
                   (focused === index ? " Mui-selected" : "") +
                   (draggedIndex === index ? " dragging" : "")
                 }
@@ -470,7 +470,7 @@ export default ({
                     />
                   )}
                 </IconButton>
-              </button>
+              </TabLike>
             </div>
           );
         })}

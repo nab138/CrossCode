@@ -25,30 +25,14 @@
   position: relative;
 }
 
-.tab {
-  font-size: 14px !important;
-  min-height: 24px !important;
-  padding: 2px 8px !important;
-  padding-right: 2px !important;
-  cursor: grab;
-  transition: opacity 0.2s ease;
-}
-
-.tab:active {
-  cursor: grabbing;
-}
-
-.tab.dragging {
-  opacity: 0.5;
-}
-
 .tabsContainer .Mui-selected::after {
   content: "";
   display: block;
   height: 2px;
   background: currentColor;
   position: absolute;
-  bottom: -2px;
+  bottom: -1px;
+  z-index: 999;
   left: 0;
   right: 0;
 }
