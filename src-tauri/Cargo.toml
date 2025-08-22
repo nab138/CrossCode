@@ -1,6 +1,6 @@
 [package]
 name = "crosscode"
-version = "0.0.1"
+version = "0.0.2"
 description = "Cross platform iOS IDE"
 authors = ["nab138"]
 edition = "2021"

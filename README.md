@@ -20,6 +20,8 @@ CrossCode is currently in development and not recommended for use. However, if y
 
 You can download the latest build from [actions](https://github.com/nab138/CrossCode/actions/workflows/build.yml).
 
+Check out the [Getting Started](https://github.com/nab138/CrossCode/wiki#getting-started) section of the [wiki](https://github.com/nab138/CrossCode/wiki). Also, see [Troubleshooting](https://github.com/nab138/CrossCode/wiki/Troubleshooting) and [FAQ](https://github.com/nab138/CrossCode/wiki/FAQ)
+
 ## Future plans
 
 The app is currently functional but does not have all the features it should. You can see a tentative plan for the future [on trello](https://trello.com/b/QYQFfOvm/ycode)

@@ -1,16 +1,16 @@
 {
   "name": "crosscode",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "bump-patch": "npx tauri-version --no-git --no-lock patch",
-    "bump-minor": "npx tauri-version --no-git --no-lock minor",
-    "bump-major": "npx tauri-version --no-git --no-lock major"
+    "bump-patch": "bunx tauri-version --no-git --no-lock patch",
+    "bump-minor": "bunx tauri-version --no-git --no-lock minor",
+    "bump-major": "bunx tauri-version --no-git --no-lock major"
   },
   "dependencies": {
     "@codingame/esbuild-import-meta-url-plugin": "^1.0.3",
