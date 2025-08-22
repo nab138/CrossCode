@@ -12,10 +12,12 @@ export interface CommandButtonProps {
   sx?: React.CSSProperties;
   clearConsole?: boolean;
   validate?: () => boolean;
+  after?: () => void;
   disabled?: boolean;
   useMenuItem?: boolean;
   shortcut?: React.ReactNode;
   id?: string;
+  size?: "sm" | "md" | "lg";
 }
 
 export default function CommandButton({
@@ -28,8 +30,10 @@ export default function CommandButton({
   sx = {},
   clearConsole = true,
   validate = () => true,
+  after = () => {},
   disabled = false,
   useMenuItem = false,
+  size = "md",
   shortcut,
   id,
 }: CommandButtonProps) {
@@ -46,7 +50,7 @@ export default function CommandButton({
         useMenuItem ? undefined : isRunningCommand && currentCommand === command
       }
       variant={variant}
-      size="md"
+      size={size}
       sx={
         useMenuItem
           ? {}
@@ -70,7 +74,7 @@ export default function CommandButton({
           }
           return;
         }
-        runCommand(command, parameters);
+        runCommand(command, parameters).then(after);
       }}
       id={id}
     >

@@ -30,7 +30,7 @@ use sideloader::{
         reset_anisette, revoke_certificate,
     },
     sideload::refresh_idevice,
-    syslog::{start_stream_syslog, stop_stream_syslog, SyslogStream},
+    syslog::{is_streaming_syslog, start_stream_syslog, stop_stream_syslog, SyslogStream},
 };
 use sourcekit_lsp::{get_server_status, start_sourcekit_server, stop_sourcekit_server};
 use std::sync::Arc;
@@ -131,6 +131,7 @@ fn main() {
             start_stream_syslog,
             stop_stream_syslog,
             import_icon,
+            is_streaming_syslog,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

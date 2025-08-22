@@ -85,3 +85,9 @@ pub async fn stop_stream_syslog(stream: State<'_, SyslogStream>) -> Result<(), S
         Err("No active syslog stream found".to_string())
     }
 }
+
+#[tauri::command]
+pub async fn is_streaming_syslog(stream: State<'_, SyslogStream>) -> Result<bool, String> {
+    let stream_guard = stream.lock().await;
+    Ok(stream_guard.is_some())
+}

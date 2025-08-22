@@ -3,45 +3,22 @@ import "./Console.css";
 import { listen } from "@tauri-apps/api/event";
 import Convert from "ansi-to-html";
 import { Virtuoso } from "react-virtuoso";
+import { useStore } from "../../utilities/StoreContext";
+import { escapeHtml } from "./Console";
 
 const convert = new Convert();
 
-export function escapeHtml(unsafe: string) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-export default function Console({
-  channel,
-  jsonPrettyPrint,
-}: {
-  channel: string;
-  jsonPrettyPrint?: boolean;
-}) {
+export default function Syslog() {
   const [consoleLines, setConsoleLines] = useState<string[]>([]);
+  const [syslogFilter] = useStore<string>("syslog-filter", "");
   const listenerAdded = useRef(false);
   const unlisten = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (!listenerAdded.current) {
       (async () => {
-        const unlistenFn = await listen(channel, (event) => {
+        const unlistenFn = await listen("syslog-message", (event) => {
           let line = event.payload as string;
-          if (jsonPrettyPrint) {
-            try {
-              let parsed = JSON.parse(line);
-              line = JSON.stringify(parsed, null, 2);
-            } catch (error) {
-              console.error(
-                "Failed to parse JSON where prettyPrint was enabled:",
-                error
-              );
-            }
-          }
           setConsoleLines((lines) => [...lines, line]);
         });
         unlisten.current = unlistenFn;
@@ -57,9 +34,12 @@ export default function Console({
     <div className="console-container">
       <Virtuoso
         className="console-tile"
-        atBottomThreshold={40}
+        atBottomThreshold={50}
         followOutput={"auto"}
-        data={consoleLines}
+        data={consoleLines.filter((line) => {
+          if (!syslogFilter || syslogFilter === "") return true;
+          return line.toLowerCase().includes(syslogFilter.toLowerCase());
+        })}
         itemContent={(_, line) => (
           <pre
             style={{ margin: 0, width: "fit-content", padding: 0 }}
