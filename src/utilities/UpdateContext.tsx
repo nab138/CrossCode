@@ -21,7 +21,6 @@ export const UpdateProvider: React.FC<{ children: React.ReactNode }> = ({
   const { addToast } = useToast();
 
   const checkForUpdates = useCallback(async () => {
-    console.log("checking");
     const update = await check();
     if (!update) return;
 

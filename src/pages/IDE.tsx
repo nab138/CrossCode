@@ -19,7 +19,7 @@ import {
   ModalDialog,
   Typography,
 } from "@mui/joy";
-import { ErrorIcon, WarningIcon } from "react-toast-plus";
+import { ErrorIcon, useToast, WarningIcon } from "react-toast-plus";
 import SwiftMenu from "../components/SwiftMenu";
 import { restartServer } from "../utilities/lsp-client";
 import BottomBar from "../components/Tiles/BottomBar";
@@ -64,6 +64,7 @@ export default () => {
   const [projectValidation, setProjectValidation] =
     useState<ProjectValidation | null>(null);
   const [editor, setEditor] = useState<IStandaloneCodeEditor | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     (async () => {
@@ -138,11 +139,17 @@ export default () => {
     };
     autoEnable();
   }, [hasIgnoredRam, hasLimitedRam, storeInitialized, store]);
-
   useEffect(() => {
     if (!sourcekitStartup || selectedToolchain == null) return;
-    restartServer(path, selectedToolchain).catch((e) => {
-      console.error("Failed to start SourceKit-LSP:", e);
+    requestAnimationFrame(async () => {
+      try {
+        await restartServer(path, selectedToolchain);
+      } catch (e) {
+        console.error("Failed to start SourceKit-LSP:", e);
+        addToast.error(
+          "Failed to start SourceKit-LSP (see devtools for details). Some language features may not be available."
+        );
+      }
     });
   }, [sourcekitStartup, path, selectedToolchain]);
 
