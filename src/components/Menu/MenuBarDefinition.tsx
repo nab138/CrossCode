@@ -372,6 +372,19 @@ export default [
         ],
       },
       {
+        label: "Debug",
+        items: [
+          {
+            name: "Open Devtools",
+            shortcut: "Ctrl+Shift+I",
+            ignoreShortcutInMonaco: true,
+            callback: () => {
+              invoke("open_devtools");
+            },
+          },
+        ],
+      },
+      {
         label: "Updates",
         items: [
           {

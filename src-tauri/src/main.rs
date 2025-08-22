@@ -133,6 +133,7 @@ fn main() {
             stop_stream_syslog,
             import_icon,
             is_streaming_syslog,
+            open_devtools,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -142,4 +143,10 @@ pub fn emit_error_and_return<T>(window: &tauri::Window, msg: &str) -> Result<T, 
     window.emit("build-output", msg.to_string()).ok();
     window.emit("build-output", "command.done.999").ok();
     Err(msg.to_string())
+}
+
+#[tauri::command]
+fn open_devtools(app: tauri::AppHandle) -> Result<(), String> {
+    app.get_webview_window("main").unwrap().open_devtools();
+    Ok(())
 }
