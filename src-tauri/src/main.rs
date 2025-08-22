@@ -64,6 +64,7 @@ fn main() {
                         if arg.value == Value::Bool(true) {
                             let window = app.get_webview_window("main").unwrap();
                             window.show().unwrap();
+                            window.open_devtools();
                         }
                     }
                 }
