@@ -46,6 +46,7 @@ fn main() {
     let syslog_stream: SyslogStream = Arc::new(Mutex::new(None));
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_os::init())

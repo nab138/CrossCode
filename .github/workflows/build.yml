@@ -8,6 +8,8 @@ on:
     branches:
       - "*"
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -19,10 +21,10 @@ jobs:
             args: ""
           - platform: "windows-latest"
             args: ""
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
-            args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
-            args: "--target x86_64-apple-darwin"
+          # - platform: "macos-latest"
+          #   args: "--target aarch64-apple-darwin"
+          # - platform: "macos-latest"
+          #   args: "--target x86_64-apple-darwin"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -67,11 +69,25 @@ jobs:
       - name: Install frontend dependencies
         run: bun i --frozen-lockfile
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build for Development
+        uses: tauri-apps/tauri-action@v0
+        if: github.event_name != 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: ${{ matrix.args }}
+
+      - name: Build for Release
+        uses: tauri-apps/tauri-action@v0
+        if: github.event_name == 'release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: ${{ github.event.release.id }}
+          args: ${{ matrix.args }}
+          includeUpdaterJson: true
 
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4

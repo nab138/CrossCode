@@ -27,8 +27,24 @@ export const generalPage = createPreferencePage(
           value: "welcome",
         },
       ],
-      "What to do when the app starts.",
+      "",
       "open-last"
+    ),
+    createItems.select(
+      "check-updates",
+      "Check for Updates",
+      [
+        {
+          label: "On Startup",
+          value: "auto",
+        },
+        {
+          label: "Manually",
+          value: "manual",
+        },
+      ],
+      "",
+      "auto"
     ),
   ],
   {

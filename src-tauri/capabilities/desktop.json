@@ -9,6 +9,7 @@
     "main"
   ],
   "permissions": [
-    "cli:default"
+    "cli:default",
+    "updater:default"
   ]
 }

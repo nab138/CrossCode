@@ -2,6 +2,7 @@
 import React, {
   createContext,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -22,9 +23,12 @@ import {
   Typography,
 } from "@mui/joy";
 import { useCommandRunner } from "./Command";
-import { useStore } from "./StoreContext";
+import { StoreContext, useStore } from "./StoreContext";
 import { Operation, OperationState, OperationUpdate } from "./operations";
 import OperationView from "../components/OperationView";
+import { check } from "@tauri-apps/plugin-updater";
+import { getVersion } from "@tauri-apps/api/app";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 let isMainWindow = getCurrentWindow().label === "main";
 
@@ -100,6 +104,8 @@ export const IDEProvider: React.FC<{
     "swift/selected-toolchain",
     null
   );
+
+  const { storeInitialized, store } = useContext(StoreContext);
 
   const [hasLimitedRam, setHasLimitedRam] = useState<boolean>(false);
 
@@ -193,19 +199,77 @@ export const IDEProvider: React.FC<{
   }, []);
 
   useEffect(() => {
-    if (initialized) {
-      let changeWindows = async () => {
-        let splash = await Window.getByLabel("splashscreen");
-        let main = await Window.getByLabel("main");
-        if (splash && main) {
-          splash.close();
-          await main.show();
-          main.setFocus();
-        }
-      };
-      changeWindows();
-    }
+    if (!initialized) return;
+    let changeWindows = async () => {
+      let splash = await Window.getByLabel("splashscreen");
+      let main = await Window.getByLabel("main");
+      if (splash && main) {
+        splash.close();
+        await main.show();
+        main.setFocus();
+      }
+    };
+    changeWindows();
   }, [initialized]);
+
+  useEffect(() => {
+    if (!initialized || !storeInitialized) return;
+    let checkUpdates = async () => {
+      if (!store) return;
+      if (
+        (await store.has("general/check-updates")) &&
+        (await store.get("general/check-updates")) === "manual"
+      )
+        return;
+
+      const update = await check();
+      if (!update) return;
+
+      let shouldUpdate = dialog.ask(
+        "A new update (" +
+          (await getVersion()) +
+          " -> " +
+          update.version +
+          ") is available. Would you like to install it?",
+        {
+          title: "Update Available",
+        }
+      );
+
+      if (!shouldUpdate) return;
+
+      let downloadPromise = update.download();
+
+      addToast.promise(downloadPromise, {
+        pending: "Downloading update...",
+        success: "Update downloaded",
+        error: "Failed to download update",
+      });
+
+      await downloadPromise;
+
+      let installPromise = update.install();
+      addToast.promise(installPromise, {
+        pending: "Installing update...",
+        success: "Update installed",
+        error: "Failed to install update",
+      });
+      await installPromise;
+
+      const shouldRelaunch = await dialog.ask(
+        "The update has been installed. Would you like to relaunch the application?",
+        {
+          title: "Relaunch Required",
+        }
+      );
+
+      if (shouldRelaunch) {
+        await relaunch();
+      }
+    };
+
+    checkUpdates();
+  }, [initialized, storeInitialized]);
 
   const listenerAdded = useRef(false);
   const listener2Added = useRef(false);
