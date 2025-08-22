@@ -86,6 +86,8 @@ export type ListToolchainResponse =
 
 export const IDEContext = createContext<IDEContextType | null>(null);
 
+let hasCheckedForUpdates = false;
+
 export const IDEProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
@@ -215,6 +217,7 @@ export const IDEProvider: React.FC<{
     if (!store || !storeInitialized || !initialized || !checkForUpdates) return;
 
     let check = async () => {
+      if (hasCheckedForUpdates) return;
       if (
         (await store.has("general/check-updates")) &&
         (await store.get("general/check-updates")) === "manual"
@@ -222,6 +225,7 @@ export const IDEProvider: React.FC<{
         return;
 
       checkForUpdates();
+      hasCheckedForUpdates = true;
     };
 
     check();

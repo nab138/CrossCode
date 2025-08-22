@@ -137,6 +137,7 @@ export default ({
       }
 
       globalInitialized = true;
+      console.log("Initializing Monaco");
       await initialize({
         ...getTextMateServiceOverride(),
         ...getThemeServiceOverride(),
@@ -174,6 +175,7 @@ export default ({
         }),
         ...getModelServiceOverride(),
       });
+      console.log("Initialized Monaco");
       setInitialized(true);
       hasInitializedRef.current = true;
     };
