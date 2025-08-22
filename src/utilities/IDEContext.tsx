@@ -224,8 +224,8 @@ export const IDEProvider: React.FC<{
       )
         return;
 
-      checkForUpdates();
       hasCheckedForUpdates = true;
+      checkForUpdates();
     };
 
     check();

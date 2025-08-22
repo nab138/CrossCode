@@ -35,6 +35,8 @@ type ProjectValidation =
   | "InvalidPackage"
   | "InvalidToolchain";
 
+let autoStartedLsp = false;
+
 export default () => {
   const { storeInitialized, store } = useContext(StoreContext);
   const [openFile, setOpenFile] = useState<string | null>(null);
@@ -143,6 +145,8 @@ export default () => {
     if (!sourcekitStartup || selectedToolchain == null) return;
     requestAnimationFrame(async () => {
       try {
+        if (autoStartedLsp) return;
+        autoStartedLsp = true;
         await restartServer(path, selectedToolchain);
       } catch (e) {
         console.error("Failed to start SourceKit-LSP:", e);
