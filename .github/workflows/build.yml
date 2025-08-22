@@ -71,23 +71,14 @@ jobs:
 
       - name: Build for Development
         uses: tauri-apps/tauri-action@v0
-        if: github.event_name != 'release'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: ${{ matrix.args }}
-
-      - name: Build for Release
-        uses: tauri-apps/tauri-action@v0
-        if: github.event_name == 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          releaseId: ${{ github.event.release.id }}
           args: ${{ matrix.args }}
-          includeUpdaterJson: true
+          includeUpdaterJson: ${{ github.event_name == 'release' }}
+          releaseId: ${{ github.event_name == 'release' && github.event.release.id || '' }}
 
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4
