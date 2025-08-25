@@ -20,13 +20,13 @@ pub struct ProjectConfig {
 }
 
 #[derive(Deserialize, Serialize)]
-struct TomlConfig {
+pub struct TomlConfig {
     pub format_version: u32,
     pub project: ProjectTomlConfig,
 }
 
 #[derive(Deserialize, Serialize)]
-struct ProjectTomlConfig {
+pub struct ProjectTomlConfig {
     pub version_num: String,
     pub version_string: String,
     pub bundle_id: String,

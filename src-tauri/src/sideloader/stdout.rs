@@ -1,13 +1,16 @@
-use crate::sideloader::device::DeviceInfo;
+use crate::{
+    builder::config::TomlConfig,
+    sideloader::{apple::get_developer_session, device::DeviceInfo},
+};
 use idevice::{
     core_device::{AppServiceClient, OpenStdioSocketClient},
     core_device_proxy::CoreDeviceProxy,
     rsd::RsdHandshake,
     usbmuxd::{UsbmuxdAddr, UsbmuxdConnection},
-    IdeviceService, ReadWrite, RsdService,
+    IdeviceService, RsdService,
 };
-use std::sync::Arc;
-use tauri::{Emitter, State, Window};
+use std::{path::PathBuf, sync::Arc};
+use tauri::{AppHandle, Emitter, State, Window};
 use tokio::{io::AsyncReadExt, sync::Mutex};
 use tokio_util::sync::CancellationToken;
 
@@ -15,11 +18,16 @@ pub type StdoutStream = Arc<Mutex<Option<CancellationToken>>>;
 
 #[tauri::command]
 pub async fn start_stream_stdout(
+    handle: AppHandle,
     window: Window,
     device: DeviceInfo,
     stream: State<'_, StdoutStream>,
-    bundle_id: String,
+    folder: String,
+    anisette_server: String,
 ) -> Result<(), String> {
+    let bundle_id = get_bundle_id(&handle, &window, anisette_server, folder).await?;
+    println!("Starting stdout stream for bundle ID: {}", bundle_id);
+
     let mut stream_guard = stream.lock().await;
     if let Some(token) = stream_guard.take() {
         token.cancel();
@@ -54,11 +62,6 @@ pub async fn start_stream_stdout(
         .await
         .map_err(|e| format!("Failed to create RSD handshake: {}", e))?;
 
-    let mut asc: AppServiceClient<Box<(dyn ReadWrite + 'static)>> =
-        AppServiceClient::connect_rsd(&mut adapter, &mut handshake)
-            .await
-            .map_err(|e| format!("Failed to connect to app service: {}", e))?;
-
     let mut stdio_conn = OpenStdioSocketClient::connect_rsd(&mut adapter, &mut handshake)
         .await
         .map_err(|e| format!("Failed to connect to stdio: {}", e))?;
@@ -68,9 +71,29 @@ pub async fn start_stream_stdout(
         .await
         .map_err(|e| format!("Failed to read stdio UUID: {}", e))?;
 
-    asc.launch_application(bundle_id, &[], true, false, None, None, Some(stdio_uuid))
-        .await
-        .map_err(|e| format!("Failed to launch application: {}", e))?;
+    use tokio::sync::oneshot;
+
+    let (tx, rx) = oneshot::channel();
+
+    let mut adapter_for_launch = adapter;
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let result = rt.block_on(async {
+            let mut asc: AppServiceClient<Box<dyn idevice::ReadWrite>> =
+                AppServiceClient::connect_rsd(&mut adapter_for_launch, &mut handshake)
+                    .await
+                    .map_err(|e| format!("Failed to connect to app service: {}", e))?;
+            asc.launch_application(bundle_id, &[], true, false, None, None, Some(stdio_uuid))
+                .await
+                .map_err(|e| format!("Failed to launch application: {}", e))
+        });
+        let _ = tx.send(result);
+    });
+
+    rx.await.map_err(|_| "Launch thread failed".to_string())??;
 
     let cancellation_token = CancellationToken::new();
 
@@ -102,6 +125,9 @@ pub async fn start_stream_stdout(
                         }
                         Err(e) => {
                             eprintln!("Error reading from stdio: {}", e);
+                            window.emit("stdout-message", "stdout.done").unwrap_or_else(|e| {
+                                eprintln!("Failed to emit stdout error: {}", e);
+                            });
                             break;
                         }
                     }
@@ -116,6 +142,25 @@ pub async fn start_stream_stdout(
     Ok(())
 }
 
+async fn get_bundle_id(
+    handle: &AppHandle,
+    window: &Window,
+    anisette_server: String,
+    folder: String,
+) -> Result<String, String> {
+    let config = TomlConfig::load_or_default(PathBuf::from(folder))?;
+    let bundle_id = config.project.bundle_id;
+
+    let session = get_developer_session(handle, window, anisette_server).await?;
+
+    let team_id = session
+        .get_team()
+        .await
+        .map_err(|e| format!("Failed to get team: {:?}", e))?
+        .team_id;
+
+    Ok(format!("{}.{}", bundle_id, team_id))
+}
 #[tauri::command]
 pub async fn stop_stream_stdout(stream: State<'_, StdoutStream>) -> Result<(), String> {
     let mut stream_guard = stream.lock().await;

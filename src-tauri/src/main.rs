@@ -44,7 +44,7 @@ use tokio::sync::Mutex;
 use windows::{has_wsl, is_windows};
 
 fn main() {
-    let syslog_stream: SyslogStream = Arc::new(Mutex::new(None));
+    let syslog_stream: SyslogStream = SyslogStream(Arc::new(Mutex::new(None)));
     let stdout_stream: StdoutStream = Arc::new(Mutex::new(None));
 
     tauri::Builder::default()

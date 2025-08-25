@@ -44,10 +44,10 @@ pub fn delete_stored_credentials() -> Result<(), String> {
         Entry::new("crosscode", &email).map_err(|e| format!("Keyring error: {:?}", e))?;
 
     pass_entry
-        .delete_credential()
+        .delete_password()
         .map_err(|e| format!("Keyring error: {:?}", e))?;
     email_entry
-        .delete_credential()
+        .delete_password()
         .map_err(|e| format!("Keyring error: {:?}", e))?;
 
     if let Some(account) = APPLE_ACCOUNT.get() {

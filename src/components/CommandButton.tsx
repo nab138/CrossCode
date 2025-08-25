@@ -1,6 +1,7 @@
 import { Button, MenuItem } from "@mui/joy";
 import { useCommandRunner } from "../utilities/Command";
 import { useIDE } from "../utilities/IDEContext";
+import { useToast } from "react-toast-plus";
 
 export interface CommandButtonProps {
   command: string;
@@ -42,6 +43,7 @@ export default function CommandButton({
   const { setConsoleLines } = useIDE();
 
   const Component: React.ElementType = useMenuItem ? MenuItem : Button;
+  const { addToast } = useToast();
 
   return (
     <Component
@@ -74,7 +76,12 @@ export default function CommandButton({
           }
           return;
         }
-        runCommand(command, parameters).then(after);
+        runCommand(command, parameters)
+          .then(after)
+          .catch((e) => {
+            addToast.error(e);
+            console.error(e);
+          });
       }}
       id={id}
     >
