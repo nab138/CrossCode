@@ -26,7 +26,6 @@ pub async fn start_stream_stdout(
     anisette_server: String,
 ) -> Result<(), String> {
     let bundle_id = get_bundle_id(&handle, &window, anisette_server, folder).await?;
-    println!("Starting stdout stream for bundle ID: {}", bundle_id);
 
     let mut stream_guard = stream.lock().await;
     if let Some(token) = stream_guard.take() {
