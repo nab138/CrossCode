@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import "./BottomBar.css";
 import { Input, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
-import Console from "./Console";
-import CommandConsole from "./CommandConsole";
 import CommandButton from "../CommandButton";
 import { Terminal, StopCircle } from "@mui/icons-material";
 import { useIDE } from "../../utilities/IDEContext";
 import { useToast } from "react-toast-plus";
 import { invoke } from "@tauri-apps/api/core";
-import { useStore } from "../../utilities/StoreContext";
-import Syslog from "./Syslog";
+import CommandConsole from "./CommandConsole";
+import Console from "./Console";
+import FilteredConsole from "./FilteredConsole";
 
-const tabs = [
+const staticTabs = [
   {
     name: "Build Output",
     component: <CommandConsole />,
@@ -22,22 +21,14 @@ const tabs = [
       <Console key="lsp-message" channel="lsp-message" jsonPrettyPrint />
     ),
   },
-  {
-    name: "Syslog",
-    component: <Syslog />,
-  },
-  //{ name: "Terminal", component: <div>Terminal is coming soon!</div> },
 ];
 
 export default function BottomBar() {
   const [focused, setFocused] = useState<number>();
   const [refreshSyslog, setRefreshSyslog] = useState<number>(0);
   const [runningSyslog, setRunningSyslog] = useState<boolean>(false);
-  const [syslogFilter, setSyslogFilter] = useStore<string>("syslog-filter", "");
-  const [syslogFilterState, setSyslogFilterState] =
-    useState<string>(syslogFilter);
-  const { selectedDevice } = useIDE();
-  const { addToast } = useToast();
+  const [syslogFilter, setSyslogFilter] = useState<string>("");
+  const [stdoutFilter, setStdoutFilter] = useState<string>("");
 
   useEffect(() => {
     const checkSyslog = async () => {
@@ -48,14 +39,10 @@ export default function BottomBar() {
   }, [focused, refreshSyslog]);
 
   useEffect(() => {
-    if (focused === undefined && tabs.length > 0) {
+    if (focused === undefined && staticTabs.length > 0) {
       setFocused(0);
     }
   }, [focused]);
-
-  useEffect(() => {
-    setSyslogFilter(syslogFilterState);
-  }, [syslogFilterState]);
 
   return (
     <div className="bottom-container">
@@ -78,77 +65,45 @@ export default function BottomBar() {
             },
           }}
         >
-          {tabs.map((tab, index) => (
+          {staticTabs.map((tab, index) => (
             <Tab key={tab.name} value={index} indicatorPlacement="bottom">
               {tab.name}
             </Tab>
           ))}
-          {focused === 2 && !runningSyslog && (
-            <CommandButton
-              disabled={!selectedDevice}
-              tooltip="Start syslog (will affect performance!)"
-              variant="plain"
-              command="start_stream_syslog"
-              icon={<Terminal />}
-              parameters={{
-                device: selectedDevice,
-              }}
-              validate={() => {
-                if (!selectedDevice) {
-                  addToast.error(
-                    "Please select a device to stream the syslog from"
-                  );
-                  return false;
-                }
-                return true;
-              }}
-              after={() => {
-                setRefreshSyslog((prev) => prev + 1);
-              }}
-              label="Start Syslog"
-              sx={{
-                marginLeft: "auto",
-                marginRight: "var(--padding-xs)",
-                fontSize: "12px",
-              }}
-              size="sm"
+          <Tab value={staticTabs.length} indicatorPlacement="bottom">
+            Syslog
+          </Tab>
+          <Tab value={staticTabs.length + 1} indicatorPlacement="bottom">
+            App Console
+          </Tab>
+          {focused === staticTabs.length && (
+            <BottomBarFilter
+              filter={syslogFilter}
+              setFilter={setSyslogFilter}
+              setRefresh={setRefreshSyslog}
+              displayName="Syslog"
+              errorMessage="Please select a device to stream the syslog from."
+              startCommand="start_stream_syslog"
+              stopCommand="stop_stream_syslog"
+              customTooltip="will cause performance issues"
+              running={runningSyslog}
             />
           )}
-          {focused === 2 && runningSyslog && (
-            <Input
-              placeholder="Filter syslog..."
-              value={syslogFilterState}
-              onChange={(e) => {
-                setSyslogFilterState(e.target.value);
-              }}
-              sx={{
-                width: "200px",
-                marginRight: "var(--padding-xs)",
-                marginLeft: "auto",
-                fontSize: "12px",
-              }}
-              size="sm"
-            />
-          )}
-          {focused === 2 && runningSyslog && (
-            <CommandButton
-              tooltip="Stop syslog"
-              variant="plain"
-              command="stop_stream_syslog"
-              icon={<StopCircle />}
-              sx={{
-                marginRight: "var(--padding-xs)",
-                fontSize: "12px",
-              }}
-              after={() => {
-                setRefreshSyslog((prev) => prev + 1);
-              }}
-              label="Stop Syslog"
-              size="sm"
+          {focused === staticTabs.length + 1 && (
+            <BottomBarFilter
+              filter={stdoutFilter}
+              setFilter={setStdoutFilter}
+              setRefresh={setRefreshSyslog}
+              displayName="App Console"
+              errorMessage="Please select a device to stream app console from."
+              startCommand="start_stream_stdout"
+              stopCommand="stop_stream_stdout"
+              customTooltip="will launch app automatically"
+              running={false}
             />
           )}
         </TabList>
-        {tabs.map((tab, index) => (
+        {staticTabs.map((tab, index) => (
           <TabPanel
             value={index}
             key={tab.name}
@@ -158,7 +113,106 @@ export default function BottomBar() {
             {tab.component}
           </TabPanel>
         ))}
+
+        <TabPanel value={staticTabs.length} sx={{ padding: 0 }} keepMounted>
+          <FilteredConsole filter={syslogFilter} channel={"syslog-message"} />,
+        </TabPanel>
+        <TabPanel value={staticTabs.length + 1} sx={{ padding: 0 }} keepMounted>
+          <FilteredConsole filter={stdoutFilter} channel={"stdout-message"} />,
+        </TabPanel>
       </Tabs>
     </div>
+  );
+}
+
+function BottomBarFilter({
+  filter,
+  setFilter,
+  setRefresh,
+  displayName,
+  errorMessage,
+  startCommand,
+  stopCommand,
+  running,
+  customTooltip,
+}: {
+  filter: string;
+  setFilter: React.Dispatch<React.SetStateAction<string>>;
+  setRefresh: React.Dispatch<React.SetStateAction<number>>;
+  displayName: string;
+  errorMessage: string;
+  startCommand: string;
+  stopCommand: string;
+  running: boolean;
+  customTooltip: string;
+}) {
+  const { selectedDevice } = useIDE();
+  const { addToast } = useToast();
+
+  return (
+    <>
+      {!running && (
+        <CommandButton
+          disabled={!selectedDevice}
+          tooltip={`Start ${displayName} (${customTooltip})`}
+          variant="plain"
+          command={startCommand}
+          icon={<Terminal />}
+          parameters={{
+            device: selectedDevice,
+          }}
+          validate={() => {
+            if (!selectedDevice) {
+              addToast.error(errorMessage);
+              return false;
+            }
+            return true;
+          }}
+          after={() => {
+            setRefresh((prev) => prev + 1);
+          }}
+          label={`Start ${displayName}`}
+          sx={{
+            marginLeft: "auto",
+            marginRight: "var(--padding-xs)",
+            fontSize: "12px",
+          }}
+          size="sm"
+        />
+      )}
+      {running && (
+        <Input
+          placeholder={`Filter ${displayName}...`}
+          value={filter}
+          onChange={(e) => {
+            setFilter(e.target.value);
+          }}
+          sx={{
+            width: "200px",
+            marginRight: "var(--padding-xs)",
+            marginLeft: "auto",
+            fontSize: "12px",
+          }}
+          size="sm"
+        />
+      )}
+      {running && (
+        <CommandButton
+          tooltip={`Stop ${displayName}`}
+          variant="plain"
+          command={stopCommand}
+          icon={<StopCircle />}
+          sx={{
+            marginRight: "var(--padding-xs)",
+            fontSize: "12px",
+          }}
+          after={() => {
+            setRefresh((prev) => prev + 1);
+          }}
+          label={`Stop ${displayName}`}
+          size="sm"
+        />
+      )}
+    </>
   );
 }

@@ -3,21 +3,25 @@ import "./Console.css";
 import { listen } from "@tauri-apps/api/event";
 import Convert from "ansi-to-html";
 import { Virtuoso } from "react-virtuoso";
-import { useStore } from "../../utilities/StoreContext";
 import { escapeHtml } from "./Console";
 
 const convert = new Convert();
 
-export default function Syslog() {
+export default function FilteredConsole({
+  filter,
+  channel,
+}: {
+  filter: string;
+  channel: string;
+}) {
   const [consoleLines, setConsoleLines] = useState<string[]>([]);
-  const [syslogFilter] = useStore<string>("syslog-filter", "");
   const listenerAdded = useRef(false);
   const unlisten = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (!listenerAdded.current) {
       (async () => {
-        const unlistenFn = await listen("syslog-message", (event) => {
+        const unlistenFn = await listen(channel, (event) => {
           let line = event.payload as string;
           setConsoleLines((lines) => [...lines, line]);
         });
@@ -37,8 +41,8 @@ export default function Syslog() {
         atBottomThreshold={50}
         followOutput={"auto"}
         data={consoleLines.filter((line) => {
-          if (!syslogFilter || syslogFilter === "") return true;
-          return line.toLowerCase().includes(syslogFilter.toLowerCase());
+          if (!filter || filter === "") return true;
+          return line.toLowerCase().includes(filter.toLowerCase());
         })}
         itemContent={(_, line) => (
           <pre
