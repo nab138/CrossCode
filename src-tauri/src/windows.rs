@@ -16,20 +16,23 @@ pub fn wsl_to_windows_path(path: &str) -> String {
 
 #[tauri::command]
 pub fn has_wsl() -> bool {
-    if !is_windows() {
+    #[cfg(not(target_os = "windows"))]
+    {
         return false;
     }
+    #[cfg(target_os = "windows")]
+    {
+        let output = Command::new("wsl")
+            .arg("echo")
+            .arg("1")
+            .stdout(Stdio::piped())
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
+            .output()
+            .expect("failed to execute process");
 
-    let output = Command::new("wsl")
-        .arg("echo")
-        .arg("1")
-        .stdout(Stdio::piped())
-        .creation_flags(0x08000000) // CREATE_NO_WINDOW
-        .output()
-        .expect("failed to execute process");
-
-    let output = String::from_utf8_lossy(&output.stdout);
-    return output.trim() == "1";
+        let output = String::from_utf8_lossy(&output.stdout);
+        return output.trim() == "1";
+    }
 }
 
 #[tauri::command]
