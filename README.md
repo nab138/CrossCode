@@ -12,9 +12,12 @@
 
 [![Build CrossCode](https://github.com/nab138/CrossCode/actions/workflows/build.yml/badge.svg)](https://github.com/nab138/CrossCode/actions/workflows/build.yml)
 
-iOS Development IDE for windows/linux
+iOS Swift development IDE for Windows/Linux
+
+Supports Swift 6.1 and the Swift Package Manager.
 
 ### Demo
+
 https://github.com/user-attachments/assets/d0f23971-4711-4de5-be58-ce2e6a66523e
 
 ## Installation
@@ -42,13 +45,13 @@ Check out the [Getting Started](https://github.com/nab138/CrossCode/wiki#getting
 
 The app is currently functional but does not have all the features it should. You can see a tentative plan for the future [on trello](https://trello.com/b/QYQFfOvm/ycode)
 
+Please note that I am one person, so development may be slow. If you want to help, PRs welcome!
+
 ## How it works
 
 - A darwin SDK is generated from a user provided copy of Xcode 16.3 (extracted with [unxip](https://github.com/saagarjha/unxip)) and darwin tools from [darwin-tools-linux-llvm](https://github.com/xtool-org/darwin-tools-linux-llvm)
 - Swift uses the darwin SDK to build an executable which is packaged into an .app bundle.
 - The code to sign and install apps onto a device has been removed from CrossCode's source and moved to a standalone package, [isideload](https://github.com/nab138/isideload). It was built on a lot of other libraries, so check out its README for more info.
-
-Supports swift 6.1 and the swift package manager.
 
 ## Credits
 
