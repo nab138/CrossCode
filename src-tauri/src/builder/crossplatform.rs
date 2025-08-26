@@ -165,6 +165,7 @@ pub fn remove_dir_all(path: &PathBuf) -> Result<(), String> {
             .arg("rm")
             .arg("-rf")
             .arg(windows_to_wsl_path(&path.to_string_lossy().to_string()))
+            .creation_flags(CREATE_NO_WINDOW)
             .output()
             .expect("failed to execute process");
         if output.status.success() {

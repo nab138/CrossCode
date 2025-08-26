@@ -1,8 +1,9 @@
 import { Button, FormControl, Radio, RadioGroup, Typography } from "@mui/joy";
 import { Toolchain, useIDE } from "../utilities/IDEContext";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import ErrorIcon from "@mui/icons-material/Error";
+import { invoke } from "@tauri-apps/api/core";
 
 export default () => {
   const {
@@ -17,20 +18,27 @@ export default () => {
 
   const isWindowsReady = !isWindows || hasWSL;
 
-  const allToolchains = useMemo(() => {
-    let all: Toolchain[] = [];
-    if (toolchains !== null && toolchains.toolchains) {
-      all = [...toolchains.toolchains];
-    }
-    if (
-      selectedToolchain &&
-      !all.some(
-        (t) => stringifyToolchain(t) === stringifyToolchain(selectedToolchain)
-      )
-    ) {
-      all.push(selectedToolchain);
-    }
-    return all;
+  const [allToolchains, setAllToolchains] = useState<Toolchain[]>([]);
+  useEffect(() => {
+    let loadAllToolchains = async () => {
+      let all: Toolchain[] = [];
+      if (toolchains !== null && toolchains.toolchains) {
+        all = [...toolchains.toolchains];
+      }
+      if (
+        selectedToolchain &&
+        !all.some(
+          (t) => stringifyToolchain(t) === stringifyToolchain(selectedToolchain)
+        ) &&
+        (await invoke("validate_toolchain", {
+          toolchainPath: selectedToolchain.path,
+        }))
+      ) {
+        all.push(selectedToolchain);
+      }
+      setAllToolchains(all);
+    };
+    loadAllToolchains();
   }, [selectedToolchain, toolchains]);
 
   return (
