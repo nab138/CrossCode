@@ -46,6 +46,7 @@ futures-util = "0.3.31"
 sysinfo = "0.37.0"
 tokio-util = "0.7.16"
 image = "0.25.6"
+rustls = { version = "0.23.31", default-features = false, features = ["ring"] }
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

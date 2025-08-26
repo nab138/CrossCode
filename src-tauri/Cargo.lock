@@ -1173,6 +1173,7 @@ dependencies = [
  "plist",
  "regex",
  "reqwest 0.12.23",
+ "rustls 0.23.31",
  "serde",
  "serde_json",
  "sha1",
