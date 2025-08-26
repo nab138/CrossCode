@@ -56,7 +56,7 @@ pub async fn create_template(
     for entry in walker {
         let path = entry.path();
         if path.is_file() {
-            let mut content = std::fs::read_to_string(path)
+            let mut content = std::fs::read(path)
                 .map_err(|e| format!("Failed to read file '{}': {}", path.display(), e))?;
 
             let mut filename = path
@@ -65,7 +65,6 @@ pub async fn create_template(
                 .unwrap_or("".to_string());
 
             for (key, value) in &parameters {
-                content = content.replace(&format!("{{{{{}}}}}", key), value);
                 if filename.contains(&format!("{{{{{}}}}}", key)) {
                     filename = filename.replace(&format!("{{{{{}}}}}", key), value);
                     let new_path = path.with_file_name(&filename);
@@ -74,6 +73,17 @@ pub async fn create_template(
                     })?;
                 }
             }
+
+            if let Ok(s) = String::from_utf8(content) {
+                let mut replaced = s;
+                for (key, value) in &parameters {
+                    replaced = replaced.replace(&format!("{{{{{}}}}}", key), value);
+                }
+                content = replaced.into_bytes();
+            } else {
+                continue;
+            }
+
             let final_path = path.with_file_name(&filename);
             std::fs::write(&final_path, content)
                 .map_err(|e| format!("Failed to write file '{}': {}", path.display(), e))?;

@@ -9,7 +9,7 @@ use tauri::{Emitter, State, Window};
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
-pub type SyslogStream = Arc<Mutex<Option<CancellationToken>>>;
+pub struct SyslogStream(pub Arc<Mutex<Option<CancellationToken>>>);
 
 #[tauri::command]
 pub async fn start_stream_syslog(
@@ -17,7 +17,7 @@ pub async fn start_stream_syslog(
     device: DeviceInfo,
     stream: State<'_, SyslogStream>,
 ) -> Result<(), String> {
-    let mut stream_guard = stream.lock().await;
+    let mut stream_guard = stream.0.lock().await;
     if let Some(token) = stream_guard.take() {
         token.cancel();
     }
@@ -40,7 +40,7 @@ pub async fn start_stream_syslog(
 
     *stream_guard = Some(cancellation_token.clone());
 
-    let stream_clone = stream.inner().clone();
+    let stream_clone = stream.0.clone();
 
     tokio::spawn(async move {
         loop {
@@ -76,7 +76,7 @@ pub async fn start_stream_syslog(
 
 #[tauri::command]
 pub async fn stop_stream_syslog(stream: State<'_, SyslogStream>) -> Result<(), String> {
-    let mut stream_guard = stream.lock().await;
+    let mut stream_guard = stream.0.lock().await;
 
     if let Some(token) = stream_guard.take() {
         token.cancel();
@@ -88,6 +88,6 @@ pub async fn stop_stream_syslog(stream: State<'_, SyslogStream>) -> Result<(), S
 
 #[tauri::command]
 pub async fn is_streaming_syslog(stream: State<'_, SyslogStream>) -> Result<bool, String> {
-    let stream_guard = stream.lock().await;
+    let stream_guard = stream.0.lock().await;
     Ok(stream_guard.is_some())
 }

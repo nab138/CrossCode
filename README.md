@@ -22,6 +22,19 @@ You can download the latest build from [actions](https://github.com/nab138/Cross
 
 Check out the [Getting Started](https://github.com/nab138/CrossCode/wiki#getting-started) section of the [wiki](https://github.com/nab138/CrossCode/wiki). Also, see [Troubleshooting](https://github.com/nab138/CrossCode/wiki/Troubleshooting) and [FAQ](https://github.com/nab138/CrossCode/wiki/FAQ)
 
+## Features
+
+- Generate a Darwin SDK for linux from a user provided copy of Xcode 16.3 to build the apps
+- Build apps using swift package manager
+- Log in with your Apple ID to sign apps
+- Install apps on device
+- Create projects from templates
+- Code editing including error reporting, autocomplete, go to definition, and other language features
+- Light/dark mode and other customizations
+- View and manage certificates, app IDs, and more
+- View the syslog or the stdout (console) of your device/app
+- Much more (and more to come!)
+
 ## Future plans
 
 The app is currently functional but does not have all the features it should. You can see a tentative plan for the future [on trello](https://trello.com/b/QYQFfOvm/ycode)

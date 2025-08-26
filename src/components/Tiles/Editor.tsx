@@ -231,9 +231,8 @@ export default ({
 
   useEffect(() => {
     if (!editor || !initialized) return;
-
     monaco.editor.setTheme(mode === "dark" ? "vs-dark" : "vs");
-  }, [mode, editor, initialized]);
+  }, [mode, editor, initialized, openFiles]);
 
   useEffect(() => {
     if (!monacoEl.current || !editor) return;

@@ -43,7 +43,9 @@ pub fn delete_stored_credentials() -> Result<(), String> {
     let pass_entry =
         Entry::new("crosscode", &email).map_err(|e| format!("Keyring error: {:?}", e))?;
 
-    let _ = pass_entry.delete_password();
+    pass_entry
+        .delete_password()
+        .map_err(|e| format!("Keyring error: {:?}", e))?;
     email_entry
         .delete_password()
         .map_err(|e| format!("Keyring error: {:?}", e))?;

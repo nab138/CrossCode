@@ -23,6 +23,7 @@ use builder::swift::{
     has_darwin_sdk, validate_toolchain,
 };
 use lsp_utils::{ensure_lsp_config, has_limited_ram, validate_project};
+use rustls::crypto::{ring, CryptoProvider};
 use serde_json::Value;
 use sideloader::{
     apple_commands::{
@@ -30,6 +31,7 @@ use sideloader::{
         reset_anisette, revoke_certificate,
     },
     sideload::refresh_idevice,
+    stdout::{is_streaming_stdout, start_stream_stdout, stop_stream_stdout, StdoutStream},
     syslog::{is_streaming_syslog, start_stream_syslog, stop_stream_syslog, SyslogStream},
 };
 use sourcekit_lsp::{get_server_status, start_sourcekit_server, stop_sourcekit_server};
@@ -43,7 +45,10 @@ use tokio::sync::Mutex;
 use windows::{has_wsl, is_windows};
 
 fn main() {
-    let syslog_stream: SyslogStream = Arc::new(Mutex::new(None));
+    CryptoProvider::install_default(ring::default_provider()).unwrap();
+
+    let syslog_stream: SyslogStream = SyslogStream(Arc::new(Mutex::new(None)));
+    let stdout_stream: StdoutStream = Arc::new(Mutex::new(None));
 
     tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -57,6 +62,7 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .manage(sourcekit_lsp::create_server_state())
         .manage(syslog_stream)
+        .manage(stdout_stream)
         .setup(|app| {
             match app.cli().matches() {
                 Ok(matches) => {
@@ -134,6 +140,9 @@ fn main() {
             import_icon,
             is_streaming_syslog,
             open_devtools,
+            start_stream_stdout,
+            stop_stream_stdout,
+            is_streaming_stdout,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
