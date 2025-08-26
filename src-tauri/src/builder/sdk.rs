@@ -208,9 +208,11 @@ async fn install_sdk_internal(
     )?;
     op.move_on("write_metadata", "install_sdk")?;
 
+    let real_output_dir =
+        op.fail_if_err("install_sdk", linux_path(&output_dir.to_string_lossy()))?;
     let output = op.fail_if_err_map(
         "install_sdk",
-        swift_bin.output(&["sdk", "install", &linux_path(&output_dir.to_string_lossy())]),
+        swift_bin.output(&["sdk", "install", &real_output_dir]),
         |e| format!("Failed to execute swift command: {}", e),
     )?;
 
@@ -283,7 +285,7 @@ async fn install_toolset(output_path: &PathBuf) -> Result<(), String> {
     {
         // I'm guessing this has to be done because I'm extracting the tar from windows into the wsl file system and windows doesn't play nice with permissions, but im too lazy to do this properly
         let wsl_toolset_path =
-            windows_to_wsl_path(&toolset_dir.join("bin").to_string_lossy().to_string());
+            windows_to_wsl_path(&toolset_dir.join("bin").to_string_lossy().to_string())?;
         let output = Command::new("wsl")
             .arg("chmod")
             .arg("+x")
@@ -326,9 +328,9 @@ async fn install_developer(
         .arg("-c")
         .arg(format!(
             "{} {} {}",
-            windows_to_wsl_path(&unxip_path.to_string_lossy()),
-            windows_to_wsl_path(&xcode_path),
-            windows_to_wsl_path(&dev_stage.to_string_lossy())
+            windows_to_wsl_path(&unxip_path.to_string_lossy())?,
+            windows_to_wsl_path(&xcode_path)?,
+            windows_to_wsl_path(&dev_stage.to_string_lossy())?
         ))
         .creation_flags(CREATE_NO_WINDOW)
         .output();

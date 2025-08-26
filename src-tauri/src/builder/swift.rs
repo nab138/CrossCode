@@ -284,7 +284,7 @@ pub async fn get_swiftly_toolchains() -> Result<ToolchainResult, String> {
 
 fn get_swiftly_config() -> Result<SwiftlyConfig, String> {
     let swiftly_home_dir = get_swiftly_path().ok_or("Swiftly home directory not found")?;
-    let swiftly_home_dir = windows_path(&swiftly_home_dir);
+    let swiftly_home_dir = windows_path(&swiftly_home_dir)?;
 
     let config_path = format!("{}/config.json", swiftly_home_dir);
 

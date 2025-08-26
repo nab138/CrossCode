@@ -1,17 +1,19 @@
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 use std::process::{Command, Stdio};
 #[cfg(target_os = "windows")]
 use wslpath2::{convert, Conversion};
-#[cfg(target_os = "windows")]
-use std::os::windows::process::CommandExt;
 
 #[cfg(target_os = "windows")]
-pub fn windows_to_wsl_path(path: &str) -> String {
-    convert(path, None, Conversion::WindowsToWsl, false).unwrap()
+pub fn windows_to_wsl_path(path: &str) -> Result<String, String> {
+    println!("Converting Windows path to WSL path: {}", path);
+    convert(path, None, Conversion::WindowsToWsl, false).map_err(|e| e.to_string())
 }
 
 #[cfg(target_os = "windows")]
-pub fn wsl_to_windows_path(path: &str) -> String {
-    convert(path, None, Conversion::WslToWindows, false).unwrap()
+pub fn wsl_to_windows_path(path: &str) -> Result<String, String> {
+    println!("Converting WSL path to Windows path: {}", path);
+    convert(path, None, Conversion::WslToWindows, false).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
