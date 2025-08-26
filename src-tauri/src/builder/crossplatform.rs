@@ -2,7 +2,12 @@
 use crate::windows::{has_wsl, windows_to_wsl_path, wsl_to_windows_path};
 #[cfg(target_os = "windows")]
 use std::process::{Command, Stdio};
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 use std::{fs, path::PathBuf};
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 pub fn symlink(target: &str, link: &str) -> std::io::Result<()> {
     #[cfg(not(target_os = "windows"))]
@@ -24,6 +29,7 @@ pub fn symlink(target: &str, link: &str) -> std::io::Result<()> {
             .arg(windows_to_wsl_path(link))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
+            .creation_flags(CREATE_NO_WINDOW)
             .output()
             .expect("failed to execute process");
         if !output.status.success() {
@@ -52,6 +58,7 @@ pub fn read_link(path: &PathBuf) -> Result<PathBuf, String> {
         let output = Command::new("wsl")
             .arg("readlink")
             .arg(windows_to_wsl_path(&path.to_string_lossy().to_string()))
+            .creation_flags(CREATE_NO_WINDOW)
             .output()
             .expect("failed to execute process");
         if output.status.success() {
@@ -80,6 +87,7 @@ pub fn linux_env(key: &str) -> Result<String, String> {
         let output = Command::new("wsl")
             .args(["bash", "-l", "-c"])
             .arg(format!("printenv {}", key))
+            .creation_flags(CREATE_NO_WINDOW)
             .output()
             .expect("failed to execute process");
         if output.status.success() {

@@ -1,5 +1,8 @@
 #[cfg(target_os = "windows")]
 use crate::windows::has_wsl;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
 use crate::{
     builder::{
         config::{BuildSettings, ProjectConfig},
@@ -18,6 +21,9 @@ use std::{
 };
 use tauri::{Emitter, Window};
 use tokio::process::Command as TokioCommand;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -61,6 +67,7 @@ impl SwiftBin {
                     "-c",
                     &format!("test -f \"{}/usr/bin/swift\"", toolchain_path),
                 ])
+                .creation_flags(CREATE_NO_WINDOW)
                 .output()
                 .map_err(|e| format!("Failed to execute command: {}", e))?;
             if !output.status.success() {
@@ -109,6 +116,7 @@ impl SwiftBin {
                 .arg(format!("\"{}\" {}", self.bin_path, args.join(" ")))
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
+                .creation_flags(CREATE_NO_WINDOW)
                 .output()
         }
         #[cfg(not(target_os = "windows"))]
@@ -126,6 +134,7 @@ impl SwiftBin {
         {
             let mut cmd = Command::new("wsl");
             cmd.arg(&self.bin_path);
+            cmd.creation_flags(CREATE_NO_WINDOW);
             cmd
         }
         #[cfg(not(target_os = "windows"))]
@@ -139,6 +148,7 @@ impl SwiftBin {
         {
             let mut cmd = TokioCommand::new("wsl");
             cmd.arg(&self.sourcekit_path);
+            cmd.creation_flags(CREATE_NO_WINDOW);
             cmd
         }
         #[cfg(not(target_os = "windows"))]

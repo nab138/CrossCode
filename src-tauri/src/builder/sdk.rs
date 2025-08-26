@@ -15,6 +15,10 @@ use crate::operation::Operation;
 
 #[cfg(target_os = "windows")]
 use crate::windows::windows_to_wsl_path;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 const DARWIN_TOOLS_VERSION: &str = "1.0.1";
 
@@ -284,6 +288,7 @@ async fn install_toolset(output_path: &PathBuf) -> Result<(), String> {
             .arg("chmod")
             .arg("+x")
             .arg(format!("{}/*", wsl_toolset_path))
+            .creation_flags(CREATE_NO_WINDOW)
             .output()
             .map_err(|e| format!("Failed to run chmod: {}", e))?;
         if !output.status.success() {
@@ -325,6 +330,7 @@ async fn install_developer(
             windows_to_wsl_path(&xcode_path),
             windows_to_wsl_path(&dev_stage.to_string_lossy())
         ))
+        .creation_flags(CREATE_NO_WINDOW)
         .output();
     #[cfg(not(target_os = "windows"))]
     let status = Command::new(unxip_path)

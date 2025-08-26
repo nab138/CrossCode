@@ -1,6 +1,8 @@
 use std::process::{Command, Stdio};
 #[cfg(target_os = "windows")]
 use wslpath2::{convert, Conversion};
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 
 #[cfg(target_os = "windows")]
 pub fn windows_to_wsl_path(path: &str) -> String {
@@ -22,6 +24,7 @@ pub fn has_wsl() -> bool {
         .arg("echo")
         .arg("1")
         .stdout(Stdio::piped())
+        .creation_flags(0x08000000) // CREATE_NO_WINDOW
         .output()
         .expect("failed to execute process");
 
