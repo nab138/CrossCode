@@ -97,14 +97,12 @@ pub fn convert(
     let real_path = if replace_backslash {
         path.replace('\\', "\\\\")
     } else {
-        path
+        path.to_string()
     };
     cmd.arg(real_path);
 
     #[cfg(windows)]
     cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
-
-    println!("Executing command: {:?}", cmd);
 
     let output = cmd
         .output()
