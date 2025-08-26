@@ -14,6 +14,9 @@
 
 iOS Development IDE for windows/linux
 
+### Demo
+https://github.com/user-attachments/assets/d0f23971-4711-4de5-be58-ce2e6a66523e
+
 ## Installation
 
 CrossCode is currently in alpha. Expect bugs!
