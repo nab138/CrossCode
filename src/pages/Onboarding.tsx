@@ -147,9 +147,9 @@ export default ({}: OnboardingProps) => {
               >
                 microsoft.com
               </Link>
-              . We recommended installing WSL 2 and Ubuntu. Other distributions
-              may work, but are not officially supported. CrossCode will use
-              your default WSL distribution.
+              . We recommended installing WSL 2 and Ubuntu 24.04. Other
+              distributions may work, but are not officially supported.
+              CrossCode will use your default WSL distribution.
             </Typography>
             <Divider />
             <CardContent>
@@ -195,10 +195,10 @@ export default ({}: OnboardingProps) => {
         <Card variant="soft">
           <Typography level="h3">Darwin SDK</Typography>
           <Typography level="body-sm">
-            CrossCode requires a special swift SDK to build apps for iOS. It can be
-            generated from a copy of Xcode 16 or later. To install it, download
-            Xcode.xip using the link below, click the "Install SDK" button, then
-            select the downloaded file.
+            CrossCode requires a special swift SDK to build apps for iOS. It can
+            be generated from a copy of Xcode 16 or later. To install it,
+            download Xcode.xip using the link below, click the "Install SDK"
+            button, then select the downloaded file.
           </Typography>
           <Divider />
           <CardContent>
