@@ -15,6 +15,7 @@
   "dependencies": {
     "@codingame/esbuild-import-meta-url-plugin": "^1.0.3",
     "@codingame/monaco-vscode-api": "~20.2.1",
+    "@codingame/monaco-vscode-debug-service-override": "~20.2.1",
     "@codingame/monaco-vscode-languages-service-override": "~20.2.1",
     "@codingame/monaco-vscode-model-service-override": "~20.2.1",
     "@codingame/monaco-vscode-swift-default-extension": "~20.2.1",

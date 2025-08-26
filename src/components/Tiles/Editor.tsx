@@ -11,6 +11,7 @@ import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-over
 import getTextMateServiceOverride from "@codingame/monaco-vscode-textmate-service-override";
 import getEditorServiceOverride from "@codingame/monaco-vscode-editor-service-override";
 import getModelServiceOverride from "@codingame/monaco-vscode-model-service-override";
+import getDebugServiceOverride from "@codingame/monaco-vscode-debug-service-override";
 import "@codingame/monaco-vscode-swift-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import { platform } from "@tauri-apps/plugin-os";
@@ -142,6 +143,7 @@ export default ({
         ...getTextMateServiceOverride(),
         ...getThemeServiceOverride(),
         ...getLanguagesServiceOverride(),
+        ...getDebugServiceOverride(),
         ...getEditorServiceOverride((modelRef, options) => {
           return new Promise((resolve) => {
             if (!globalEditorServiceCallbacks.editorRef.current)
