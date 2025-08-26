@@ -22,7 +22,7 @@ use builder::swift::{
     build_swift, clean_swift, deploy_swift, get_swiftly_toolchains, get_toolchain_info,
     has_darwin_sdk, validate_toolchain,
 };
-use lsp_utils::{ensure_lsp_config, has_limited_ram, validate_project};
+use lsp_utils::{has_limited_ram, validate_project};
 use rustls::crypto::{ring, CryptoProvider};
 use serde_json::Value;
 use sideloader::{
@@ -132,7 +132,6 @@ fn main() {
             get_server_status,
             has_limited_ram,
             validate_project,
-            ensure_lsp_config,
             linux_path,
             windows_path,
             start_stream_syslog,

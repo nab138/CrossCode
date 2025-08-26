@@ -44,7 +44,7 @@ const createLanguageClient = (
   return new MonacoLanguageClient({
     name: "Swift Language Client",
     clientOptions: {
-      documentSelector: ["swift"],
+      documentSelector: ["swift", "c", "cpp", "h", "hpp", "m", "mm"],
       workspaceFolder: { uri: Uri.file(folder), name: folder, index: 0 },
       errorHandler: {
         error: () => ({ action: ErrorAction.Continue }),
