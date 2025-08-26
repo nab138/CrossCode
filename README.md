@@ -16,9 +16,9 @@ iOS Development IDE for windows/linux
 
 ## Installation
 
-CrossCode is currently in development and not recommended for use. However, if you want to try it out, your feedback would be greatly appreciated!
+CrossCode is currently in alpha. Expect bugs!
 
-You can download the latest build from [actions](https://github.com/nab138/CrossCode/actions/workflows/build.yml).
+Download the latest build for your platform from [releases](https://github.com/nab138/CrossCode/releases/latest).
 
 Check out the [Getting Started](https://github.com/nab138/CrossCode/wiki#getting-started) section of the [wiki](https://github.com/nab138/CrossCode/wiki). Also, see [Troubleshooting](https://github.com/nab138/CrossCode/wiki/Troubleshooting) and [FAQ](https://github.com/nab138/CrossCode/wiki/FAQ)
 
