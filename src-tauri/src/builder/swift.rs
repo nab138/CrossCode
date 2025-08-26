@@ -59,7 +59,7 @@ impl SwiftBin {
         #[cfg(target_os = "windows")]
         {
             if !has_wsl() {
-                panic!("WSL is not available");
+                return Err("WSL is not available".to_string());
             }
             let output = Command::new("wsl")
                 .args([

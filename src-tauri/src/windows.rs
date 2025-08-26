@@ -45,8 +45,14 @@ pub fn has_wsl() -> bool {
             .arg("1")
             .stdout(Stdio::piped())
             .creation_flags(0x08000000) // CREATE_NO_WINDOW
-            .output()
-            .expect("failed to execute process");
+            .output();
+
+        if let Err(err) = output {
+            println!("Failed to execute WSL: {}", err);
+            return false;
+        }
+
+        let output = output.unwrap();
 
         let output = String::from_utf8_lossy(&output.stdout);
         return output.trim() == "1";
