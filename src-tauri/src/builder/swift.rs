@@ -105,30 +105,6 @@ impl SwiftBin {
         }
     }
 
-    #[cfg(not(target_os = "windows"))]
-    fn maybe_scrub_appimage_env(cmd: &mut std::process::Command) {
-        if std::env::var_os("APPIMAGE").is_some() || std::env::var_os("APPDIR").is_some() {
-            cmd.env_remove("LD_LIBRARY_PATH")
-                .env_remove("APPDIR")
-                .env_remove("APPIMAGE")
-                .env_remove("APPIMAGE_UUID")
-                .env_remove("APPIMAGE_SILENT_INSTALL")
-                .env_remove("GIO_MODULE_DIR");
-        }
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    fn maybe_scrub_appimage_env_tokio(cmd: &mut tokio::process::Command) {
-        if std::env::var_os("APPIMAGE").is_some() || std::env::var_os("APPDIR").is_some() {
-            cmd.env_remove("LD_LIBRARY_PATH")
-                .env_remove("APPDIR")
-                .env_remove("APPIMAGE")
-                .env_remove("APPIMAGE_UUID")
-                .env_remove("APPIMAGE_SILENT_INSTALL")
-                .env_remove("GIO_MODULE_DIR");
-        }
-    }
-
     pub fn output(&self, args: &[&str]) -> io::Result<Output> {
         #[cfg(target_os = "windows")]
         {
@@ -146,9 +122,10 @@ impl SwiftBin {
         #[cfg(not(target_os = "windows"))]
         {
             let mut cmd = Command::new(&self.bin_path);
-            cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped());
-            Self::maybe_scrub_appimage_env(&mut cmd);
-            cmd.output()
+            cmd.args(args)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .output()
         }
     }
 
@@ -162,9 +139,7 @@ impl SwiftBin {
         }
         #[cfg(not(target_os = "windows"))]
         {
-            let mut cmd = Command::new(&self.bin_path);
-            Self::maybe_scrub_appimage_env(&mut cmd);
-            cmd
+            Command::new(&self.bin_path)
         }
     }
 
@@ -178,9 +153,7 @@ impl SwiftBin {
         }
         #[cfg(not(target_os = "windows"))]
         {
-            let mut cmd = TokioCommand::new(&self.sourcekit_path);
-            Self::maybe_scrub_appimage_env_tokio(&mut cmd);
-            cmd
+            TokioCommand::new(&self.sourcekit_path)
         }
     }
 }
