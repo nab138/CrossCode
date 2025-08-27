@@ -169,6 +169,9 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
   const [newOpen, setNewOpen] = useState(false);
   const [newValue, setNewValue] = useState("");
   const [newTarget, setNewTarget] = useState<string | null>(null);
+  const [newFolderOpen, setNewFolderOpen] = useState(false);
+  const [newFolderValue, setNewFolderValue] = useState("");
+  const [newFolderTarget, setNewFolderTarget] = useState<string | null>(null);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -232,6 +235,20 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
     setRefresh((r) => r + 1);
   };
 
+  const handleNewFolder = async () => {
+    if (!newFolderTarget) return;
+    const newPath = await path.resolve(newFolderTarget, newFolderValue);
+    if (await fs.exists(newPath)) {
+      addToast.error("Folder already exists!");
+      return;
+    }
+    await fs.mkdir(newPath);
+    setNewFolderOpen(false);
+    setNewFolderTarget(null);
+    setNewFolderValue("");
+    setRefresh((r) => r + 1);
+  };
+
   return (
     <div className={"file-explorer"} onContextMenu={handleContextMenu}>
       <FileItem
@@ -276,7 +293,19 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
                 setNewOpen(true);
               }}
             >
-              New File
+              New File...
+            </MenuItem>
+          )}
+          {contextMenu?.isFolder && (
+            <MenuItem
+              onClick={async () => {
+                handleClose();
+                setNewFolderTarget(contextMenu!.filePath);
+                setNewFolderValue("");
+                setNewFolderOpen(true);
+              }}
+            >
+              New Folder...
             </MenuItem>
           )}
           {contextMenu?.isFolder && <Divider />}
@@ -297,7 +326,7 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
               setRenameOpen(true);
             }}
           >
-            Rename
+            Rename...
           </MenuItem>
           <MenuItem
             onClick={async () => {
@@ -308,6 +337,15 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
             }}
           >
             Delete
+          </MenuItem>
+          <Divider />
+          <MenuItem
+            onClick={async () => {
+              handleClose();
+              setRefresh((r) => r + 1);
+            }}
+          >
+            Refresh
           </MenuItem>
         </Menu>
       </ClickAwayListener>
@@ -333,6 +371,33 @@ export default ({ openFolder, setOpenFile }: FileExplorerProps) => {
           >
             <Button onClick={() => setNewOpen(false)}>Cancel</Button>
             <Button onClick={handleNewFile} disabled={!newValue.trim()}>
+              Create
+            </Button>
+          </Box>
+        </ModalDialog>
+      </Modal>
+
+      {/* New Folder Modal */}
+      <Modal open={newFolderOpen} onClose={() => setNewFolderOpen(false)}>
+        <ModalDialog>
+          <Typography level="h4" component="h2" sx={{ mb: 2 }}>
+            New Folder
+          </Typography>
+          <Input
+            autoFocus
+            value={newFolderValue}
+            onChange={(e) => setNewFolderValue(e.target.value)}
+            onKeyDown={async (e) => {
+              if (e.key === "Enter") {
+                await handleNewFolder();
+              }
+            }}
+          />
+          <Box
+            sx={{ display: "flex", gap: 1, justifyContent: "flex-end", mt: 2 }}
+          >
+            <Button onClick={() => setNewFolderOpen(false)}>Cancel</Button>
+            <Button onClick={handleNewFolder} disabled={!newFolderValue.trim()}>
               Create
             </Button>
           </Box>
