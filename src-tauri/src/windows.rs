@@ -116,10 +116,6 @@ pub fn convert(
 
     let code = output.status.code().unwrap_or(-1);
     if code != 0 {
-        println!(
-            "wslpath output: {}",
-            String::from_utf8_lossy(&output.stdout)
-        );
         return Err(format!("Error getting wslpath: {}", code).into());
     }
 
