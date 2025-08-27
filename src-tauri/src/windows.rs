@@ -1,5 +1,6 @@
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
+#[cfg(target_os = "windows")]
 use std::process::{Command, Stdio};
 
 #[cfg(target_os = "windows")]

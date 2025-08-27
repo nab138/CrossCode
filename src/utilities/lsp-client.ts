@@ -1,7 +1,11 @@
 // https://github.com/CodinGame/monaco-vscode-api/wiki/Getting-started-guide
 
 // lsp-client.ts
-import { WebSocketMessageReader, WebSocketMessageWriter, toSocket } from "vscode-ws-jsonrpc";
+import {
+  WebSocketMessageReader,
+  WebSocketMessageWriter,
+  toSocket,
+} from "vscode-ws-jsonrpc";
 import {
   CloseAction,
   ErrorAction,
@@ -50,8 +54,8 @@ const createLanguageClient = (
       },
       initializationOptions: {
         swiftPM: {
-          swiftSDK: "arm64-apple-ios"
-        }
+          swiftSDK: "arm64-apple-ios",
+        },
       },
       middleware: {
         workspace: {
