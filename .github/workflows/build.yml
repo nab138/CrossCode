@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "ubuntu-22.04"
+          - platform: "ubuntu-20.04"
             args: ""
           - platform: "windows-latest"
             args: ""
@@ -70,6 +70,9 @@ jobs:
 
       - name: Install frontend dependencies
         run: bun i --frozen-lockfile
+
+      - name: Clean old bundles
+        run: rm -rf src-tauri/target/release/bundle
 
       - name: Build for Development
         uses: tauri-apps/tauri-action@v0
