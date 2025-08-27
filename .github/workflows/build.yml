@@ -72,7 +72,7 @@ jobs:
         run: bun i --frozen-lockfile
 
       - name: Clean old bundles
-        run: rm -rf src-tauri/target/release/bundle
+        run: bunx rimraf src-tauri/target/release/bundle
 
       - name: Build for Development
         uses: tauri-apps/tauri-action@v0
