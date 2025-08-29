@@ -39,6 +39,31 @@ export default () => {
     const params = {
       xcodePath: xipPath,
       toolchainPath: selectedToolchain?.path || "",
+      isDir: false,
+    };
+    await startOperation(installSdkOperation, params);
+    checkSDK();
+  }, [selectedToolchain, addToast]);
+
+  const installFromFolder = useCallback(async () => {
+    let xcodePath = await open({
+      directory: true,
+      multiple: false,
+      filters: [
+        {
+          name: "XCode.app",
+          extensions: ["app"],
+        },
+      ],
+    });
+    if (!xcodePath) {
+      addToast.error("No Xcode selected");
+      return;
+    }
+    const params = {
+      xcodePath,
+      toolchainPath: selectedToolchain?.path || "",
+      isDir: true,
     };
     await startOperation(installSdkOperation, params);
     checkSDK();
@@ -104,7 +129,17 @@ export default () => {
         >
           Download XCode 16.3
         </Button>
-        <Button variant="soft" onClick={install} disabled={!selectedToolchain}>
+        <Button
+          variant="soft"
+          onClick={(e) => {
+            if (e.shiftKey) {
+              installFromFolder();
+            } else {
+              install();
+            }
+          }}
+          disabled={!selectedToolchain}
+        >
           {hasDarwinSDK ? "Reinstall SDK" : "Install SDK"}
         </Button>
         <Button variant="soft" onClick={checkSDK} disabled={!selectedToolchain}>

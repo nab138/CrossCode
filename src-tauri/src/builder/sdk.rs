@@ -3,6 +3,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::io::ErrorKind;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 use tauri::{AppHandle, Manager, Window};
@@ -28,13 +29,22 @@ pub async fn install_sdk_operation(
     window: Window,
     xcode_path: String,
     toolchain_path: String,
+    is_dir: bool,
 ) -> Result<(), String> {
     let op = Operation::new("install_sdk".to_string(), &window);
     op.start("create_stage")?;
     let work_dir = op
         .fail_if_err("create_stage", linux_temp_dir())?
         .join("DarwinSDKBuild");
-    let res = install_sdk_internal(app, xcode_path, toolchain_path, work_dir.clone(), &op).await;
+    let res = install_sdk_internal(
+        app,
+        xcode_path,
+        toolchain_path,
+        work_dir.clone(),
+        is_dir,
+        &op,
+    )
+    .await;
     op.start("cleanup")?;
     let cleanup_result = if work_dir.exists() {
         remove_dir_all(&work_dir)
@@ -71,9 +81,10 @@ async fn install_sdk_internal(
     xcode_path: String,
     toolchain_path: String,
     work_dir: PathBuf,
+    is_dir: bool,
     op: &Operation<'_>,
 ) -> Result<(), String> {
-    if xcode_path.is_empty() || !xcode_path.ends_with(".xip") {
+    if xcode_path.is_empty() || (!xcode_path.ends_with(".xip") && !is_dir) {
         return op.fail("create_stage", "Xcode not found".to_string());
     }
     if toolchain_path.is_empty() {
@@ -114,7 +125,7 @@ async fn install_sdk_internal(
     op.move_on("create_stage", "install_toolset")?;
     op.fail_if_err("install_toolset", install_toolset(&output_dir).await)?;
     op.complete("install_toolset")?;
-    let dev = install_developer(&app, &output_dir, &xcode_path, op).await?;
+    let dev = install_developer(&app, &output_dir, &xcode_path, is_dir, op).await?;
     op.start("write_metadata")?;
 
     let iphone_os_sdk = sdk(&dev, "iPhoneOS")?;
@@ -307,72 +318,78 @@ async fn install_developer(
     app: &AppHandle,
     output_path: &PathBuf,
     xcode_path: &str,
+    is_dir: bool,
     op: &Operation<'_>,
 ) -> Result<PathBuf, String> {
     op.start("extract_xip")?;
+
     let dev_stage = output_path.join("DeveloperStage");
-    op.fail_if_err_map("extract_xip", fs::create_dir_all(&dev_stage), |e| {
-        format!("Failed to create DeveloperStage directory: {}", e)
-    })?;
+    let mut app_path = PathBuf::from(xcode_path);
+    if !is_dir {
+        op.fail_if_err_map("extract_xip", fs::create_dir_all(&dev_stage), |e| {
+            format!("Failed to create DeveloperStage directory: {}", e)
+        })?;
 
-    let unxip_path = op.fail_if_err_map(
-        "extract_xip",
-        app.path()
-            .resolve("unxip", tauri::path::BaseDirectory::Resource),
-        |e| format!("Failed to resolve unxip path: {}", e),
-    )?;
-
-    #[cfg(target_os = "windows")]
-    let status = Command::new("wsl")
-        .arg("bash")
-        .arg("-c")
-        .arg(format!(
-            "{} {} {}",
-            windows_to_wsl_path(&unxip_path.to_string_lossy())?,
-            windows_to_wsl_path(&xcode_path)?,
-            windows_to_wsl_path(&dev_stage.to_string_lossy())?
-        ))
-        .creation_flags(CREATE_NO_WINDOW)
-        .output();
-    #[cfg(not(target_os = "windows"))]
-    let status = Command::new(unxip_path)
-        .current_dir(&dev_stage)
-        .arg(xcode_path)
-        .output();
-    if let Err(e) = status {
-        return op.fail("extract_xip", format!("Failed to run unxip: {}", e));
-    }
-    let status = status.unwrap();
-    if !status.status.success() {
-        return op.fail(
+        let unxip_path = op.fail_if_err_map(
             "extract_xip",
-            format!(
-                "{}\nProcess exited with code {}",
-                String::from_utf8_lossy(&status.stderr.trim_ascii()),
-                status.status.code().unwrap_or(0)
-            ),
-        );
-    }
+            app.path()
+                .resolve("unxip", tauri::path::BaseDirectory::Resource),
+            |e| format!("Failed to resolve unxip path: {}", e),
+        )?;
 
-    let app_dirs = op
-        .fail_if_err_map("extract_xip", fs::read_dir(&dev_stage), |e| {
-            format!("Failed to read DeveloperStage directory: {}", e)
-        })?
-        .filter_map(Result::ok)
-        .filter(|entry| entry.path().extension().map_or(false, |ext| ext == "app"))
-        .collect::<Vec<_>>();
-    if app_dirs.len() != 1 {
-        return op.fail(
-            "extract_xip",
-            format!(
-                "Expected one .app in DeveloperStage, found {}",
-                app_dirs.len()
-            ),
-        );
+        #[cfg(target_os = "windows")]
+        let status = Command::new("wsl")
+            .arg("bash")
+            .arg("-c")
+            .arg(format!(
+                "{} {} {}",
+                windows_to_wsl_path(&unxip_path.to_string_lossy())?,
+                windows_to_wsl_path(&xcode_path)?,
+                windows_to_wsl_path(&dev_stage.to_string_lossy())?
+            ))
+            .creation_flags(CREATE_NO_WINDOW)
+            .output();
+        #[cfg(not(target_os = "windows"))]
+        let status = Command::new(unxip_path)
+            .current_dir(&dev_stage)
+            .arg(xcode_path)
+            .output();
+        if let Err(e) = status {
+            return op.fail("extract_xip", format!("Failed to run unxip: {}", e));
+        }
+        let status = status.unwrap();
+        if !status.status.success() {
+            return op.fail(
+                "extract_xip",
+                format!(
+                    "{}\nProcess exited with code {}",
+                    String::from_utf8_lossy(&status.stderr.trim_ascii()),
+                    status.status.code().unwrap_or(0)
+                ),
+            );
+        }
+
+        let app_dirs = op
+            .fail_if_err_map("extract_xip", fs::read_dir(&dev_stage), |e| {
+                format!("Failed to read DeveloperStage directory: {}", e)
+            })?
+            .filter_map(Result::ok)
+            .filter(|entry| entry.path().extension().map_or(false, |ext| ext == "app"))
+            .collect::<Vec<_>>();
+        if app_dirs.len() != 1 {
+            return op.fail(
+                "extract_xip",
+                format!(
+                    "Expected one .app in DeveloperStage, found {}",
+                    app_dirs.len()
+                ),
+            );
+        }
+
+        app_path = app_dirs[0].path();
     }
 
     op.move_on("extract_xip", "copy_files")?;
-    let app_path = app_dirs[0].path();
     let dev = output_path.join("Developer");
     op.fail_if_err_map("copy_files", fs::create_dir_all(&dev), |e| {
         format!("Failed to create Developer directory: {}", e)
@@ -390,9 +407,11 @@ async fn install_developer(
         "copy_files",
         copy_developer(&contents_developer, &dev, Path::new("Contents/Developer")),
     )?;
-    op.fail_if_err_map("copy_files", remove_dir_all(&dev_stage), |e| {
-        format!("Failed to remove DeveloperStage directory: {}", e)
-    })?;
+    if dev_stage.exists() {
+        op.fail_if_err_map("copy_files", remove_dir_all(&dev_stage), |e| {
+            format!("Failed to remove DeveloperStage directory: {}", e)
+        })?;
+    }
 
     for platform in ["iPhoneOS", "MacOSX", "iPhoneSimulator"] {
         let lib = "../../../../../Library";
@@ -485,7 +504,17 @@ fn copy_developer(src: &Path, dst: &Path, rel: &Path) -> Result<(), String> {
                 fs::create_dir_all(parent)
                     .map_err(|e| format!("Failed to create parent dir: {}", e))?;
             }
-            fs::rename(&src_path, &dst_path).map_err(|e| format!("Failed to copy file: {}", e))?;
+            match fs::rename(&src_path, &dst_path) {
+                Ok(_) => {}
+                Err(e) => {
+                    if e.kind() == ErrorKind::CrossesDevices {
+                        fs::copy(&src_path, &dst_path)
+                            .map_err(|e2| format!("Failed to copy file across devices: {}", e2))?;
+                    } else {
+                        return Err(format!("Failed to move file: {}", e));
+                    }
+                }
+            }
         }
     }
     Ok(())
