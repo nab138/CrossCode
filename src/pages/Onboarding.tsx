@@ -167,28 +167,39 @@ export default ({}: OnboardingProps) => {
             </Typography>
             <Divider />
             <CardContent>
-              <Typography level="body-md">
+              <Typography
+                level="body-md"
+                sx={{
+                  alignContent: "center",
+                  display: "flex",
+                  gap: "var(--padding-xs)",
+                }}
+                color={hasWSL === false ? "danger" : undefined}
+              >
                 {hasWSL === null ? (
                   "Checking for wsl..."
                 ) : hasWSL ? (
                   "WSL is already installed on your system!"
                 ) : (
                   <>
-                    WSL is not installed on your system. CrossCode can attempt
-                    to automatically install WSL. If it fails, follow the guide
-                    on{" "}
-                    <Link
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        openUrl(
-                          "https://learn.microsoft.com/en-us/windows/wsl/install"
-                        );
-                      }}
-                    >
-                      microsoft.com
-                    </Link>
-                    .
+                    <ErrorIcon />{" "}
+                    <div>
+                      WSL is not installed on your system. CrossCode can attempt
+                      to automatically install WSL. If it fails, follow the
+                      guide on{" "}
+                      <Link
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          openUrl(
+                            "https://learn.microsoft.com/en-us/windows/wsl/install"
+                          );
+                        }}
+                      >
+                        microsoft.com
+                      </Link>
+                      .
+                    </div>
                   </>
                 )}
               </Typography>

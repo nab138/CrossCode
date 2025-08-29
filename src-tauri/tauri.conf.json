@@ -23,7 +23,7 @@
   },
   "productName": "CrossCode",
   "mainBinaryName": "CrossCode",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "identifier": "me.nabdev.crosscode",
   "plugins": {
     "fs": {
