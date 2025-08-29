@@ -42,7 +42,7 @@ use tauri_plugin_cli::CliExt;
 use tauri_plugin_store::StoreExt;
 use templates::create_template;
 use tokio::sync::Mutex;
-use windows::{has_wsl, is_windows};
+use windows::{has_wsl, install_wsl, is_windows};
 
 fn main() {
     CryptoProvider::install_default(ring::default_provider()).unwrap();
@@ -142,6 +142,7 @@ fn main() {
             start_stream_stdout,
             stop_stream_stdout,
             is_streaming_stdout,
+            install_wsl
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
