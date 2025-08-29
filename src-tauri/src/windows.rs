@@ -71,7 +71,7 @@ pub fn install_wsl() -> Result<(), String> {
     {
         Command::new("powershell")
             .arg("-Command")
-            .arg("Start-Process powershell -Verb runAs -ArgumentList 'wsl --install'")
+            .arg("Start-Process powershell -Verb runAs -ArgumentList 'wsl --install Ubuntu-24.04'")
             .spawn()
             .map_err(|e| e.to_string())?;
     }
