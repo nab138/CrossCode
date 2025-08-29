@@ -158,22 +158,13 @@ export default () => {
           gap: "var(--padding-md)",
         }}
       >
-        {
-          <Button
-            variant="soft"
-            onClick={locateToolchain}
-            disabled={!isWindowsReady}
-          >
-            Locate Existing Toolchain
-          </Button>
-        }
         {toolchains?.swiftlyInstalled === false &&
           selectedToolchain === null && (
             <Button
               disabled={!isWindowsReady}
               variant="soft"
               onClick={() => {
-                openUrl("https://swift.org/install/");
+                openUrl("https://www.swift.org/install/linux");
               }}
             >
               Download Swift
@@ -188,6 +179,15 @@ export default () => {
             }}
           >
             Scan Again
+          </Button>
+        }
+        {
+          <Button
+            variant="soft"
+            onClick={locateToolchain}
+            disabled={!isWindowsReady}
+          >
+            Locate Existing Toolchain
           </Button>
         }
       </div>

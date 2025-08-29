@@ -192,36 +192,46 @@ export default ({}: OnboardingProps) => {
                   </>
                 )}
               </Typography>
-              {!hasWSL && <Divider />}
               {!hasWSL && (
-                <Button
-                  onClick={async () => {
-                    try {
-                      await invoke("install_wsl");
-                    } catch (error) {
-                      addToast.error(
-                        "Failed to launch WSL installation. Please try installing it manually."
-                      );
-                    }
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "var(--padding-md)",
+                    marginTop: "var(--padding-xs)",
                   }}
                 >
-                  Install WSL
-                </Button>
-              )}
-              {!hasWSL && (
-                <Button
-                  onClick={async () => {
-                    try {
-                      await relaunch();
-                    } catch (error) {
-                      addToast.error(
-                        "Failed to relaunch CrossCode. Please try manually."
-                      );
-                    }
-                  }}
-                >
-                  Relaunch CrossCode (post-installation)
-                </Button>
+                  <Button
+                    variant="soft"
+                    onClick={async () => {
+                      try {
+                        await invoke("install_wsl");
+                        addToast.success(
+                          "Started WSL installation. It may take a while, and may ask you to restart your PC. If you are prompted to enter a username or password, choose whatever you like."
+                        );
+                      } catch (error) {
+                        addToast.error(
+                          "Failed to launch WSL installation. Please try installing it manually."
+                        );
+                      }
+                    }}
+                  >
+                    Install WSL
+                  </Button>
+                  <Button
+                    variant="soft"
+                    onClick={async () => {
+                      try {
+                        await relaunch();
+                      } catch (error) {
+                        addToast.error(
+                          "Failed to relaunch CrossCode. Please try manually."
+                        );
+                      }
+                    }}
+                  >
+                    Relaunch CrossCode (post-installation)
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
