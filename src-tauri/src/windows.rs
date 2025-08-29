@@ -65,6 +65,19 @@ pub fn is_windows() -> bool {
     cfg!(target_os = "windows")
 }
 
+#[tauri::command]
+pub fn install_wsl() -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("powershell")
+            .arg("-Command")
+            .arg("Start-Process powershell -Verb runAs -ArgumentList 'wsl --install'")
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 // Taken from wslpath2 crate and modified
 #[cfg(target_os = "windows")]
 #[derive(Debug)]
