@@ -71,7 +71,7 @@ pub fn install_wsl() -> Result<(), String> {
     {
         Command::new("powershell")
             .arg("-Command")
-            .arg("Start-Process powershell -Verb runAs -ArgumentList '-NoExit','-Command','wsl --install -d Ubuntu-24.04; Write-Host \"`nA restart is required to finish installing WSL. After restarting, open CrossCode and click Install WSL again to finish the installation.\"; Read-Host \"Press Enter to close\"'")
+            .arg("Start-Process powershell -Verb runAs -ArgumentList '-NoExit','-Command','wsl --install Ubuntu-24.04; Write-Host \"`nIf this is your first time installing WSL, a restart is required to finish. After restarting, open CrossCode and click Install WSL again to finish the installation.\"; Read-Host \"Press Enter to close\"'")
             .spawn()
             .map_err(|e| e.to_string())?;
     }
