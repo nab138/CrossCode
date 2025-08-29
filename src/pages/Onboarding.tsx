@@ -96,7 +96,17 @@ export default ({}: OnboardingProps) => {
           >
             github
           </Link>
-          .
+          . Check the{" "}
+          <Link
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              open("https://github.com/nab138/CrossCode/wiki/Troubleshooting");
+            }}
+          >
+            troubleshooting guide
+          </Link>{" "}
+          for known issues and workarounds.
         </Typography>
       </div>
       <div className="onboarding-buttons">
