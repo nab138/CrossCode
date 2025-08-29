@@ -136,7 +136,7 @@ export default ({}: OnboardingProps) => {
         )}
       </Typography>
       <div className="onboarding-cards">
-        {!isWindows && (
+        {isWindows && (
           <Card variant="soft">
             <Typography level="h3">Windows Subsystem for Linux</Typography>
             <Typography level="body-sm">
@@ -182,8 +182,8 @@ export default ({}: OnboardingProps) => {
                   </>
                 )}
               </Typography>
-              {hasWSL && <Divider />}
-              {hasWSL && (
+              {!hasWSL && <Divider />}
+              {!hasWSL && (
                 <Button
                   onClick={async () => {
                     try {
@@ -198,7 +198,7 @@ export default ({}: OnboardingProps) => {
                   Install WSL
                 </Button>
               )}
-              {hasWSL && (
+              {!hasWSL && (
                 <Button
                   onClick={async () => {
                     try {
