@@ -11,7 +11,7 @@ use tauri::{AppHandle, Manager, Window};
 use crate::builder::crossplatform::{
     linux_path, linux_temp_dir, read_link, remove_dir_all, symlink,
 };
-use crate::builder::swift::{validate_toolchain, SwiftBin};
+use crate::builder::swift::{SwiftBin, validate_toolchain};
 use crate::operation::Operation;
 
 #[cfg(target_os = "windows")]
@@ -330,43 +330,15 @@ async fn install_developer(
             format!("Failed to create DeveloperStage directory: {}", e)
         })?;
 
-        let unxip_path = op.fail_if_err_map(
-            "extract_xip",
-            app.path()
-                .resolve("unxip", tauri::path::BaseDirectory::Resource),
-            |e| format!("Failed to resolve unxip path: {}", e),
-        )?;
-
         #[cfg(target_os = "windows")]
-        let status = Command::new("wsl")
-            .arg("bash")
-            .arg("-c")
-            .arg(format!(
-                "{} {} {}",
-                windows_to_wsl_path(&unxip_path.to_string_lossy())?,
-                windows_to_wsl_path(&xcode_path)?,
-                windows_to_wsl_path(&dev_stage.to_string_lossy())?
-            ))
-            .creation_flags(CREATE_NO_WINDOW)
-            .output();
+        panic!("Not implemented on windows");
+
         #[cfg(not(target_os = "windows"))]
-        let status = Command::new(unxip_path)
-            .current_dir(&dev_stage)
-            .arg(xcode_path)
-            .output();
-        if let Err(e) = status {
-            return op.fail("extract_xip", format!("Failed to run unxip: {}", e));
-        }
-        let status = status.unwrap();
-        if !status.status.success() {
-            return op.fail(
-                "extract_xip",
-                format!(
-                    "{}\nProcess exited with code {}",
-                    String::from_utf8_lossy(&status.stderr.trim_ascii()),
-                    status.status.code().unwrap_or(0)
-                ),
-            );
+        {
+            let mut file = fs::File::open(xcode_path)
+                .map_err(|e| format!("Failed to open xip file: {}", e))?;
+            unxip_rs::unxip(&mut file, &dev_stage)
+                .map_err(|e| format!("Failed to extract xip file: {}", e))?;
         }
 
         let app_dirs = op
