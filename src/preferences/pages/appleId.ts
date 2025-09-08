@@ -14,6 +14,7 @@ export const appleIdPage = createPreferencePage(
         { label: "Sidestore (.zip)", value: "ani.sidestore.zip" },
         { label: "Sidestore (.xyz)", value: "ani.846969.xyz" },
         { label: "nythepegasus", value: "ani.npeg.us" },
+        { label: "Custom", value: "other", default: "ani.yourserver.com" }
       ],
       "The remote anisette server used. Change this if you are having issues logging in.",
       "ani.sidestore.io"

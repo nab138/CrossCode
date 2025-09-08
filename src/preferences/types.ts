@@ -10,7 +10,7 @@ export interface PreferenceItem {
     | "info"
     | "number"
     | "custom";
-  options?: Array<{ label: string; value: string }>;
+  options?: Array<{ label: string; value: string, default?: string }>;
   defaultValue?: any;
   onChange?: (value: any) => void | Promise<void>;
   validation?: (value: any) => string | null;

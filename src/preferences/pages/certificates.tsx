@@ -1,6 +1,6 @@
 import { createCustomPreferencePage } from "../helpers";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../../utilities/StoreContext";
 import { Button, Typography } from "@mui/joy";
 
@@ -20,17 +20,18 @@ const CertificatesComponent = () => {
     "ani.sidestore.io"
   );
   const loadingRef = useRef<boolean>(false);
+  let fetch = useCallback(async () => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    let certs = await invoke<Certificate[]>("get_certificates", {
+      anisetteServer,
+    });
+    setCertificates(certs);
+    setLoading(false);
+    loadingRef.current = false;
+  }, [anisetteServer]);
+
   useEffect(() => {
-    let fetch = async () => {
-      if (loadingRef.current) return;
-      loadingRef.current = true;
-      let certs = await invoke<Certificate[]>("get_certificates", {
-        anisetteServer,
-      });
-      setCertificates(certs);
-      setLoading(false);
-      loadingRef.current = false;
-    };
     fetch().catch((e) => {
       console.error("Failed to fetch certificates:", e);
       setError(
@@ -39,7 +40,7 @@ const CertificatesComponent = () => {
       setLoading(false);
       loadingRef.current = false;
     });
-  }, []);
+  }, [fetch]);
 
   if (loading) {
     return <div>Loading certificates...</div>;

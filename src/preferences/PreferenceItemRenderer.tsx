@@ -24,7 +24,21 @@ export default function PreferenceItemRenderer({
 }: PreferenceItemRendererProps) {
   const storeKey = `${pageName}/${item.id}`.toLowerCase();
   const [value, setValue] = useStore(storeKey, item.defaultValue || "");
+  const [showOtherTextField, setShowOtherTextField] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (item.type === "select" && item.options) {
+      if (
+        item.options.some((o) => o.value === "other") &&
+        !item.options.some((o) => o.value === value)
+      ) {
+        setShowOtherTextField(true);
+      } else {
+        setShowOtherTextField(false);
+      }
+    }
+  }, [value]);
 
   if (item.type === "info" && typeof item.defaultValue === "function") {
     const [info, setInfo] = useState("");
@@ -63,6 +77,21 @@ export default function PreferenceItemRenderer({
   }
 
   const handleChange = async (newValue: any) => {
+    if (
+      item.type === "select" &&
+      item.options?.some((o) => o.default !== undefined)
+    ) {
+      if (
+        item.options?.find((o) => o.value === newValue)?.default !== undefined
+      ) {
+        setNewValue(item.options.find((o) => o.value === newValue)?.default);
+        return;
+      }
+    }
+    setNewValue(newValue);
+  };
+
+  const setNewValue = async (newValue: any) => {
     if (item.validation) {
       const validationError = item.validation(newValue);
       setError(validationError);
@@ -93,6 +122,7 @@ export default function PreferenceItemRenderer({
           {item.type === "text" && (
             <Input
               type="text"
+              size="sm"
               disabled={!storeExists}
               value={value}
               onChange={(e) => handleChange(e.target.value)}
@@ -102,6 +132,7 @@ export default function PreferenceItemRenderer({
           {item.type === "number" && (
             <Input
               type="number"
+              size="sm"
               disabled={!storeExists}
               value={value}
               onChange={(e) => handleChange(Number(e.target.value))}
@@ -110,7 +141,7 @@ export default function PreferenceItemRenderer({
 
           {item.type === "select" && (
             <Select
-              value={value}
+              value={showOtherTextField ? "other" : value}
               size="sm"
               disabled={!storeExists}
               onChange={(_, newValue) => handleChange(newValue)}
@@ -152,6 +183,18 @@ export default function PreferenceItemRenderer({
           )}
         </div>
       </div>
+
+      {item.type === "select" && showOtherTextField && (
+        <>
+          <Input
+            type="text"
+            size="sm"
+            disabled={!storeExists}
+            value={value}
+            onChange={(e) => setNewValue(e.target.value)}
+          />
+        </>
+      )}
 
       {error && (
         <Typography level="body-xs" color="danger">
