@@ -228,6 +228,13 @@ pub async fn get_toolchain_info(
 #[tauri::command]
 pub async fn get_swiftly_toolchains() -> Result<ToolchainResult, String> {
     let swiftly_home_dir = get_swiftly_path();
+    if get_swiftly_config().is_err() {
+        return Ok(ToolchainResult {
+            swiftly_installed: false,
+            swiftly_version: None,
+            toolchains: vec![],
+        });
+    }
     if let Some(_) = swiftly_home_dir {
         let config = get_swiftly_config()?;
         let toolchains_unfiltered: Vec<Toolchain> = config
