@@ -135,7 +135,7 @@ export const IDEProvider: React.FC<{
   }, []);
 
   const locateToolchain = useCallback(async () => {
-    const path = await dialog.open({
+    let path = await dialog.open({
       directory: true,
       multiple: false,
     });
@@ -143,25 +143,39 @@ export const IDEProvider: React.FC<{
       addToast.error("No path selected");
       return;
     }
-    if (await invoke("validate_toolchain", { toolchainPath: path })) {
-      const info = await invoke<Toolchain>("get_toolchain_info", {
-        toolchainPath: path,
-      }).catch((error) => {
-        console.error("Error getting toolchain info:", error);
-        addToast.error("Failed to get toolchain info");
-        return null;
-      });
-      if (!info) {
-        addToast.error("Invalid toolchain path or version not found");
+    if (!(await invoke("validate_toolchain", { toolchainPath: path }))) {
+      if (isWindows) {
+        if (path?.startsWith("\\\\wsl.localhost\\")) {
+          path = path.replace("\\\\wsl.localhost\\", "\\\\wsl$\\");
+        }
+        path = await invoke<string>("linux_path", {
+          path,
+        });
+        if (!(await invoke("validate_toolchain", { toolchainPath: path }))) {
+          addToast.error("Invalid toolchain path");
+          return;
+        }
+      } else {
+        addToast.error("Invalid toolchain path");
         return;
       }
-      if (info) {
-        setSelectedToolchain(info);
-      }
-    } else {
-      addToast.error("Invalid toolchain path");
     }
-  }, []);
+    const info = await invoke<Toolchain>("get_toolchain_info", {
+      toolchainPath: path,
+      isSwiftly: false,
+    }).catch((error) => {
+      console.error("Error getting toolchain info:", error);
+      addToast.error("Failed to get toolchain info");
+      return null;
+    });
+    if (!info) {
+      addToast.error("Invalid toolchain path or version not found");
+      return;
+    }
+    if (info) {
+      setSelectedToolchain(info);
+    }
+  }, [isWindows]);
 
   useEffect(() => {
     let initPromises: Promise<void>[] = [];
