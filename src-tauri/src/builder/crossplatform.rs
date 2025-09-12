@@ -53,36 +53,6 @@ pub fn symlink(target: &str, link: &str) -> std::io::Result<()> {
     }
 }
 
-pub fn read_link(path: &PathBuf) -> Result<PathBuf, String> {
-    #[cfg(not(target_os = "windows"))]
-    {
-        return fs::read_link(path).map_err(|e| format!("Failed to read symlink: {}", e));
-    }
-    #[cfg(target_os = "windows")]
-    {
-        if !has_wsl() {
-            return Err("WSL is not available".to_string());
-        }
-        let wsl_path = windows_to_wsl_path(&path.to_string_lossy().to_string())?;
-        let output = Command::new("wsl")
-            .arg("readlink")
-            .arg(wsl_path)
-            .creation_flags(CREATE_NO_WINDOW)
-            .output()
-            .expect("failed to execute process");
-        if output.status.success() {
-            let res = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            Ok(PathBuf::from(res))
-        } else {
-            Err(format!(
-                "Failed to read symlink '{}': {}",
-                path.display(),
-                String::from_utf8_lossy(&output.stderr)
-            ))
-        }
-    }
-}
-
 pub fn linux_env(key: &str) -> Result<String, String> {
     #[cfg(not(target_os = "windows"))]
     {

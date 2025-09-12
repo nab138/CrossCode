@@ -1,0 +1,14 @@
+[package]
+name = "sdkmover"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "sdkmover"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sdkmoverbin"
+path = "src/main.rs"
+
+[dependencies]
