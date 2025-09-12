@@ -387,7 +387,7 @@ async fn install_developer(
 
     op.fail_if_err(
         "copy_files",
-        copy_developer(&contents_developer, &dev, Path::new("Contents/Developer")),
+        copy_developer(&contents_developer, &dev, Path::new("Contents/Developer"), false),
     )?;
     if dev_stage.exists() {
         op.fail_if_err_map("copy_files", remove_dir_all(&dev_stage), |e| {
@@ -441,7 +441,8 @@ async fn install_developer(
     Ok(dev)
 }
 
-fn copy_developer(src: &Path, dst: &Path, rel: &Path) -> Result<(), String> {
+fn copy_developer(src: &Path, dst: &Path, rel: &Path, crosses_devices: bool) -> Result<(), String> {
+    let mut has_crossed_device = crosses_devices;
     for entry in fs::read_dir(src).map_err(|e| format!("Failed to read dir: {}", e))? {
         let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
         let file_name = entry.file_name();
@@ -480,16 +481,22 @@ fn copy_developer(src: &Path, dst: &Path, rel: &Path) -> Result<(), String> {
             .map_err(|e| format!("Failed to create symlink: {}", e))?;
         } else if metadata.is_dir() {
             fs::create_dir_all(&dst_path).map_err(|e| format!("Failed to create dir: {}", e))?;
-            copy_developer(&src_path, dst, &rel_path)?;
+            copy_developer(&src_path, dst, &rel_path, has_crossed_device)?;
         } else if metadata.is_file() {
             if let Some(parent) = dst_path.parent() {
                 fs::create_dir_all(parent)
                     .map_err(|e| format!("Failed to create parent dir: {}", e))?;
             }
+            if has_crossed_device {
+                fs::copy(&src_path, &dst_path)
+                    .map_err(|e| format!("Failed to copy file across devices: {}", e))?;
+                continue;
+            }
             match fs::rename(&src_path, &dst_path) {
                 Ok(_) => {}
                 Err(e) => {
                     if e.kind() == ErrorKind::CrossesDevices {
+                        has_crossed_device = true;
                         fs::copy(&src_path, &dst_path)
                             .map_err(|e2| format!("Failed to copy file across devices: {}", e2))?;
                     } else {
