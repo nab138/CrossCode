@@ -3,8 +3,9 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::io::ErrorKind;
+use std::io::{ErrorKind, Read, Seek};
 use std::path::{Component, Path, PathBuf};
+use std::process::{Command, Stdio};
 use tauri::{AppHandle, Manager, Window};
 
 use crate::builder::crossplatform::{
@@ -12,6 +13,8 @@ use crate::builder::crossplatform::{
 };
 use crate::builder::swift::{validate_toolchain, SwiftBin};
 use crate::operation::Operation;
+use tauri::path::BaseDirectory;
+use unxip_rs::{reader::XipReader, UnxipError};
 
 #[cfg(target_os = "windows")]
 use crate::windows::windows_to_wsl_path;
@@ -329,27 +332,24 @@ async fn install_developer(
             format!("Failed to create DeveloperStage directory: {}", e)
         })?;
 
-        #[cfg(target_os = "windows")]
-        panic!("Not implemented on windows");
-
-        #[cfg(not(target_os = "windows"))]
-        {
-            use tauri::path::BaseDirectory;
-
-            let mut file = fs::File::open(xcode_path)
-                .map_err(|e| format!("Failed to open xip file: {}", e))?;
-            let cpio = op.fail_if_err_map(
+        let mut file = op.fail_if_err_map("extract_xip", fs::File::open(xcode_path), |e| {
+            format!("Failed to open xip file: {}", e)
+        })?;
+        let cpio = op
+            .fail_if_err_map(
                 "extract_xip",
                 app.path().resolve("cpio", BaseDirectory::Resource),
                 |e| format!("Failed to resolve cpio path: {}", e),
-            )?;
-            unxip_rs::unxip(
-                &mut file,
-                &dev_stage,
-                Some(cpio.to_string_lossy().to_string()),
-            )
-            .map_err(|e| format!("Failed to extract xip file: {}", e))?;
-        }
+            )?
+            .to_string_lossy()
+            .to_string();
+
+        #[cfg(target_os = "windows")]
+        let cpio = windows_to_wsl_path(&cpio)?;
+
+        op.fail_if_err_map("extract_xip", unxip(&mut file, &dev_stage, cpio), |e| {
+            format!("Failed to extract xip file: {}", e)
+        })?;
 
         let app_dirs = op
             .fail_if_err_map("extract_xip", fs::read_dir(&dev_stage), |e| {
@@ -687,4 +687,48 @@ fn is_wanted(path: &Path) -> bool {
     }
 
     true
+}
+
+pub fn unxip<R: Read + Seek + Sized + std::fmt::Debug>(
+    reader: &mut R,
+    output_path: &Path,
+    cpio_path: String,
+) -> Result<(), UnxipError> {
+    let mut xip_reader = XipReader::new(reader)?;
+
+    std::fs::create_dir_all(output_path).map_err(UnxipError::IoError)?;
+
+    #[cfg(not(target_os = "windows"))]
+    let mut child = Command::new(&cpio_path)
+        .arg("-idm")
+        .current_dir(output_path)
+        .stdin(Stdio::piped())
+        .spawn()
+        .map_err(|e| UnxipError::Misc(format!("Failed to spawn cpio: {}", e)))?;
+    #[cfg(target_os = "windows")]
+    let mut child = Command::new("wsl")
+        .arg(format!("{}", cpio_path))
+        .arg("-idm")
+        .current_dir(output_path)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::inherit())
+        .spawn()
+        .map_err(|e| UnxipError::Misc(format!("Failed to spawn cpio: {}", e)))?;
+    {
+        let stdin = child
+            .stdin
+            .as_mut()
+            .ok_or_else(|| UnxipError::Misc("Failed to open cpio stdin".to_string()))?;
+
+        std::io::copy(&mut xip_reader, stdin).map_err(UnxipError::IoError)?;
+    }
+
+    let status = child.wait().map_err(UnxipError::IoError)?;
+    if !status.success() {
+        return Err(UnxipError::Misc(format!(
+            "cpio failed with status: {}",
+            status
+        )));
+    }
+    Ok(())
 }
