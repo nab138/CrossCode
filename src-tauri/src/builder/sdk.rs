@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::ErrorKind;
 use std::path::{Component, Path, PathBuf};
-use tauri::Window;
+use tauri::{AppHandle, Manager, Window};
 
 use crate::builder::crossplatform::{
     linux_path, linux_temp_dir, read_link, remove_dir_all, symlink,
@@ -24,6 +24,7 @@ const DARWIN_TOOLS_VERSION: &str = "1.0.1";
 
 #[tauri::command]
 pub async fn install_sdk_operation(
+    app: AppHandle,
     window: Window,
     xcode_path: String,
     toolchain_path: String,
@@ -34,7 +35,15 @@ pub async fn install_sdk_operation(
     let work_dir = op
         .fail_if_err("create_stage", linux_temp_dir())?
         .join("DarwinSDKBuild");
-    let res = install_sdk_internal(xcode_path, toolchain_path, work_dir.clone(), is_dir, &op).await;
+    let res = install_sdk_internal(
+        app,
+        xcode_path,
+        toolchain_path,
+        work_dir.clone(),
+        is_dir,
+        &op,
+    )
+    .await;
     op.start("cleanup")?;
     let cleanup_result = if work_dir.exists() {
         remove_dir_all(&work_dir)
@@ -67,6 +76,7 @@ pub async fn install_sdk_operation(
     }
 }
 async fn install_sdk_internal(
+    app: AppHandle,
     xcode_path: String,
     toolchain_path: String,
     work_dir: PathBuf,
@@ -114,12 +124,12 @@ async fn install_sdk_internal(
     op.move_on("create_stage", "install_toolset")?;
     op.fail_if_err("install_toolset", install_toolset(&output_dir).await)?;
     op.complete("install_toolset")?;
-    let dev = install_developer(&output_dir, &xcode_path, is_dir, op).await?;
+    let dev = install_developer(app, &output_dir, &xcode_path, is_dir, op).await?;
     op.start("write_metadata")?;
 
-    let iphone_os_sdk = sdk(&dev, "iPhoneOS")?;
-    let mac_os_sdk = sdk(&dev, "MacOSX")?;
-    let iphone_simulator_sdk = sdk(&dev, "iPhoneSimulator")?;
+    let iphone_os_sdk = op.fail_if_err("write_metadata", sdk(&dev, "iPhoneOS"))?;
+    let mac_os_sdk = op.fail_if_err("write_metadata", sdk(&dev, "MacOSX"))?;
+    let iphone_simulator_sdk = op.fail_if_err("write_metadata", sdk(&dev, "iPhoneSimulator"))?;
 
     let info = "{
     \"schemaVersion\": \"1.0\",
@@ -304,6 +314,7 @@ async fn install_toolset(output_path: &PathBuf) -> Result<(), String> {
 }
 
 async fn install_developer(
+    app: AppHandle,
     output_path: &PathBuf,
     xcode_path: &str,
     is_dir: bool,
@@ -323,10 +334,21 @@ async fn install_developer(
 
         #[cfg(not(target_os = "windows"))]
         {
+            use tauri::path::BaseDirectory;
+
             let mut file = fs::File::open(xcode_path)
                 .map_err(|e| format!("Failed to open xip file: {}", e))?;
-            unxip_rs::unxip(&mut file, &dev_stage)
-                .map_err(|e| format!("Failed to extract xip file: {}", e))?;
+            let cpio = op.fail_if_err_map(
+                "extract_xip",
+                app.path().resolve("cpio", BaseDirectory::Resource),
+                |e| format!("Failed to resolve cpio path: {}", e),
+            )?;
+            unxip_rs::unxip(
+                &mut file,
+                &dev_stage,
+                Some(cpio.to_string_lossy().to_string()),
+            )
+            .map_err(|e| format!("Failed to extract xip file: {}", e))?;
         }
 
         let app_dirs = op

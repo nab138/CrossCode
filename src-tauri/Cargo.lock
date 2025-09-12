@@ -7333,9 +7333,9 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "unxip-rs"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e4dc1fcff33d015d0ee988e3875a503c565418e154cfc799d8087d8ccd03171"
+checksum = "f0784818663cf55c57e8f1a677047fa45701ac20b55069a739716dd44fb72bd4"
 dependencies = [
  "apple-xar",
  "thiserror 2.0.16",

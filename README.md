@@ -58,6 +58,7 @@ Please note that I am one person, so development may be slow. If you want to hel
 - [idevice](https://github.com/jkcoxson/idevice) is used to communicate with iOS devices.
 - [xtool](https://xtool.sh) has been used as a reference for the implementation of the darwin SDK generation.
 - [Sideloader](https://github.com/Dadoum/Sideloader) has been heavily used as a reference for the implementation of the Apple Developer APIs and sideloading process.
+- [GNU cpio](https://www.gnu.org/software/cpio/) 2.14 is included under GPLv3 (see licenses/GPL-3.0.txt), with its copyright holders. See [Source code](https://ftp.gnu.org/gnu/cpio/cpio-2.14.tar.gz). It is used to help with XIP extraction.
 
 ### AI Usage
 

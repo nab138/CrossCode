@@ -14,6 +14,7 @@ import New from "./pages/New";
 import NewTemplate from "./pages/NewTemplate";
 import "vscode/localExtensionHost";
 import { UpdateProvider } from "./utilities/UpdateContext";
+import About from "./pages/About";
 
 declare module "@mui/joy/IconButton" {
   interface IconButtonPropsSizeOverrides {
@@ -44,22 +45,24 @@ const theme = extendTheme({
 const IDELayout = () => {
   const [appTheme] = useStore("appearance/theme", "dark");
   return (
-    <ToastProvider
-      toastOptions={{ placement: "bottom-right" }}
-      toastStyles={
-        appTheme == "dark"
-          ? { toastBgColor: "#333", toastTextColor: "#fff" }
-          : {}
-      }
-    >
-      <UpdateProvider>
-        <CommandProvider>
-          <IDEProvider>
-            <Outlet />
-          </IDEProvider>
-        </CommandProvider>
-      </UpdateProvider>
-    </ToastProvider>
+    <StoreProvider>
+      <ToastProvider
+        toastOptions={{ placement: "bottom-right" }}
+        toastStyles={
+          appTheme == "dark"
+            ? { toastBgColor: "#333", toastTextColor: "#fff" }
+            : {}
+        }
+      >
+        <UpdateProvider>
+          <CommandProvider>
+            <IDEProvider>
+              <Outlet />
+            </IDEProvider>
+          </CommandProvider>
+        </UpdateProvider>
+      </ToastProvider>
+    </StoreProvider>
   );
 };
 
@@ -67,30 +70,29 @@ const App = () => {
   return (
     <BrowserRouter>
       <CssVarsProvider defaultMode="system" theme={theme}>
-        <StoreProvider>
-          <Sheet
-            onContextMenu={(e) => {
-              e.preventDefault();
-            }}
-            sx={{
-              width: "100%",
-              height: "100%",
-              overflow: "auto",
-            }}
-          >
-            <Routes>
-              <Route element={<IDELayout />}>
-                <Route index element={<Onboarding />} />
-                <Route path="/ide/:path" element={<IDE />} />
-                <Route path="/new" element={<New />} />
-                <Route path="/new/:template" element={<NewTemplate />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
+        <Sheet
+          onContextMenu={(e) => {
+            e.preventDefault();
+          }}
+          sx={{
+            width: "100%",
+            height: "100%",
+            overflow: "auto",
+          }}
+        >
+          <Routes>
+            <Route element={<IDELayout />}>
+              <Route index element={<Onboarding />} />
+              <Route path="/ide/:path" element={<IDE />} />
+              <Route path="/new" element={<New />} />
+              <Route path="/new/:template" element={<NewTemplate />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
 
-                <Route path="/preferences/:page?" element={<Preferences />} />
-              </Route>
-            </Routes>
-          </Sheet>
-        </StoreProvider>
+              <Route path="/preferences/:page?" element={<Preferences />} />
+            </Route>
+            <Route path="/about" element={<About />} />
+          </Routes>
+        </Sheet>
       </CssVarsProvider>
     </BrowserRouter>
   );

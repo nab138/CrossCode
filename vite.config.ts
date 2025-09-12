@@ -28,6 +28,8 @@ export default defineConfig(async () => ({
       input: {
         index: "./index.html",
         splash: "./splash.html",
+        about: "./about.html",
+        logo: "./logo.png",
       },
     },
   },
