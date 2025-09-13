@@ -265,7 +265,9 @@ export default ({}: OnboardingProps) => {
             CrossCode requires a special swift SDK to build apps for iOS. It can
             be generated from a copy of Xcode 16 or later. To install it,
             download Xcode.xip using the link below, click the "Install SDK"
-            button, then select the downloaded file.
+            button, then select the downloaded file. Note that installing the
+            SDK will temporarily require a lot of disk space (~10GB) and may
+            take a while.
           </Typography>
           <Divider />
           <CardContent>

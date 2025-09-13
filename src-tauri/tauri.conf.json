@@ -8,10 +8,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "resources": [
-      "templates",
-      "unxip"
-    ],
+    "resources": ["templates", "cpio"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -68,7 +65,8 @@
         "fullscreen": false,
         "visible": true,
         "center": true,
-        "focus": true
+        "focus": true,
+        "backgroundColor": "#171a1c"
       }
     ]
   }
