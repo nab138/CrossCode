@@ -36,6 +36,7 @@ pub async fn install_sdk_operation(
     op.start("create_stage")?;
     let work_dir = op
         .fail_if_err("create_stage", linux_temp_dir())?
+        .join("crosscode")
         .join("DarwinSDKBuild");
     let res = install_sdk_internal(
         app,
