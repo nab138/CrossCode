@@ -429,17 +429,13 @@ async fn install_developer(
             |e| format!("Failed to run sdkmover: {}", e),
         )?;
         if !output.status.success() {
-            op.fail(
+            return op.fail(
                 "copy_files",
                 format!(
                     "Failed to move files: {}",
                     String::from_utf8_lossy(&output.stderr)
                 ),
-            )?;
-            return Err(format!(
-                "Failed to move files: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ));
+            );
         }
     }
 
