@@ -408,6 +408,8 @@ async fn install_developer(
             )?
             .to_string_lossy()
             .to_string();
+        let linux_sdkmover_path =
+            op.fail_if_err("copy_files", windows_to_wsl_path(&sdkmover_path))?;
         let linux_contents_developer = op.fail_if_err(
             "copy_files",
             windows_to_wsl_path(&contents_developer.to_string_lossy().to_string()),
@@ -416,16 +418,26 @@ async fn install_developer(
             "copy_files",
             windows_to_wsl_path(&dev.to_string_lossy().to_string()),
         )?;
-        let output = Command::new("wsl")
-            .arg(format!("{}", sdkmover_path))
-            .arg(&linux_contents_developer)
-            .arg(&linux_dev)
-            .creation_flags(CREATE_NO_WINDOW)
-            .output()
-            .map_err(|e| format!("Failed to run sdkmover: {}", e))?;
+        let output = op.fail_if_err_map(
+            "copy_files",
+            Command::new("wsl")
+                .arg(&linux_sdkmover_path)
+                .arg(&linux_contents_developer)
+                .arg(&linux_dev)
+                .creation_flags(CREATE_NO_WINDOW)
+                .output(),
+            |e| format!("Failed to run sdkmover: {}", e),
+        )?;
         if !output.status.success() {
+            op.fail(
+                "copy_files",
+                format!(
+                    "Failed to move files: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ),
+            )?;
             return Err(format!(
-                "Failed to set executable permissions: {}",
+                "Failed to move files: {}",
                 String::from_utf8_lossy(&output.stderr)
             ));
         }

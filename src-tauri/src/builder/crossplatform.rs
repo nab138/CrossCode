@@ -1,11 +1,12 @@
 #[cfg(target_os = "windows")]
 use crate::windows::{has_wsl, windows_to_wsl_path, wsl_to_windows_path};
-use std::env;
 #[cfg(not(target_os = "windows"))]
 use std::fs;
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
-use std::path::{Path, PathBuf};
+#[cfg(not(target_os = "windows"))]
+use std::path::Path;
+use std::path::PathBuf;
 #[cfg(target_os = "windows")]
 use std::process::{Command, Stdio};
 
@@ -117,6 +118,32 @@ pub fn linux_path(path: &str) -> Result<String, String> {
     }
 }
 
+pub fn is_linux_dir(path: &str) -> Result<bool, String> {
+    #[cfg(not(target_os = "windows"))]
+    {
+        let p = Path::new(path);
+        return Ok(p.is_dir());
+    }
+    #[cfg(target_os = "windows")]
+    {
+        if !has_wsl() {
+            return Err("WSL is not available".to_string());
+        }
+        let output = Command::new("wsl")
+            .arg("test")
+            .arg("-d")
+            .arg(&path)
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+            .expect("failed to execute process");
+        if output.status.success() {
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
 pub fn linux_temp_dir() -> Result<PathBuf, String> {
     #[cfg(target_os = "windows")]
     {
@@ -124,15 +151,14 @@ pub fn linux_temp_dir() -> Result<PathBuf, String> {
             return Err("WSL is not available".to_string());
         }
 
-        if let Ok(tmpdir) = env::var("TMPDIR") {
-            let path = Path::new(&tmpdir);
-            if path.is_dir() {
-                let win_path = wsl_to_windows_path(path.to_str().unwrap())?;
+        if let Ok(tmpdir) = linux_env("TMPDIR") {
+            if is_linux_dir(&tmpdir)? {
+                let win_path = wsl_to_windows_path(&tmpdir)?;
                 return Ok(PathBuf::from(win_path));
             }
         }
 
-        if Path::new("/var/tmp").is_dir() {
+        if is_linux_dir("/var/tmp")? {
             let win_path = wsl_to_windows_path("/var/tmp")?;
             return Ok(PathBuf::from(win_path));
         }
@@ -143,7 +169,7 @@ pub fn linux_temp_dir() -> Result<PathBuf, String> {
 
     #[cfg(not(target_os = "windows"))]
     {
-        if let Ok(tmpdir) = env::var("TMPDIR") {
+        if let Ok(tmpdir) = std::env::var("TMPDIR") {
             let path = Path::new(&tmpdir);
             if path.is_dir() {
                 return Ok(path.to_path_buf());

@@ -175,13 +175,6 @@ export default () => {
     });
   }, [saveFile, openFolderDialog, navigate, selectFile, undo, redo]);
 
-  console.log(
-    initialized,
-    selectedToolchain,
-    sourcekitStartup,
-    hasIgnoredRam,
-    hasLimitedRam
-  );
   return (
     <div className="ide-container">
       <MenuBar callbacks={callbacks} editor={editor} />
