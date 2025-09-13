@@ -11,9 +11,11 @@ use tauri::{AppHandle, Manager, Window};
 use crate::builder::crossplatform::{linux_path, linux_temp_dir, remove_dir_all, symlink};
 use crate::builder::swift::{validate_toolchain, SwiftBin};
 use crate::operation::Operation;
-use sdkmover::copy_developer;
 use tauri::path::BaseDirectory;
 use unxip_rs::{reader::XipReader, UnxipError};
+
+#[cfg(not(target_os = "windows"))]
+use sdkmover::copy_developer;
 
 #[cfg(target_os = "windows")]
 use crate::windows::windows_to_wsl_path;
