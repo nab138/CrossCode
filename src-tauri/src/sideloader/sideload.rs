@@ -1,7 +1,6 @@
 use std::{path::PathBuf, sync::Arc};
 
-use crate::sideloader::device::{list_devices, DeviceInfo};
-use idevice::usbmuxd::{UsbmuxdAddr, UsbmuxdConnection};
+use crate::sideloader::device::{get_provider, list_devices, DeviceInfo};
 use isideload::{sideload, Error, SideloadConfiguration, SideloadLogger};
 use tauri::{Emitter, Manager, Window};
 
@@ -35,20 +34,13 @@ pub async fn sideload_app(
         window: Arc::new(window.clone()),
     };
     let store_dir = handle.path().app_config_dir().map_err(|e| e.to_string())?;
-    let mut usbmuxd = UsbmuxdConnection::default()
-        .await
-        .map_err(|e| format!("Failed to connect to usbmuxd: {}", e))?;
-    let device = usbmuxd
-        .get_device(&device.uuid)
-        .await
-        .map_err(|e| format!("Failed to get device: {}", e))?;
 
     let config = SideloadConfiguration::new()
         .set_store_dir(store_dir.clone())
         .set_logger(Box::new(logger))
         .set_machine_name("CrossCode".to_string());
 
-    let provider = device.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "CrossCode");
+    let provider = get_provider(&device).await?;
     sideload::sideload_app(&provider, &dev_session, app_path, config)
         .await
         .map_err(|e| e.to_string())?;

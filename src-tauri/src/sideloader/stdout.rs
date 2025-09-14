@@ -1,12 +1,14 @@
 use crate::{
     builder::config::TomlConfig,
-    sideloader::{apple::get_developer_session, device::DeviceInfo},
+    sideloader::{
+        apple::get_developer_session,
+        device::{get_provider, DeviceInfo},
+    },
 };
 use idevice::{
     core_device::{AppServiceClient, OpenStdioSocketClient},
     core_device_proxy::CoreDeviceProxy,
     rsd::RsdHandshake,
-    usbmuxd::{UsbmuxdAddr, UsbmuxdConnection},
     IdeviceService, RsdService,
 };
 use std::{path::PathBuf, sync::Arc};
@@ -32,15 +34,7 @@ pub async fn start_stream_stdout(
         token.cancel();
     }
 
-    let mut usbmuxd = UsbmuxdConnection::default()
-        .await
-        .map_err(|e| format!("Failed to connect to usbmuxd: {}", e))?;
-    let device_info = usbmuxd
-        .get_device(&device.uuid)
-        .await
-        .map_err(|e| format!("Failed to get device: {}", e))?;
-
-    let provider = device_info.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "crosscode");
+    let provider = get_provider(&device).await?;
 
     let proxy = CoreDeviceProxy::connect(&provider)
         .await
