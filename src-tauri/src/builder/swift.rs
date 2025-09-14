@@ -59,7 +59,7 @@ impl SwiftBin {
         #[cfg(target_os = "windows")]
         {
             if !has_wsl() {
-                panic!("WSL is not available");
+                return Err("WSL is not available".to_string());
             }
             let output = Command::new("wsl")
                 .args([
@@ -228,6 +228,13 @@ pub async fn get_toolchain_info(
 #[tauri::command]
 pub async fn get_swiftly_toolchains() -> Result<ToolchainResult, String> {
     let swiftly_home_dir = get_swiftly_path();
+    if get_swiftly_config().is_err() {
+        return Ok(ToolchainResult {
+            swiftly_installed: false,
+            swiftly_version: None,
+            toolchains: vec![],
+        });
+    }
     if let Some(_) = swiftly_home_dir {
         let config = get_swiftly_config()?;
         let toolchains_unfiltered: Vec<Toolchain> = config
@@ -284,7 +291,7 @@ pub async fn get_swiftly_toolchains() -> Result<ToolchainResult, String> {
 
 fn get_swiftly_config() -> Result<SwiftlyConfig, String> {
     let swiftly_home_dir = get_swiftly_path().ok_or("Swiftly home directory not found")?;
-    let swiftly_home_dir = windows_path(&swiftly_home_dir);
+    let swiftly_home_dir = windows_path(&swiftly_home_dir)?;
 
     let config_path = format!("{}/config.json", swiftly_home_dir);
 

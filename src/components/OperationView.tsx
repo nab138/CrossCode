@@ -23,7 +23,10 @@ export default ({
   const operation = operationState.current;
   const opFailed = operationState.failed.length > 0;
   const done =
-    (opFailed && operationState.started.length == (operationState.completed.length + operationState.failed.length)) || operationState.completed.length == operation.steps.length;
+    (opFailed &&
+      operationState.started.length ==
+        operationState.completed.length + operationState.failed.length) ||
+    operationState.completed.length == operation.steps.length;
 
   return (
     <Modal
@@ -32,7 +35,7 @@ export default ({
         if (done) closeMenu();
       }}
     >
-      <ModalDialog sx={{minWidth: "40rem", maxWidth: "90vw"}}>
+      <ModalDialog sx={{ minWidth: "40rem", maxWidth: "90vw" }}>
         {done && <ModalClose />}
         <div>
           <Typography level="h3">{operation?.title}</Typography>
@@ -52,7 +55,7 @@ export default ({
             let started = operationState.started.includes(step.id);
             let notStarted = !failed && !completed && !started;
             return (
-              <div className="operation-step">
+              <div className="operation-step" key={step.id}>
                 <div className="operation-step-icon">
                   {failed && <ErrorIcon />}
                   {!failed && completed && <SuccessIcon />}

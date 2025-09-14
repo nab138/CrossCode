@@ -11,6 +11,9 @@ import SDKMenu from "../components/SDKMenu";
 import ErrorIcon from "@mui/icons-material/Error";
 import WarningIcon from "@mui/icons-material/Warning";
 import { getVersion } from "@tauri-apps/api/app";
+import { invoke } from "@tauri-apps/api/core";
+import { useToast } from "react-toast-plus";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 export interface OnboardingProps {}
 
@@ -26,6 +29,7 @@ export default ({}: OnboardingProps) => {
   const [ready, setReady] = useState(false);
   const [version, setVersion] = useState<string>("");
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (toolchains !== null && isWindows !== null && hasWSL !== null) {
@@ -92,7 +96,17 @@ export default ({}: OnboardingProps) => {
           >
             github
           </Link>
-          .
+          . Check the{" "}
+          <Link
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              open("https://github.com/nab138/CrossCode/wiki/Troubleshooting");
+            }}
+          >
+            troubleshooting guide
+          </Link>{" "}
+          for known issues and workarounds.
         </Typography>
       </div>
       <div className="onboarding-buttons">
@@ -147,36 +161,89 @@ export default ({}: OnboardingProps) => {
               >
                 microsoft.com
               </Link>
-              . We recommended installing WSL 2 and Ubuntu 24.04. Other
-              distributions may work, but are not officially supported.
-              CrossCode will use your default WSL distribution.
+              . We recommended WSL 2 and Ubuntu 24.04. Other distributions may
+              work, but are not officially supported. CrossCode will use your
+              default WSL distribution.
             </Typography>
             <Divider />
             <CardContent>
-              <Typography level="body-md">
+              <Typography
+                level="body-md"
+                sx={{
+                  alignContent: "center",
+                  display: "flex",
+                  gap: "var(--padding-xs)",
+                }}
+                color={hasWSL === false ? "danger" : undefined}
+              >
                 {hasWSL === null ? (
                   "Checking for wsl..."
                 ) : hasWSL ? (
                   "WSL is already installed on your system!"
                 ) : (
                   <>
-                    WSL is not installed on your system. Please follow the guide
-                    on{" "}
-                    <Link
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        openUrl(
-                          "https://learn.microsoft.com/en-us/windows/wsl/install"
-                        );
-                      }}
-                    >
-                      microsoft.com
-                    </Link>
-                    .
+                    <ErrorIcon />{" "}
+                    <div>
+                      WSL is not installed on your system. CrossCode can attempt
+                      to automatically install WSL. If it fails, follow the
+                      guide on{" "}
+                      <Link
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          openUrl(
+                            "https://learn.microsoft.com/en-us/windows/wsl/install"
+                          );
+                        }}
+                      >
+                        microsoft.com
+                      </Link>
+                      .
+                    </div>
                   </>
                 )}
               </Typography>
+              {!hasWSL && (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "var(--padding-md)",
+                    marginTop: "var(--padding-xs)",
+                  }}
+                >
+                  <Button
+                    variant="soft"
+                    onClick={async () => {
+                      try {
+                        await invoke("install_wsl");
+                        addToast.success(
+                          "Started WSL installation. It may take a while, and may ask you to restart your PC. If you are prompted to enter a username or password, choose whatever you like."
+                        );
+                      } catch (error) {
+                        addToast.error(
+                          "Failed to launch WSL installation. Please try installing it manually."
+                        );
+                      }
+                    }}
+                  >
+                    Install WSL
+                  </Button>
+                  <Button
+                    variant="soft"
+                    onClick={async () => {
+                      try {
+                        await relaunch();
+                      } catch (error) {
+                        addToast.error(
+                          "Failed to relaunch CrossCode. Please try manually."
+                        );
+                      }
+                    }}
+                  >
+                    Relaunch CrossCode (post-installation)
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

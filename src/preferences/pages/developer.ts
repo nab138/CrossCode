@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { createItems, createPreferencePage } from "../helpers";
 import { load } from "@tauri-apps/plugin-store";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { confirm } from "@tauri-apps/plugin-dialog";
 
 export const developerPage = createPreferencePage(
   "developer",
@@ -15,10 +16,11 @@ export const developerPage = createPreferencePage(
     createItems.button(
       "reset-all",
       "Reset All Stored Data",
-      "Reset all stored data. This action is irreversible! The app will restart after.",
+      "Resets preferences, credentials, etc. This action is irreversible! The app will restart after.",
       "danger",
       "solid",
       async () => {
+        if(!await confirm("Are you sure you want to reset all stored data? This action is irreversible!")) return;
         await invoke("delete_stored_credentials");
         await invoke("reset_anisette");
 

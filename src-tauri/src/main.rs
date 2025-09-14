@@ -30,6 +30,7 @@ use sideloader::{
         delete_app_id, delete_stored_credentials, get_apple_email, get_certificates, list_app_ids,
         reset_anisette, revoke_certificate,
     },
+    device::{is_ddi_mounted, mount_ddi},
     sideload::refresh_idevice,
     stdout::{is_streaming_stdout, start_stream_stdout, stop_stream_stdout, StdoutStream},
     syslog::{is_streaming_syslog, start_stream_syslog, stop_stream_syslog, SyslogStream},
@@ -42,7 +43,7 @@ use tauri_plugin_cli::CliExt;
 use tauri_plugin_store::StoreExt;
 use templates::create_template;
 use tokio::sync::Mutex;
-use windows::{has_wsl, is_windows};
+use windows::{has_wsl, install_wsl, is_windows};
 
 fn main() {
     CryptoProvider::install_default(ring::default_provider()).unwrap();
@@ -142,6 +143,9 @@ fn main() {
             start_stream_stdout,
             stop_stream_stdout,
             is_streaming_stdout,
+            install_wsl,
+            is_ddi_mounted,
+            mount_ddi,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

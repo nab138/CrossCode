@@ -369,6 +369,14 @@ export default [
               openUrl("https://github.com/nab138/CrossCode/issues");
             },
           },
+          {
+            name: "Troubleshooting",
+            callback: () => {
+              openUrl(
+                "https://github.com/nab138/CrossCode/wiki/Troubleshooting"
+              );
+            },
+          },
         ],
       },
       {

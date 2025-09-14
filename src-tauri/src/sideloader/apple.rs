@@ -45,10 +45,11 @@ pub async fn get_developer_session(
             // This code means we have been logged in for too long and we must relogin again
             let is_22411 = match &e {
                 isideload::Error::Auth(code, _) => *code == -22411,
+                isideload::Error::DeveloperSession(code, _) => *code == -22411,
                 _ => false,
             };
             if is_22411 {
-                crate::sideloader::apple::invalidate_account();
+                invalidate_account();
                 let account = get_account(handle, window, anisette_server).await?;
                 dev_session = DeveloperSession::new(account);
                 match dev_session.list_teams().await {

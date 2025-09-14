@@ -71,6 +71,9 @@ jobs:
       - name: Install frontend dependencies
         run: bun i --frozen-lockfile
 
+      - name: Clean old bundles
+        run: bunx rimraf src-tauri/target/release/bundle
+
       - name: Build for Development
         uses: tauri-apps/tauri-action@v0
         env:

@@ -35,7 +35,7 @@ type ProjectValidation =
   | "InvalidPackage"
   | "InvalidToolchain";
 
-let autoStartedLsp = false;
+let autoStartedLsp = "";
 
 export default () => {
   const { storeInitialized, store } = useContext(StoreContext);
@@ -124,29 +124,20 @@ export default () => {
   }, [path]);
 
   useEffect(() => {
-    if (!store || !storeInitialized) return;
     let autoEnable = async () => {
-      let hasAutoEnabledSourcekit = await store!.get(
-        "has-auto-enabled-sourcekit"
-      );
-      if (
-        storeInitialized &&
-        hasIgnoredRam === false &&
-        hasLimitedRam === false &&
-        hasAutoEnabledSourcekit === undefined
-      ) {
+      if (initialized && sourcekitStartup === null && hasLimitedRam === false) {
         setSourcekitStartup(true);
-        await store!.set("has-auto-enabled-sourcekit", true);
       }
     };
     autoEnable();
-  }, [hasIgnoredRam, hasLimitedRam, storeInitialized, store]);
+  }, [hasLimitedRam, initialized, sourcekitStartup]);
+
   useEffect(() => {
     if (!sourcekitStartup || selectedToolchain == null) return;
     requestAnimationFrame(async () => {
       try {
-        if (autoStartedLsp) return;
-        autoStartedLsp = true;
+        if (autoStartedLsp === path) return;
+        autoStartedLsp = path;
         await restartServer(path, selectedToolchain);
       } catch (e) {
         console.error("Failed to start SourceKit-LSP:", e);
@@ -184,6 +175,13 @@ export default () => {
     });
   }, [saveFile, openFolderDialog, navigate, selectFile, undo, redo]);
 
+  console.log(
+    initialized,
+    selectedToolchain,
+    sourcekitStartup,
+    hasIgnoredRam,
+    hasLimitedRam
+  );
   return (
     <div className="ide-container">
       <MenuBar callbacks={callbacks} editor={editor} />

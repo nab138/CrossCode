@@ -94,7 +94,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({
     [storeValues, setStoreValue, store]
   );
 
-  if (!store) {
+  if (!store || !storeInitialized) {
     return null;
   }
 

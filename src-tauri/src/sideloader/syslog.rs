@@ -1,9 +1,5 @@
-use crate::sideloader::device::DeviceInfo;
-use idevice::{
-    syslog_relay::SyslogRelayClient,
-    usbmuxd::{UsbmuxdAddr, UsbmuxdConnection},
-    IdeviceService,
-};
+use crate::sideloader::device::{get_provider, DeviceInfo};
+use idevice::{syslog_relay::SyslogRelayClient, IdeviceService};
 use std::sync::Arc;
 use tauri::{Emitter, State, Window};
 use tokio::sync::Mutex;
@@ -22,15 +18,7 @@ pub async fn start_stream_syslog(
         token.cancel();
     }
 
-    let mut usbmuxd = UsbmuxdConnection::default()
-        .await
-        .map_err(|e| format!("Failed to connect to usbmuxd: {}", e))?;
-    let device_info = usbmuxd
-        .get_device(&device.uuid)
-        .await
-        .map_err(|e| format!("Failed to get device: {}", e))?;
-
-    let provider = device_info.to_provider(UsbmuxdAddr::from_env_var().unwrap(), "crosscode");
+    let provider = get_provider(&device).await?;
 
     let mut relay_client = SyslogRelayClient::connect(&provider)
         .await

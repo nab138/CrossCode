@@ -1,4 +1,11 @@
-import { Button, FormControl, Radio, RadioGroup, Typography } from "@mui/joy";
+import {
+  Button,
+  FormControl,
+  Link,
+  Radio,
+  RadioGroup,
+  Typography,
+} from "@mui/joy";
 import { Toolchain, useIDE } from "../utilities/IDEContext";
 import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -87,7 +94,20 @@ export default () => {
           >
             swiftly install 6.1
           </span>
-          " or manually.
+          " or manually. If you have already done so, but it is not showing up,
+          your toolchain installation may be broken. For help, refer to the{" "}
+          <Link
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              openUrl(
+                "https://github.com/nab138/CrossCode/wiki/Troubleshooting#swift-toolchain-not-detected"
+              );
+            }}
+          >
+            troubleshooting guide
+          </Link>
+          .
         </Typography>
       )}
       {toolchains !== null && allToolchains.length > 0 && (
@@ -138,22 +158,13 @@ export default () => {
           gap: "var(--padding-md)",
         }}
       >
-        {
-          <Button
-            variant="soft"
-            onClick={locateToolchain}
-            disabled={!isWindowsReady}
-          >
-            Locate Existing Toolchain
-          </Button>
-        }
         {toolchains?.swiftlyInstalled === false &&
           selectedToolchain === null && (
             <Button
               disabled={!isWindowsReady}
               variant="soft"
               onClick={() => {
-                openUrl("https://swift.org/install/");
+                openUrl("https://www.swift.org/install/linux");
               }}
             >
               Download Swift
@@ -168,6 +179,15 @@ export default () => {
             }}
           >
             Scan Again
+          </Button>
+        }
+        {
+          <Button
+            variant="soft"
+            onClick={locateToolchain}
+            disabled={!isWindowsReady}
+          >
+            Locate Existing Toolchain
           </Button>
         }
       </div>

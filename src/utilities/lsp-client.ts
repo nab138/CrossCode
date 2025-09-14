@@ -1,14 +1,16 @@
 // https://github.com/CodinGame/monaco-vscode-api/wiki/Getting-started-guide
 
 // lsp-client.ts
-import { WebSocketMessageReader } from "vscode-ws-jsonrpc";
+import {
+  WebSocketMessageReader,
+  WebSocketMessageWriter,
+  toSocket,
+} from "vscode-ws-jsonrpc";
 import {
   CloseAction,
   ErrorAction,
   MessageTransports,
 } from "vscode-languageclient/browser.js";
-import { WebSocketMessageWriter } from "vscode-ws-jsonrpc";
-import { toSocket } from "vscode-ws-jsonrpc";
 import { MonacoLanguageClient } from "monaco-languageclient";
 import { Toolchain } from "./IDEContext";
 import { invoke } from "@tauri-apps/api/core";
@@ -18,8 +20,8 @@ export const initWebSocketAndStartClient = async (
   url: string,
   folder: string
 ): Promise<WebSocket> => {
-  const webSocket = new WebSocket(url);
   let workspaceFolder = await invoke<string>("linux_path", { path: folder });
+  const webSocket = new WebSocket(url);
   webSocket.onopen = () => {
     const socket = toSocket(webSocket);
     const reader = new WebSocketMessageReader(socket);
@@ -50,7 +52,11 @@ const createLanguageClient = (
         error: () => ({ action: ErrorAction.Continue }),
         closed: () => ({ action: CloseAction.DoNotRestart }),
       },
-      initializationOptions: {},
+      initializationOptions: {
+        swiftPM: {
+          swiftSDK: "arm64-apple-ios",
+        },
+      },
       middleware: {
         workspace: {
           configuration: () => {

@@ -70,7 +70,7 @@ export const createItems = {
   select: (
     id: string,
     name: string,
-    options: Array<{ label: string; value: string }>,
+    options: Array<{ label: string; value: string, default?: string }>,
     description?: string,
     defaultValue?: string,
     onChange?: (value: string) => void | Promise<void>
