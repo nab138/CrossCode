@@ -30,6 +30,7 @@ use sideloader::{
         delete_app_id, delete_stored_credentials, get_apple_email, get_certificates, list_app_ids,
         reset_anisette, revoke_certificate,
     },
+    device::{is_ddi_mounted, mount_ddi},
     sideload::refresh_idevice,
     stdout::{is_streaming_stdout, start_stream_stdout, stop_stream_stdout, StdoutStream},
     syslog::{is_streaming_syslog, start_stream_syslog, stop_stream_syslog, SyslogStream},
@@ -142,7 +143,9 @@ fn main() {
             start_stream_stdout,
             stop_stream_stdout,
             is_streaming_stdout,
-            install_wsl
+            install_wsl,
+            is_ddi_mounted,
+            mount_ddi,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -121,6 +121,7 @@ export default function BottomBar() {
               startCommand="start_stream_stdout"
               stopCommand="stop_stream_stdout"
               customTooltip="will launch app automatically"
+              requiresDDI={true}
               running={runningStdout}
               clear={() => {
                 stdoutRef.current?.clear();
@@ -179,6 +180,7 @@ function BottomBarFilter({
   stopCommand,
   running,
   customTooltip,
+  requiresDDI = false,
 }: {
   filter: string;
   setFilter: React.Dispatch<React.SetStateAction<string>>;
@@ -190,8 +192,9 @@ function BottomBarFilter({
   stopCommand: string;
   running: boolean;
   customTooltip: string;
+  requiresDDI?: boolean;
 }) {
-  const { selectedDevice } = useIDE();
+  const { selectedDevice, mountDdi } = useIDE();
   const { addToast } = useToast();
   const { path } = useParams<"path">();
   const [anisetteServer] = useStore<string>(
@@ -232,6 +235,7 @@ function BottomBarFilter({
             }
             return true;
           }}
+          validateAsync={requiresDDI ? () => mountDdi(true) : undefined}
           after={() => {
             setRefresh((prev) => prev + 1);
           }}

@@ -13,6 +13,7 @@ export interface CommandButtonProps {
   sx?: React.CSSProperties;
   clearConsole?: boolean;
   validate?: () => boolean;
+  validateAsync?: () => Promise<boolean>;
   after?: () => void;
   disabled?: boolean;
   useMenuItem?: boolean;
@@ -31,6 +32,7 @@ export default function CommandButton({
   sx = {},
   clearConsole = true,
   validate = () => true,
+  validateAsync = () => Promise.resolve(true),
   after = () => {},
   disabled = false,
   useMenuItem = false,
@@ -63,8 +65,8 @@ export default function CommandButton({
             }
       }
       title={tooltip}
-      onClick={() => {
-        if (!validate()) {
+      onClick={async () => {
+        if (!validate() || !(await validateAsync())) {
           return;
         }
         if (clearConsole) {

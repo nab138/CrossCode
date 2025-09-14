@@ -54,6 +54,7 @@ export interface IDEContextType {
   ) => void;
   selectedDevice: DeviceInfo | null;
   setSelectedDevice: React.Dispatch<React.SetStateAction<DeviceInfo | null>>;
+  mountDdi: (ask: boolean) => Promise<boolean>;
 }
 
 export type DeviceInfo = {
@@ -109,8 +110,50 @@ export const IDEProvider: React.FC<{
 
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | null>(null);
 
+  const [ddiOpen, setDdiOpen] = useState(false);
+  const [ddiProgress, setDdiProgress] = useState(0);
+
   const { checkForUpdates } = useContext(UpdateContext);
   const { store, storeInitialized } = useContext(StoreContext);
+
+  const { addToast } = useToast();
+
+  const mountDdi = useCallback(
+    async (ask: boolean): Promise<boolean> => {
+      if (!selectedDevice) {
+        addToast.error("No device selected");
+        return false;
+      }
+      try {
+        if (await invoke<boolean>("is_ddi_mounted", { device: selectedDevice }))
+          return true;
+
+        if (ask) {
+          const result = await dialog.ask(
+            `This will download & mount the developer disk image on ${selectedDevice.name}. This is required for debugging apps. Do you want to continue?`,
+            {
+              title: "Mount Developer Disk Image",
+            }
+          );
+          if (!result) {
+            return false;
+          }
+        }
+        setDdiProgress(0);
+        setDdiOpen(true);
+
+        await invoke("mount_ddi", { device: selectedDevice });
+        setDdiOpen(false);
+        return true;
+      } catch (error) {
+        addToast.error("Failed to mount DDI: " + error);
+        console.error("Failed to mount DDI:", error);
+        setDdiOpen(false);
+        return false;
+      }
+    },
+    [selectedDevice]
+  );
 
   const checkSDK = useCallback(async () => {
     try {
@@ -252,8 +295,6 @@ export const IDEProvider: React.FC<{
   const unlisten2fa = useRef<() => void>(() => {});
   const unlistenAppleid = useRef<() => void>(() => {});
 
-  const { addToast } = useToast();
-
   const [tfaOpen, setTfaOpen] = useState(false);
   const tfaInput = useRef<HTMLInputElement | null>(null);
   const [appleIdOpen, setAppleIdOpen] = useState(false);
@@ -317,6 +358,25 @@ export const IDEProvider: React.FC<{
       unlistenAppleid.current();
     };
   }, []);
+
+  const ddiListenerAdded = useRef(false);
+  const ddiUnlisten = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    if (!ddiListenerAdded.current) {
+      (async () => {
+        const unlistenFn = await listen("ddi-mount-progress", (event) => {
+          const progress = event.payload as number;
+          setDdiProgress(progress);
+        });
+        ddiUnlisten.current = unlistenFn;
+      })();
+      ddiListenerAdded.current = true;
+    }
+    return () => {
+      ddiUnlisten.current();
+    };
+  }, [setDdiProgress]);
 
   const navigate = useNavigate();
 
@@ -412,6 +472,7 @@ export const IDEProvider: React.FC<{
       hasLimitedRam,
       selectedDevice,
       setSelectedDevice,
+      mountDdi,
     }),
     [
       isWindows,
@@ -432,6 +493,7 @@ export const IDEProvider: React.FC<{
       hasLimitedRam,
       selectedDevice,
       setSelectedDevice,
+      mountDdi,
     ]
   );
 
@@ -565,6 +627,18 @@ export const IDEProvider: React.FC<{
               Cancel
             </Button>
           </form>
+        </ModalDialog>
+      </Modal>
+      <Modal open={ddiOpen}>
+        <ModalDialog>
+          <Typography level="h4">Mounting Developer Disk Image...</Typography>
+          <Typography level="body-md">
+            This may take a few minutes. Please do not disconnect your device or
+            close the app.
+          </Typography>
+          <Typography level="body-sm">
+            Progress: {ddiProgress.toFixed(2)}%
+          </Typography>
         </ModalDialog>
       </Modal>
       {operationState && (
