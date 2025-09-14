@@ -49,7 +49,7 @@ Please note that I am one person, so development may be slow. If you want to hel
 
 ## How it works
 
-- A darwin SDK is generated from a user provided copy of Xcode 16.3 (extracted with [unxip](https://github.com/saagarjha/unxip)) and darwin tools from [darwin-tools-linux-llvm](https://github.com/xtool-org/darwin-tools-linux-llvm)
+- A darwin SDK is generated from a user provided copy of Xcode 16.3 (extracted with [unxip-rs](https://github.com/nab138/unxip-rs)) and darwin tools from [darwin-tools-linux-llvm](https://github.com/xtool-org/darwin-tools-linux-llvm)
 - Swift uses the darwin SDK to build an executable which is packaged into an .app bundle.
 - The code to sign and install apps onto a device has been removed from CrossCode's source and moved to a standalone package, [isideload](https://github.com/nab138/isideload). It was built on a lot of other libraries, so check out its README for more info.
 
@@ -58,6 +58,7 @@ Please note that I am one person, so development may be slow. If you want to hel
 - [idevice](https://github.com/jkcoxson/idevice) is used to communicate with iOS devices.
 - [xtool](https://xtool.sh) has been used as a reference for the implementation of the darwin SDK generation.
 - [Sideloader](https://github.com/Dadoum/Sideloader) has been heavily used as a reference for the implementation of the Apple Developer APIs and sideloading process.
+- [GNU cpio](https://www.gnu.org/software/cpio/) 2.14 is included under GPLv3 (see licenses/GPL-3.0.txt), with its copyright holders. See [Source code](https://ftp.gnu.org/gnu/cpio/cpio-2.14.tar.gz). It is used to help with XIP extraction.
 
 ### AI Usage
 

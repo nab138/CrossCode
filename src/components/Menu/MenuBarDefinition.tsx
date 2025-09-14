@@ -138,9 +138,9 @@ export default [
             callback: async () => {
               let prefsWindow = await WebviewWindow.getByLabel("prefs");
               if (prefsWindow) {
-                prefsWindow.show();
-                prefsWindow.center();
-                prefsWindow.setFocus();
+                await prefsWindow.show();
+                await prefsWindow.center();
+                await prefsWindow.setFocus();
                 return;
               }
 
@@ -355,14 +355,47 @@ export default [
     label: "Help",
     items: [
       {
-        label: "About CrossCode",
+        label: "About",
         items: [
+          {
+            name: "About CrossCode",
+            callback: async () => {
+              let aboutWindow = await WebviewWindow.getByLabel("about");
+              if (aboutWindow) {
+                await aboutWindow.show();
+                await aboutWindow.center();
+                await aboutWindow.setFocus();
+                return;
+              }
+
+              const appWindow = new WebviewWindow("about", {
+                title: "About CrossCode",
+                resizable: false,
+                width: 400,
+                height: 260,
+                url: "/about",
+                backgroundColor: "#171a1c",
+              });
+
+              appWindow.once("tauri://created", async function () {
+                await appWindow.center();
+              });
+              appWindow.once("tauri://error", function (e) {
+                console.error("Error creating window:", e);
+              });
+            },
+          },
           {
             name: "View Github",
             callback: () => {
               openUrl("https://github.com/nab138/CrossCode");
             },
           },
+        ],
+      },
+      {
+        label: "Get Help",
+        items: [
           {
             name: "Report Issue",
             callback: () => {

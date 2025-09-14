@@ -4,6 +4,8 @@ use crate::windows::{has_wsl, windows_to_wsl_path, wsl_to_windows_path};
 use std::fs;
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
+#[cfg(not(target_os = "windows"))]
+use std::path::Path;
 use std::path::PathBuf;
 #[cfg(target_os = "windows")]
 use std::process::{Command, Stdio};
@@ -50,36 +52,6 @@ pub fn symlink(target: &str, link: &str) -> std::io::Result<()> {
             ));
         }
         return Ok(());
-    }
-}
-
-pub fn read_link(path: &PathBuf) -> Result<PathBuf, String> {
-    #[cfg(not(target_os = "windows"))]
-    {
-        return fs::read_link(path).map_err(|e| format!("Failed to read symlink: {}", e));
-    }
-    #[cfg(target_os = "windows")]
-    {
-        if !has_wsl() {
-            return Err("WSL is not available".to_string());
-        }
-        let wsl_path = windows_to_wsl_path(&path.to_string_lossy().to_string())?;
-        let output = Command::new("wsl")
-            .arg("readlink")
-            .arg(wsl_path)
-            .creation_flags(CREATE_NO_WINDOW)
-            .output()
-            .expect("failed to execute process");
-        if output.status.success() {
-            let res = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            Ok(PathBuf::from(res))
-        } else {
-            Err(format!(
-                "Failed to read symlink '{}': {}",
-                path.display(),
-                String::from_utf8_lossy(&output.stderr)
-            ))
-        }
     }
 }
 
@@ -146,18 +118,69 @@ pub fn linux_path(path: &str) -> Result<String, String> {
     }
 }
 
-pub fn linux_temp_dir() -> Result<PathBuf, String> {
+pub fn is_linux_dir(path: &str) -> Result<bool, String> {
     #[cfg(not(target_os = "windows"))]
     {
-        return Ok(std::env::temp_dir());
+        let p = Path::new(path);
+        return Ok(p.is_dir());
     }
     #[cfg(target_os = "windows")]
     {
         if !has_wsl() {
             return Err("WSL is not available".to_string());
         }
-        let path = wsl_to_windows_path("/tmp")?;
-        Ok(PathBuf::from(path))
+        let output = Command::new("wsl")
+            .arg("test")
+            .arg("-d")
+            .arg(&path)
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+            .expect("failed to execute process");
+        if output.status.success() {
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
+pub fn linux_temp_dir() -> Result<PathBuf, String> {
+    #[cfg(target_os = "windows")]
+    {
+        if !has_wsl() {
+            return Err("WSL is not available".to_string());
+        }
+
+        if let Ok(tmpdir) = linux_env("TMPDIR") {
+            if is_linux_dir(&tmpdir)? {
+                let win_path = wsl_to_windows_path(&tmpdir)?;
+                return Ok(PathBuf::from(win_path));
+            }
+        }
+
+        if is_linux_dir("/var/tmp")? {
+            let win_path = wsl_to_windows_path("/var/tmp")?;
+            return Ok(PathBuf::from(win_path));
+        }
+
+        let win_path = wsl_to_windows_path("/tmp")?;
+        return Ok(PathBuf::from(win_path));
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        if let Ok(tmpdir) = std::env::var("TMPDIR") {
+            let path = Path::new(&tmpdir);
+            if path.is_dir() {
+                return Ok(path.to_path_buf());
+            }
+        }
+
+        if Path::new("/var/tmp").is_dir() {
+            return Ok(PathBuf::from("/var/tmp"));
+        }
+
+        Ok(PathBuf::from("/tmp"))
     }
 }
 

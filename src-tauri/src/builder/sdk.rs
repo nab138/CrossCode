@@ -1,18 +1,21 @@
 // Reference: https://github.com/xtool-org/xtool/blob/main/Sources/XToolSupport/SDKBuilder.swift
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs;
-use std::io::ErrorKind;
-use std::path::{Component, Path, PathBuf};
-use std::process::Command;
+use std::io::{Read, Seek};
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 use tauri::{AppHandle, Manager, Window};
 
-use crate::builder::crossplatform::{
-    linux_path, linux_temp_dir, read_link, remove_dir_all, symlink,
-};
+use crate::builder::crossplatform::{linux_path, linux_temp_dir, remove_dir_all, symlink};
 use crate::builder::swift::{validate_toolchain, SwiftBin};
 use crate::operation::Operation;
+use tauri::path::BaseDirectory;
+use unxip_rs::{reader::XipReader, UnxipError};
+
+#[cfg(not(target_os = "windows"))]
+use sdkmover::copy_developer;
 
 #[cfg(target_os = "windows")]
 use crate::windows::windows_to_wsl_path;
@@ -35,6 +38,7 @@ pub async fn install_sdk_operation(
     op.start("create_stage")?;
     let work_dir = op
         .fail_if_err("create_stage", linux_temp_dir())?
+        .join("crosscode")
         .join("DarwinSDKBuild");
     let res = install_sdk_internal(
         app,
@@ -125,12 +129,12 @@ async fn install_sdk_internal(
     op.move_on("create_stage", "install_toolset")?;
     op.fail_if_err("install_toolset", install_toolset(&output_dir).await)?;
     op.complete("install_toolset")?;
-    let dev = install_developer(&app, &output_dir, &xcode_path, is_dir, op).await?;
+    let dev = install_developer(app, &output_dir, &xcode_path, is_dir, op).await?;
     op.start("write_metadata")?;
 
-    let iphone_os_sdk = sdk(&dev, "iPhoneOS")?;
-    let mac_os_sdk = sdk(&dev, "MacOSX")?;
-    let iphone_simulator_sdk = sdk(&dev, "iPhoneSimulator")?;
+    let iphone_os_sdk = op.fail_if_err("write_metadata", sdk(&dev, "iPhoneOS"))?;
+    let mac_os_sdk = op.fail_if_err("write_metadata", sdk(&dev, "MacOSX"))?;
+    let iphone_simulator_sdk = op.fail_if_err("write_metadata", sdk(&dev, "iPhoneSimulator"))?;
 
     let info = "{
     \"schemaVersion\": \"1.0\",
@@ -315,7 +319,7 @@ async fn install_toolset(output_path: &PathBuf) -> Result<(), String> {
 }
 
 async fn install_developer(
-    app: &AppHandle,
+    app: AppHandle,
     output_path: &PathBuf,
     xcode_path: &str,
     is_dir: bool,
@@ -330,44 +334,24 @@ async fn install_developer(
             format!("Failed to create DeveloperStage directory: {}", e)
         })?;
 
-        let unxip_path = op.fail_if_err_map(
-            "extract_xip",
-            app.path()
-                .resolve("unxip", tauri::path::BaseDirectory::Resource),
-            |e| format!("Failed to resolve unxip path: {}", e),
-        )?;
+        let mut file = op.fail_if_err_map("extract_xip", fs::File::open(xcode_path), |e| {
+            format!("Failed to open xip file: {}", e)
+        })?;
+        let cpio = op
+            .fail_if_err_map(
+                "extract_xip",
+                app.path().resolve("cpio", BaseDirectory::Resource),
+                |e| format!("Failed to resolve cpio path: {}", e),
+            )?
+            .to_string_lossy()
+            .to_string();
 
         #[cfg(target_os = "windows")]
-        let status = Command::new("wsl")
-            .arg("bash")
-            .arg("-c")
-            .arg(format!(
-                "{} {} {}",
-                windows_to_wsl_path(&unxip_path.to_string_lossy())?,
-                windows_to_wsl_path(&xcode_path)?,
-                windows_to_wsl_path(&dev_stage.to_string_lossy())?
-            ))
-            .creation_flags(CREATE_NO_WINDOW)
-            .output();
-        #[cfg(not(target_os = "windows"))]
-        let status = Command::new(unxip_path)
-            .current_dir(&dev_stage)
-            .arg(xcode_path)
-            .output();
-        if let Err(e) = status {
-            return op.fail("extract_xip", format!("Failed to run unxip: {}", e));
-        }
-        let status = status.unwrap();
-        if !status.status.success() {
-            return op.fail(
-                "extract_xip",
-                format!(
-                    "{}\nProcess exited with code {}",
-                    String::from_utf8_lossy(&status.stderr.trim_ascii()),
-                    status.status.code().unwrap_or(0)
-                ),
-            );
-        }
+        let cpio = op.fail_if_err("extract_xip", windows_to_wsl_path(&cpio))?;
+
+        op.fail_if_err_map("extract_xip", unxip(&mut file, &dev_stage, cpio), |e| {
+            format!("Failed to extract xip file: {}", e)
+        })?;
 
         let app_dirs = op
             .fail_if_err_map("extract_xip", fs::read_dir(&dev_stage), |e| {
@@ -403,10 +387,58 @@ async fn install_developer(
         );
     }
 
+    #[cfg(not(target_os = "windows"))]
     op.fail_if_err(
         "copy_files",
-        copy_developer(&contents_developer, &dev, Path::new("Contents/Developer")),
+        copy_developer(
+            &contents_developer,
+            &dev,
+            Path::new("Contents/Developer"),
+            false,
+        ),
     )?;
+
+    #[cfg(target_os = "windows")]
+    {
+        let sdkmover_path = op
+            .fail_if_err_map(
+                "copy_files",
+                app.path().resolve("sdkmoverbin", BaseDirectory::Resource),
+                |e| format!("Failed to resolve sdkmoverbin path: {}", e),
+            )?
+            .to_string_lossy()
+            .to_string();
+        let linux_sdkmover_path =
+            op.fail_if_err("copy_files", windows_to_wsl_path(&sdkmover_path))?;
+        let linux_contents_developer = op.fail_if_err(
+            "copy_files",
+            windows_to_wsl_path(&contents_developer.to_string_lossy().to_string()),
+        )?;
+        let linux_dev = op.fail_if_err(
+            "copy_files",
+            windows_to_wsl_path(&dev.to_string_lossy().to_string()),
+        )?;
+        let output = op.fail_if_err_map(
+            "copy_files",
+            Command::new("wsl")
+                .arg(&linux_sdkmover_path)
+                .arg(&linux_contents_developer)
+                .arg(&linux_dev)
+                .creation_flags(CREATE_NO_WINDOW)
+                .output(),
+            |e| format!("Failed to run sdkmover: {}", e),
+        )?;
+        if !output.status.success() {
+            return op.fail(
+                "copy_files",
+                format!(
+                    "Failed to move files: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                ),
+            );
+        }
+    }
+
     if dev_stage.exists() {
         op.fail_if_err_map("copy_files", remove_dir_all(&dev_stage), |e| {
             format!("Failed to remove DeveloperStage directory: {}", e)
@@ -459,67 +491,6 @@ async fn install_developer(
     Ok(dev)
 }
 
-fn copy_developer(src: &Path, dst: &Path, rel: &Path) -> Result<(), String> {
-    for entry in fs::read_dir(src).map_err(|e| format!("Failed to read dir: {}", e))? {
-        let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
-        let file_name = entry.file_name();
-        let rel_path = rel.join(&file_name);
-        if !is_wanted(&rel_path) {
-            continue;
-        }
-        let src_path = entry.path();
-
-        let mut rel_components = rel_path.components();
-        if let Some(c) = rel_components.next() {
-            if c.as_os_str() != "Contents" {
-                rel_components = rel_path.components();
-            }
-        }
-        if let Some(c) = rel_components.next() {
-            if c.as_os_str() != "Developer" {
-                rel_components = rel_path.components();
-            }
-        }
-        let dst_path = dst.join(rel_components.as_path());
-
-        let metadata = fs::symlink_metadata(&src_path)
-            .map_err(|e| format!("Failed to get metadata: {}", e))?;
-
-        if metadata.file_type().is_symlink() {
-            let target = read_link(&src_path)?;
-            if let Some(parent) = dst_path.parent() {
-                fs::create_dir_all(parent)
-                    .map_err(|e| format!("Failed to create parent dir: {}", e))?;
-            }
-            symlink(
-                &target.to_string_lossy().to_string(),
-                &dst_path.to_string_lossy().to_string(),
-            )
-            .map_err(|e| format!("Failed to create symlink: {}", e))?;
-        } else if metadata.is_dir() {
-            fs::create_dir_all(&dst_path).map_err(|e| format!("Failed to create dir: {}", e))?;
-            copy_developer(&src_path, dst, &rel_path)?;
-        } else if metadata.is_file() {
-            if let Some(parent) = dst_path.parent() {
-                fs::create_dir_all(parent)
-                    .map_err(|e| format!("Failed to create parent dir: {}", e))?;
-            }
-            match fs::rename(&src_path, &dst_path) {
-                Ok(_) => {}
-                Err(e) => {
-                    if e.kind() == ErrorKind::CrossesDevices {
-                        fs::copy(&src_path, &dst_path)
-                            .map_err(|e2| format!("Failed to copy file across devices: {}", e2))?;
-                    } else {
-                        return Err(format!("Failed to move file: {}", e));
-                    }
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Triple {
@@ -564,145 +535,47 @@ struct SDKDefinition {
     target_triples: HashMap<String, Triple>,
 }
 
-#[derive(Debug, Clone)]
-struct SDKEntry {
-    names: HashSet<String>,
-    values: Vec<SDKEntry>,
-}
+pub fn unxip<R: Read + Seek + Sized + std::fmt::Debug>(
+    reader: &mut R,
+    output_path: &Path,
+    cpio_path: String,
+) -> Result<(), UnxipError> {
+    let mut xip_reader = XipReader::new(reader)?;
 
-impl SDKEntry {
-    // empty = wildcard
-    fn new(names: HashSet<String>, values: Vec<SDKEntry>) -> Self {
-        SDKEntry { names, values }
-    }
+    std::fs::create_dir_all(output_path).map_err(UnxipError::IoError)?;
 
-    fn from_name(name: &str, values: Vec<SDKEntry>) -> Self {
-        let mut set = HashSet::new();
-        set.insert(name.to_string());
-        SDKEntry::new(set, values)
-    }
+    #[cfg(not(target_os = "windows"))]
+    let mut child = Command::new(&cpio_path)
+        .arg("-idm")
+        .current_dir(output_path)
+        .stdin(Stdio::piped())
+        .spawn()
+        .map_err(|e| UnxipError::Misc(format!("Failed to spawn cpio: {}", e)))?;
 
-    fn matches<'a, I>(&self, path: I) -> bool
-    where
-        I: Iterator<Item = &'a str> + Clone,
+    #[cfg(target_os = "windows")]
+    let mut child = Command::new("wsl")
+        .arg(format!("{}", cpio_path))
+        .arg("-idm")
+        .current_dir(output_path)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::inherit())
+        .spawn()
+        .map_err(|e| UnxipError::Misc(format!("Failed to spawn cpio: {}", e)))?;
     {
-        let mut path_clone = path.clone();
-        let first = path_clone.next();
-        if first.is_none() {
-            return true;
-        }
-        let first = first.unwrap();
-        if !self.names.is_empty() && !self.names.contains(first) {
-            return false;
-        }
-        if self.values.is_empty() {
-            return true;
-        }
-        let after_name = path_clone;
-        for value in &self.values {
-            if value.matches(after_name.clone()) {
-                return true;
-            }
-        }
-        false
+        let stdin = child
+            .stdin
+            .as_mut()
+            .ok_or_else(|| UnxipError::Misc("Failed to open cpio stdin".to_string()))?;
+
+        std::io::copy(&mut xip_reader, stdin).map_err(UnxipError::IoError)?;
     }
 
-    fn e(name: Option<&str>, values: Vec<SDKEntry>) -> SDKEntry {
-        if let Some(name) = name {
-            let parts: Vec<&str> = name.split('/').collect();
-            let mut entry = SDKEntry::from_name(parts.last().unwrap(), values);
-            for part in parts.iter().rev().skip(1) {
-                entry = SDKEntry::from_name(part, vec![entry]);
-            }
-            entry
-        } else {
-            SDKEntry::new(HashSet::new(), values)
-        }
+    let status = child.wait().map_err(UnxipError::IoError)?;
+    if !status.success() {
+        return Err(UnxipError::Misc(format!(
+            "cpio failed with status: {}",
+            status
+        )));
     }
-}
-
-// Build the wanted tree
-fn wanted_sdk_entry() -> SDKEntry {
-    SDKEntry::e(
-        Some("Contents/Developer"),
-        vec![
-            SDKEntry::e(
-                Some("Toolchains/XcodeDefault.xctoolchain/usr/lib"),
-                vec![
-                    SDKEntry::e(Some("swift"), vec![]),
-                    SDKEntry::e(Some("swift_static"), vec![]),
-                    SDKEntry::e(Some("clang"), vec![]),
-                ],
-            ),
-            SDKEntry::e(
-                Some("Platforms"),
-                ["iPhoneOS", "MacOSX", "iPhoneSimulator"]
-                    .iter()
-                    .map(|plat| {
-                        SDKEntry::e(
-                            Some(&format!("{}.platform/Developer", plat)),
-                            vec![
-                                SDKEntry::e(Some("SDKs"), vec![]),
-                                SDKEntry::e(
-                                    Some("Library"),
-                                    vec![
-                                        SDKEntry::e(Some("Frameworks"), vec![]),
-                                        SDKEntry::e(Some("PrivateFrameworks"), vec![]),
-                                    ],
-                                ),
-                                SDKEntry::e(Some("usr/lib"), vec![]),
-                            ],
-                        )
-                    })
-                    .collect(),
-            ),
-        ],
-    )
-}
-
-fn is_wanted(path: &Path) -> bool {
-    let mut components: Vec<String> = path
-        .components()
-        .filter_map(|c| match c {
-            Component::Normal(os) => Some(os.to_string_lossy().to_string()),
-            _ => None,
-        })
-        .collect();
-
-    if let Some(first) = components.first() {
-        if first == "." {
-            components.remove(0);
-        }
-    }
-    if let Some(first) = components.first() {
-        if first.ends_with(".app") {
-            components.remove(0);
-        }
-    }
-
-    if !wanted_sdk_entry().matches(components.iter().map(|s| s.as_str())) {
-        return false;
-    }
-
-    if components.len() >= 10
-        && components[9] == "prebuilt-modules"
-        && components.starts_with(
-            &[
-                "Contents",
-                "Developer",
-                "Toolchains",
-                "XcodeDefault.xctoolchain",
-                "usr",
-                "lib",
-                "swift",
-            ]
-            .iter()
-            .map(|s| s.to_string())
-            .collect::<Vec<_>>(),
-        )
-    {
-        return false;
-    }
-
-    true
+    Ok(())
 }

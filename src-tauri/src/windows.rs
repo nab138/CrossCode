@@ -86,8 +86,6 @@ pub enum Conversion {
     WindowsToWsl,
     /// Convert WSL path to Windows path
     WslToWindows,
-    /// Convert WSL path to Windows path using Linux style path separators
-    WslToWindowsLinuxStyle,
 }
 
 #[cfg(target_os = "windows")]
@@ -105,7 +103,6 @@ pub fn convert(
     args.push(match options {
         Conversion::WindowsToWsl => "-u",
         Conversion::WslToWindows => "-w",
-        Conversion::WslToWindowsLinuxStyle => "-m",
     });
 
     if force_absolute_path {
