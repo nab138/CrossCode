@@ -557,6 +557,7 @@ pub fn unxip<R: Read + Seek + Sized + std::fmt::Debug>(
         .arg(format!("{}", cpio_path))
         .arg("-idm")
         .current_dir(output_path)
+        .creation_flags(CREATE_NO_WINDOW)
         .stdin(Stdio::piped())
         .stdout(Stdio::inherit())
         .spawn()
