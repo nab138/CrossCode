@@ -20,13 +20,17 @@ jobs:
       matrix:
         include:
           - platform: "ubuntu-22.04"
-            args: ""
+            args: "--bundles deb"
+          - platform: "ubuntu-22.04"
+            args: "--bundles rpm"
+          - platform: "ubuntu-22.04"
+            args: "--bundles appimage"
           - platform: "windows-latest"
             args: ""
-          # - platform: "macos-latest"
-          #   args: "--target aarch64-apple-darwin"
-          # - platform: "macos-latest"
-          #   args: "--target x86_64-apple-darwin"
+          - platform: "macos-latest"
+            args: "--target aarch64-apple-darwin"
+          - platform: "macos-latest"
+            args: "--target x86_64-apple-darwin"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -85,23 +89,30 @@ jobs:
           includeUpdaterJson: ${{ github.event_name == 'release' }}
           releaseId: ${{ github.event_name == 'release' && github.event.release.id || '' }}
 
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@v4
+        if: matrix.platform == 'macos-latest'
+        with:
+          name: macos-dmg-${{ matrix.args == '--target aarch64-apple-darwin' && 'arm64' || 'x64' }}
+          path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.dmg
+
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' && matrix.args == '--bundles deb'
         with:
           name: linux-deb
           path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.deb
 
       - name: Upload Linux RPM
         uses: actions/upload-artifact@v4
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' && matrix.args == '--bundles rpm'
         with:
           name: linux-rpm
           path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.rpm
 
       - name: Upload Linux AppImage
         uses: actions/upload-artifact@v4
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' && matrix.args == '--bundles appimage'
         with:
           name: linux-appimage
           path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.AppImage
