@@ -17,12 +17,14 @@
   padding-bottom: 1px;
   position: relative;
   width: 100%;
+  overflow-x: hidden;
 }
 
 .tab-wrapper {
   display: flex;
   align-items: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .tabsContainer .Mui-selected::after {

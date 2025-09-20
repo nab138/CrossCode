@@ -5,6 +5,7 @@ import Convert from "ansi-to-html";
 import { Virtuoso } from "react-virtuoso";
 import { escapeHtml } from "./Console";
 import React from "react";
+import { useParams } from "react-router";
 
 const convert = new Convert();
 
@@ -30,6 +31,12 @@ export default React.forwardRef<FilteredConsoleHandle, FilteredConsoleProps>(
         setConsoleLines([]);
       },
     }));
+
+    const { path } = useParams<"path">();
+
+    useEffect(() => {
+      setConsoleLines([]);
+    }, [path]);
 
     useEffect(() => {
       if (!listenerAdded.current) {

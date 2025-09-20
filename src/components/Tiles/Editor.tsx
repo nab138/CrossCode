@@ -15,6 +15,7 @@ import "@codingame/monaco-vscode-swift-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import { platform } from "@tauri-apps/plugin-os";
 import { TabLike } from "../TabLike";
+import { useParams } from "react-router";
 
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
@@ -93,6 +94,8 @@ export default ({
 
   const { mode } = useColorScheme();
 
+  const { path: filePath } = useParams<"path">();
+
   const monacoEl = useRef(null);
   const [initialized, setInitialized] = useState(false);
   const currentTabsRef = useRef(tabs);
@@ -111,6 +114,12 @@ export default ({
     globalEditorServiceCallbacks.openNewFileRef = openNewFileRef;
     globalEditorServiceCallbacks.selectionOverrideRef = selectionOverrideRef;
   });
+
+  useEffect(() => {
+    setOpenFiles([]);
+    setTabs([]);
+    setFocused(undefined);
+  }, [filePath]);
 
   useEffect(() => {
     editorRef.current = editor;
@@ -418,6 +427,12 @@ export default ({
         onDragOver={handleContainerDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onWheel={(e) => {
+          if (e.deltaY !== 0) {
+            e.currentTarget.scrollLeft += e.deltaY;
+            e.preventDefault();
+          }
+        }}
       >
         {tabs.map((tab, index) => {
           let unsaved = unsavedFiles.includes(tab.file);

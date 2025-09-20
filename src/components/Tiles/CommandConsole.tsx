@@ -5,6 +5,7 @@ import Convert from "ansi-to-html";
 import { Virtuoso } from "react-virtuoso";
 import { useIDE } from "../../utilities/IDEContext";
 import { escapeHtml } from "./Console";
+import { useParams } from "react-router";
 
 const convert = new Convert();
 
@@ -12,6 +13,12 @@ export default function CommandConsole() {
   const { consoleLines, setConsoleLines } = useIDE();
   const listenerAdded = useRef(false);
   const unlisten = useRef<() => void>(() => {});
+
+  const { path } = useParams<"path">();
+
+  useEffect(() => {
+    setConsoleLines([]);
+  }, [path]);
 
   useEffect(() => {
     if (!listenerAdded.current) {

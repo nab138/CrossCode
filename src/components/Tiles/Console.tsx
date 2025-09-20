@@ -3,6 +3,7 @@ import "./Console.css";
 import { listen } from "@tauri-apps/api/event";
 import Convert from "ansi-to-html";
 import { Virtuoso } from "react-virtuoso";
+import { useParams } from "react-router";
 
 const convert = new Convert();
 
@@ -25,6 +26,11 @@ export default function Console({
   const [consoleLines, setConsoleLines] = useState<string[]>([]);
   const listenerAdded = useRef(false);
   const unlisten = useRef<() => void>(() => {});
+  const { path } = useParams<"path">();
+
+  useEffect(() => {
+    setConsoleLines([]);
+  }, [path]);
 
   useEffect(() => {
     if (!listenerAdded.current) {
