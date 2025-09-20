@@ -76,7 +76,24 @@ jobs:
         run: bun i --frozen-lockfile
 
       - name: Clean old bundles
+        if: matrix.platform != 'macos-latest'
         run: bunx rimraf src-tauri/target/release/bundle
+
+      - name: Clean old bundles
+        if: matrix.platform == 'macos-latest' && matrix.args == '--target aarch64-apple-darwin'
+        run: bunx rimraf src-tauri/target/aarch64-apple-darwin/release/bundle
+
+      - name: Clean old bundles
+        if: matrix.platform == 'macos-latest' && matrix.args == '--target x86_64-apple-darwin'
+        run: bunx rimraf src-tauri/target/x86_64-apple-darwin/release/bundle
+
+      - name: Set up Rosetta for x86_64 cross-compilation
+        if: matrix.platform == 'macos-latest' && matrix.args == '--target x86_64-apple-darwin'
+        run: |
+          sudo softwareupdate --install-rosetta --agree-to-license
+          export CARGO_BUILD_TARGET=x86_64-apple-darwin
+          export CFLAGS="-arch x86_64"
+          export LDFLAGS="-arch x86_64"
 
       - name: Build for Development
         uses: tauri-apps/tauri-action@v0
@@ -84,6 +101,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          CARGO_BUILD_TARGET: ${{ matrix.args == '--target x86_64-apple-darwin' && 'x86_64-apple-darwin' || '' }}
+          CFLAGS: ${{ matrix.args == '--target x86_64-apple-darwin' && '-arch x86_64' || '' }}
+          LDFLAGS: ${{ matrix.args == '--target x86_64-apple-darwin' && '-arch x86_64' || '' }}
         with:
           args: ${{ matrix.args }}
           includeUpdaterJson: ${{ github.event_name == 'release' }}
@@ -94,7 +114,7 @@ jobs:
         if: matrix.platform == 'macos-latest'
         with:
           name: macos-dmg-${{ matrix.args == '--target aarch64-apple-darwin' && 'arm64' || 'x64' }}
-          path: ${{ github.workspace }}/src-tauri/target/release/bundle/**/*.dmg
+          path: ${{ github.workspace }}/src-tauri/target/**/release/bundle/**/*.dmg
 
       - name: Upload Linux DEB
         uses: actions/upload-artifact@v4
