@@ -29,7 +29,7 @@ jobs:
             args: ""
           - platform: "macos-latest"
             args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest"
+          - platform: "macos-15-intel"
             args: "--target x86_64-apple-darwin"
 
     runs-on: ${{ matrix.platform }}
@@ -87,8 +87,7 @@ jobs:
         if: matrix.platform == 'macos-latest' && matrix.args == '--target x86_64-apple-darwin'
         run: bunx rimraf src-tauri/target/x86_64-apple-darwin/release/bundle
 
-      - name: Build for Release
-        if: github.event_name == 'release'
+      - name: Build
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,17 +95,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: ${{ matrix.args }}
-          includeUpdaterJson: true
-          releaseId: ${{ github.event.release.id }}
-
-      - name: Build for Development
-        if: github.event_name != 'release'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: |
-          ${{ matrix.platform == 'macos-latest' && matrix.args == '--target x86_64-apple-darwin' && 'arch -x86_64 ' || '' }}bunx tauri build ${{ matrix.args }}
+          includeUpdaterJson: ${{ github.event_name == 'release' }}
+          releaseId: ${{ github.event_name == 'release' && github.event.release.id || '' }}
 
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
