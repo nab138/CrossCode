@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-shell";
 import "./Onboarding.css";
 import { Button, Card, CardContent, Divider, Link, Typography } from "@mui/joy";
 import { useIDE } from "../utilities/IDEContext";
 import logo from "../assets/logo.png";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import SwiftMenu from "../components/SwiftMenu";
 import SDKMenu from "../components/SDKMenu";
@@ -14,6 +14,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "react-toast-plus";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { SWIFT_VERSION_PREFIX } from "../utilities/constants";
 
 export interface OnboardingProps {}
 
@@ -30,6 +31,18 @@ export default ({}: OnboardingProps) => {
     };
     fetchVersion();
   }, []);
+
+  const location = useLocation();
+  const darwinSdkRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    console.log(location.hash);
+    if (location.hash === "#install-sdk" && darwinSdkRef.current) {
+      darwinSdkRef.current.scrollIntoView({
+        block: "start",
+      });
+    }
+  }, [location.hash]);
 
   return (
     <div className="onboarding">
@@ -230,16 +243,16 @@ export default ({}: OnboardingProps) => {
         <Card variant="soft">
           <Typography level="h3">Swift</Typography>
           <Typography level="body-sm">
-            You will need a Swift 6.2 toolchain to use CrossCode. It is
-            recommended to install it using swiftly, but you can also install it
-            manually.
+            You will need a Swift {SWIFT_VERSION_PREFIX} toolchain to use
+            CrossCode. It is recommended to install it using swiftly, but you
+            can also install it manually.
           </Typography>
           <Divider />
           <CardContent>
             <SwiftMenu />
           </CardContent>
         </Card>
-        <Card variant="soft">
+        <Card variant="soft" id="install-sdk">
           <Typography level="h3">Darwin SDK</Typography>
           <Typography level="body-sm">
             CrossCode requires a special swift SDK to build apps for iOS. It can
@@ -255,6 +268,7 @@ export default ({}: OnboardingProps) => {
           </CardContent>
         </Card>
       </div>
+      <div style={{ width: 0, height: 0 }} ref={darwinSdkRef}></div>
     </div>
   );
 };

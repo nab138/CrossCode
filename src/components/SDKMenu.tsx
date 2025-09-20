@@ -7,11 +7,13 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { installSdkOperation } from "../utilities/operations";
 import ErrorIcon from "@mui/icons-material/Error";
 import WarningIcon from "@mui/icons-material/Warning";
+import { DARWIN_SDK_VERSION } from "../utilities/constants";
 
 export default () => {
   const {
     selectedToolchain,
     hasDarwinSDK,
+    darwinSDKVersion,
     checkSDK,
     startOperation,
     isWindows,
@@ -86,32 +88,46 @@ export default () => {
         gap: "var(--padding-md)",
       }}
     >
-      <Typography
-        level="body-md"
-        color={
-          hasDarwinSDK ? "success" : selectedToolchain ? "danger" : "warning"
-        }
-        sx={{
-          alignContent: "center",
-          display: "flex",
-          gap: "var(--padding-xs)",
-        }}
-      >
-        {isWindowsReady ? (
-          hasDarwinSDK ? (
-            "Darwin SDK is installed!"
+      <div>
+        <Typography
+          level="body-md"
+          color={
+            hasDarwinSDK ? "success" : selectedToolchain ? "danger" : "warning"
+          }
+          sx={{
+            alignContent: "center",
+            display: "flex",
+            gap: "var(--padding-xs)",
+          }}
+        >
+          {isWindowsReady ? (
+            hasDarwinSDK ? (
+              "Darwin SDK is installed!"
+            ) : (
+              <>
+                {selectedToolchain ? <ErrorIcon /> : <WarningIcon />}
+                {selectedToolchain
+                  ? "Darwin SDK is not installed"
+                  : "Select a swift toolchain first"}
+              </>
+            )
           ) : (
-            <>
-              {selectedToolchain ? <ErrorIcon /> : <WarningIcon />}
-              {selectedToolchain
-                ? "Darwin SDK is not installed"
-                : "Select a swift toolchain first"}
-            </>
-          )
-        ) : (
-          "Install WSL and Swift first."
+            "Install WSL and Swift first."
+          )}
+        </Typography>
+        {hasDarwinSDK && (
+          <Typography
+            level="body-sm"
+            color={
+              darwinSDKVersion === DARWIN_SDK_VERSION ? undefined : "warning"
+            }
+          >
+            {darwinSDKVersion === DARWIN_SDK_VERSION
+              ? `Version: ${darwinSDKVersion}`
+              : `Unsupported SDK version (${darwinSDKVersion}). Apps may compile, but you may not be able to use newer features (like liquid glass). Please re-install with Xcode 26.`}
+          </Typography>
         )}
-      </Typography>
+      </div>
       <div
         style={{
           display: "flex",

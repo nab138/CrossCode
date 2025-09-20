@@ -20,16 +20,16 @@
         "@mui/icons-material": "^7.0.2",
         "@mui/joy": "^5.0.0-beta.52",
         "@mui/material": "^7.0.2",
-        "@tauri-apps/api": "~2",
+        "@tauri-apps/api": "^2",
         "@tauri-apps/plugin-cli": "^2.4.0",
-        "@tauri-apps/plugin-dialog": "~2",
-        "@tauri-apps/plugin-fs": "~2",
-        "@tauri-apps/plugin-opener": "~2",
+        "@tauri-apps/plugin-dialog": "^2",
+        "@tauri-apps/plugin-fs": "^2",
+        "@tauri-apps/plugin-opener": "^2",
         "@tauri-apps/plugin-os": "^2.3.0",
         "@tauri-apps/plugin-process": "^2.3.0",
-        "@tauri-apps/plugin-shell": "~2",
-        "@tauri-apps/plugin-store": "~2",
-        "@tauri-apps/plugin-updater": "~2",
+        "@tauri-apps/plugin-shell": "^2",
+        "@tauri-apps/plugin-store": "^2",
+        "@tauri-apps/plugin-updater": "^2",
         "ansi-to-html": "^0.7.2",
         "async-mutex": "^0.5.0",
         "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@~20.2.1",
@@ -44,13 +44,13 @@
         "vscode-ws-jsonrpc": "^3.4.0",
       },
       "devDependencies": {
-        "@tauri-apps/cli": "~2",
+        "@tauri-apps/cli": "^2",
         "@types/react": "^18.2.15",
         "@types/react-dom": "^18.2.7",
         "@types/vscode": "^1.102.0",
         "@vitejs/plugin-react": "^4.2.1",
         "typescript": "^5.0.2",
-        "vite": "^7.0.0",
+        "vite": "^7.1.6",
       },
     },
   },
@@ -699,7 +699,7 @@
 
     "supports-preserve-symlinks-flag": ["supports-preserve-symlinks-flag@1.0.0", "", {}, "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="],
 
-    "tinyglobby": ["tinyglobby@0.2.14", "", { "dependencies": { "fdir": "^6.4.4", "picomatch": "^4.0.2" } }, "sha512-tX5e7OM1HnYr2+a2C/4V0htOcSQcoSTH9KgJnVvNm5zm/cyEWKJ7j7YutsH9CxMdtOkkLFy2AHrMci9IM8IPZQ=="],
+    "tinyglobby": ["tinyglobby@0.2.15", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.3" } }, "sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
@@ -707,7 +707,7 @@
 
     "update-browserslist-db": ["update-browserslist-db@1.1.3", "", { "dependencies": { "escalade": "^3.2.0", "picocolors": "^1.1.1" }, "peerDependencies": { "browserslist": ">= 4.21.0" }, "bin": { "update-browserslist-db": "cli.js" } }, "sha512-UxhIZQ+QInVdunkDAaiazvvT/+fXL5Osr0JZlJulepYu6Jd7qJtDZjlur0emRlT71EN3ScPoE7gvsuIKKNavKw=="],
 
-    "vite": ["vite@7.1.3", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.5.0", "picomatch": "^4.0.3", "postcss": "^8.5.6", "rollup": "^4.43.0", "tinyglobby": "^0.2.14" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^20.19.0 || >=22.12.0", "jiti": ">=1.21.0", "less": "^4.0.0", "lightningcss": "^1.21.0", "sass": "^1.70.0", "sass-embedded": "^1.70.0", "stylus": ">=0.54.8", "sugarss": "^5.0.0", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-OOUi5zjkDxYrKhTV3V7iKsoS37VUM7v40+HuwEmcrsf11Cdx9y3DIr2Px6liIcZFwt3XSRpQvFpL3WVy7ApkGw=="],
+    "vite": ["vite@7.1.6", "", { "dependencies": { "esbuild": "^0.25.0", "fdir": "^6.5.0", "picomatch": "^4.0.3", "postcss": "^8.5.6", "rollup": "^4.43.0", "tinyglobby": "^0.2.15" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^20.19.0 || >=22.12.0", "jiti": ">=1.21.0", "less": "^4.0.0", "lightningcss": "^1.21.0", "sass": "^1.70.0", "sass-embedded": "^1.70.0", "stylus": ">=0.54.8", "sugarss": "^5.0.0", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "jiti", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-SRYIB8t/isTwNn8vMB3MR6E+EQZM/WG1aKmmIUCfDXfVvKfc20ZpamngWHKzAmmu9ppsgxsg4b2I7c90JZudIQ=="],
 
     "vscode": ["@codingame/monaco-vscode-extension-api@20.2.1", "", { "dependencies": { "@codingame/monaco-vscode-34a0ffd3-b9f5-5699-b43b-38af5732f38a-common": "20.2.1", "@codingame/monaco-vscode-4a3ac544-9a61-534c-88df-756262793ef7-common": "20.2.1", "@codingame/monaco-vscode-api": "20.2.1", "@codingame/monaco-vscode-extensions-service-override": "20.2.1" } }, "sha512-K2VFVhQZUpBS+YJRr4DYgvNjelu7dWw81YWg8PwEVj7X8vSd9DqQZbTvudsiJDhlkkY4KWqZQjtITY0fc/X3QQ=="],
 

@@ -37,6 +37,7 @@ export interface IDEContextType {
   isWindows: boolean;
   hasWSL: boolean;
   hasDarwinSDK: boolean;
+  darwinSDKVersion: string;
   hasLimitedRam: boolean;
   toolchains: ListToolchainResponse | null;
   selectedToolchain: Toolchain | null;
@@ -100,6 +101,7 @@ export const IDEProvider: React.FC<{
     null
   );
   const [hasDarwinSDK, setHasDarwinSDK] = useState<boolean>(false);
+  const [darwinSDKVersion, setDarwinSDKVersion] = useState<string>("none");
   const [initialized, setInitialized] = useState(false);
   const [ready, setReady] = useState<boolean | null>(null);
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
@@ -160,13 +162,15 @@ export const IDEProvider: React.FC<{
 
   const checkSDK = useCallback(async () => {
     try {
-      let result = await invoke<boolean>("has_darwin_sdk", {
+      let result = await invoke<string>("has_darwin_sdk", {
         toolchainPath: selectedToolchain?.path || "",
       });
-      setHasDarwinSDK(result);
+      setHasDarwinSDK(result != "none");
+      setDarwinSDKVersion(result);
     } catch (e) {
       console.error("Failed to check for SDK:", e);
       setHasDarwinSDK(false);
+      setDarwinSDKVersion("none");
     }
   }, [selectedToolchain]);
 
@@ -246,7 +250,11 @@ export const IDEProvider: React.FC<{
     initialized,
   ]);
 
+  let startedInitializing = useRef(false);
+
   useEffect(() => {
+    if (startedInitializing.current) return;
+    startedInitializing.current = true;
     let initPromises: Promise<void>[] = [];
     initPromises.push(scanToolchains());
     initPromises.push(
@@ -260,10 +268,11 @@ export const IDEProvider: React.FC<{
       })
     );
     initPromises.push(
-      invoke("has_darwin_sdk", {
+      invoke<string>("has_darwin_sdk", {
         toolchainPath: selectedToolchain?.path ?? "",
       }).then((response) => {
-        setHasDarwinSDK(response as boolean);
+        setHasDarwinSDK(response != "none");
+        setDarwinSDKVersion(response);
       })
     );
     initPromises.push(
@@ -500,6 +509,7 @@ export const IDEProvider: React.FC<{
       setSelectedDevice,
       mountDdi,
       ready,
+      darwinSDKVersion,
     }),
     [
       isWindows,
@@ -522,6 +532,7 @@ export const IDEProvider: React.FC<{
       setSelectedDevice,
       mountDdi,
       ready,
+      darwinSDKVersion,
     ]
   );
 

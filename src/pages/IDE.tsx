@@ -25,6 +25,7 @@ import { restartServer } from "../utilities/lsp-client";
 import BottomBar from "../components/Tiles/BottomBar";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { IStandaloneCodeEditor } from "@codingame/monaco-vscode-api/vscode/vs/editor/standalone/browser/standaloneCodeEditor";
+import { DARWIN_SDK_VERSION } from "../utilities/constants";
 
 export interface IDEProps {}
 
@@ -52,6 +53,7 @@ export default () => {
     hasLimitedRam,
     initialized,
     ready,
+    darwinSDKVersion,
   } = useIDE();
   const [sourcekitStartup, setSourcekitStartup] = useStore<boolean | null>(
     "sourcekit/startup",
@@ -59,6 +61,11 @@ export default () => {
   );
   const [hasIgnoredRam, setHasIgnoredRam] = useStore<boolean>(
     "has-ignored-ram",
+    false
+  );
+
+  const [hasIgnoredDarwinSDK, setHasIgnoredDarwinSDK] = useStore<boolean>(
+    "has-ignored-darwin-sdk",
     false
   );
 
@@ -336,6 +343,54 @@ export default () => {
                   variant="outlined"
                 >
                   Enable Anyway
+                </Button>
+              </div>
+            </ModalDialog>
+          </Modal>
+        )}
+      {initialized &&
+        selectedToolchain !== null &&
+        hasIgnoredDarwinSDK === false &&
+        darwinSDKVersion !== DARWIN_SDK_VERSION && (
+          <Modal
+            open={true}
+            onClose={() => {
+              setHasIgnoredDarwinSDK(true);
+            }}
+          >
+            <ModalDialog sx={{ maxWidth: "90vw" }}>
+              <ModalClose />
+              <div>
+                <div style={{ display: "flex", gap: "var(--padding-md)" }}>
+                  <div style={{ width: "1.25rem" }}>
+                    <WarningIcon />
+                  </div>
+                  <Typography level="h3">Incompatible SDK Version</Typography>
+                </div>
+                <Typography level="body-lg">
+                  This version of CrossCode is designed to work with Darwin SDK{" "}
+                  {DARWIN_SDK_VERSION}, but you have version {darwinSDKVersion}{" "}
+                  installed. Things may still work, but you will miss out on
+                  newer features (like liquid glass) and may run into issues.
+                </Typography>
+              </div>
+
+              <Divider sx={{ mb: "var(--padding-xs)" }} />
+              <div style={{ display: "flex", gap: "var(--padding-lg)" }}>
+                <Button
+                  onClick={() => {
+                    navigate("/#install-sdk");
+                  }}
+                >
+                  Install Correct SDK
+                </Button>
+                <Button
+                  onClick={() => {
+                    setHasIgnoredDarwinSDK(true);
+                  }}
+                  variant="outlined"
+                >
+                  Ignore
                 </Button>
               </div>
             </ModalDialog>

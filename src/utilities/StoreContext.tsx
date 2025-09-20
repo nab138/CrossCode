@@ -41,13 +41,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({
       await setTheme(theme as "light" | "dark");
       setMode(theme as "light" | "dark");
 
-      if ((await storeInstance.get("isCrossCodePrefs")) !== true) {
-        storeInstance.set("isCrossCodePrefs", true);
-      } else {
-        if ((await storeInstance.get("lastXcodeVersion")) === undefined) {
-          storeInstance.set("lastXcodeVersion", "16.3");
-        }
-      }
+      storeInstance.set("isCrossCodePrefs", true);
 
       const keys = await storeInstance.keys();
       const values: { [key: string]: any } = {};
