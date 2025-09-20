@@ -51,7 +51,7 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ (matrix.platform == 'macos-latest' || matrix.platform == 'macos-15-intel') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -76,15 +76,15 @@ jobs:
         run: bun i --frozen-lockfile
 
       - name: Clean old bundles
-        if: matrix.platform != 'macos-latest'
+        if: matrix.platform != 'macos-latest' && matrix.platform != 'macos-15-intel'
         run: bunx rimraf src-tauri/target/release/bundle
 
       - name: Clean old bundles
-        if: matrix.platform == 'macos-latest' && matrix.args == '--target aarch64-apple-darwin'
+        if: matrix.platform == 'macos-latest'
         run: bunx rimraf src-tauri/target/aarch64-apple-darwin/release/bundle
 
       - name: Clean old bundles
-        if: matrix.platform == 'macos-latest' && matrix.args == '--target x86_64-apple-darwin'
+        if: matrix.platform == 'macos-15-intel'
         run: bunx rimraf src-tauri/target/x86_64-apple-darwin/release/bundle
 
       - name: Build
@@ -100,7 +100,7 @@ jobs:
 
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
-        if: matrix.platform == 'macos-latest'
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'macos-15-intel'
         with:
           name: macos-dmg-${{ matrix.args == '--target aarch64-apple-darwin' && 'arm64' || 'x64' }}
           path: ${{ github.workspace }}/src-tauri/target/**/release/bundle/**/*.dmg
