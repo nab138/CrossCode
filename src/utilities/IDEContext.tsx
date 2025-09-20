@@ -27,11 +27,13 @@ import { StoreContext, useStore } from "./StoreContext";
 import { Operation, OperationState, OperationUpdate } from "./operations";
 import OperationView from "../components/OperationView";
 import { UpdateContext } from "./UpdateContext";
+import { isCompatable } from "../components/SwiftMenu";
 
 let isMainWindow = getCurrentWindow().label === "main";
 
 export interface IDEContextType {
   initialized: boolean;
+  ready: boolean | null;
   isWindows: boolean;
   hasWSL: boolean;
   hasDarwinSDK: boolean;
@@ -99,6 +101,7 @@ export const IDEProvider: React.FC<{
   );
   const [hasDarwinSDK, setHasDarwinSDK] = useState<boolean>(false);
   const [initialized, setInitialized] = useState(false);
+  const [ready, setReady] = useState<boolean | null>(null);
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [consoleLines, setConsoleLines] = useState<string[]>([]);
   const [selectedToolchain, setSelectedToolchain] = useStore<Toolchain | null>(
@@ -168,13 +171,15 @@ export const IDEProvider: React.FC<{
   }, [selectedToolchain]);
 
   const scanToolchains = useCallback(() => {
-    return invoke<ListToolchainResponse>("get_swiftly_toolchains").then(
-      (response) => {
-        if (response) {
-          setToolchains(response);
-        }
+    return new Promise<void>(async (resolve) => {
+      let response = await invoke<ListToolchainResponse>(
+        "get_swiftly_toolchains"
+      );
+      if (response) {
+        setToolchains(response);
+        resolve();
       }
-    );
+    });
   }, []);
 
   const locateToolchain = useCallback(async () => {
@@ -219,6 +224,27 @@ export const IDEProvider: React.FC<{
       setSelectedToolchain(info);
     }
   }, [isWindows]);
+
+  useEffect(() => {
+    if (!initialized) return setReady(null);
+    if (toolchains !== null && isWindows !== null && hasWSL !== null) {
+      setReady(
+        selectedToolchain !== null &&
+          isCompatable(selectedToolchain) &&
+          (isWindows ? hasWSL : true) &&
+          hasDarwinSDK
+      );
+    } else {
+      setReady(false);
+    }
+  }, [
+    selectedToolchain,
+    toolchains,
+    hasWSL,
+    isWindows,
+    hasDarwinSDK,
+    initialized,
+  ]);
 
   useEffect(() => {
     let initPromises: Promise<void>[] = [];
@@ -473,6 +499,7 @@ export const IDEProvider: React.FC<{
       selectedDevice,
       setSelectedDevice,
       mountDdi,
+      ready,
     }),
     [
       isWindows,
@@ -494,6 +521,7 @@ export const IDEProvider: React.FC<{
       selectedDevice,
       setSelectedDevice,
       mountDdi,
+      ready,
     ]
   );
 

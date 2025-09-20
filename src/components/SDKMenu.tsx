@@ -123,11 +123,11 @@ export default () => {
           onClick={(e) => {
             e.preventDefault();
             openUrl(
-              "https://developer.apple.com/services-account/download?path=/Developer_Tools/Xcode_16.3/Xcode_16.3.xip"
+              "https://developer.apple.com/services-account/download?path=/Developer_Tools/Xcode_26/Xcode_26_Universal.xip"
             );
           }}
         >
-          Download XCode 16.3
+          Download XCode 26
         </Button>
         <Button
           variant="soft"

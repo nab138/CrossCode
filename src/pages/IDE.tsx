@@ -46,8 +46,13 @@ export default () => {
   const [redo, setRedo] = useState<(() => void) | null>(null);
   const [theme] = useStore<"light" | "dark">("appearance/theme", "dark");
   const { path } = useParams<"path">();
-  const { openFolderDialog, selectedToolchain, hasLimitedRam, initialized } =
-    useIDE();
+  const {
+    openFolderDialog,
+    selectedToolchain,
+    hasLimitedRam,
+    initialized,
+    ready,
+  } = useIDE();
   const [sourcekitStartup, setSourcekitStartup] = useStore<boolean | null>(
     "sourcekit/startup",
     null
@@ -67,6 +72,17 @@ export default () => {
     useState<ProjectValidation | null>(null);
   const [editor, setEditor] = useState<IStandaloneCodeEditor | null>(null);
   const { addToast } = useToast();
+
+  useEffect(() => {
+    if (ready === false && initialized) {
+      console.log(
+        "IDE not ready, returning to welcome page",
+        ready,
+        initialized
+      );
+      navigate("/");
+    }
+  }, [ready, initialized, navigate]);
 
   useEffect(() => {
     (async () => {

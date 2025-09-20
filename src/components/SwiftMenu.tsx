@@ -92,7 +92,7 @@ export default () => {
               fontFamily: "monospace",
             }}
           >
-            swiftly install 6.1
+            swiftly install 6.2
           </span>
           " or manually. If you have already done so, but it is not showing up,
           your toolchain installation may be broken. For help, refer to the{" "}
@@ -110,6 +110,7 @@ export default () => {
           .
         </Typography>
       )}
+
       {toolchains !== null && allToolchains.length > 0 && (
         <div>
           <Typography level="body-md">Select a toolchain:</Typography>
@@ -195,9 +196,9 @@ export default () => {
   );
 };
 
-function isCompatable(toolchain: Toolchain | null): boolean {
+export function isCompatable(toolchain: Toolchain | null): boolean {
   if (!toolchain) return false;
-  return toolchain.version.startsWith("6.1");
+  return toolchain.version.startsWith("6.2");
 }
 
 function stringifyToolchain(toolchain: Toolchain | null): string | null {
