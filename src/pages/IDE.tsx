@@ -1,7 +1,7 @@
 import Splitter, { GutterTheme, SplitDirection } from "@devbookhq/splitter";
 import Tile from "../components/Tiles/Tile";
 import FileExplorer from "../components/Tiles/FileExplorer";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import Editor from "../components/Tiles/Editor";
 import MenuBar from "../components/Menu/MenuBar";
 import "./IDE.css";
@@ -11,6 +11,7 @@ import { useIDE } from "../utilities/IDEContext";
 import { registerFileSystemOverlay } from "@codingame/monaco-vscode-files-service-override";
 import TauriFileSystemProvider from "../utilities/TauriFileSystemProvider";
 import { invoke } from "@tauri-apps/api/core";
+import { path } from "@tauri-apps/api";
 import {
   Button,
   Divider,
@@ -25,6 +26,7 @@ import { restartServer } from "../utilities/lsp-client";
 import BottomBar from "../components/Tiles/BottomBar";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { IStandaloneCodeEditor } from "@codingame/monaco-vscode-api/vscode/vs/editor/standalone/browser/standaloneCodeEditor";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
 export interface IDEProps {}
 
@@ -45,7 +47,7 @@ export default () => {
   const [undo, setUndo] = useState<(() => void) | null>(null);
   const [redo, setRedo] = useState<(() => void) | null>(null);
   const [theme] = useStore<"light" | "dark">("appearance/theme", "dark");
-  const { path } = useParams<"path">();
+  const { path: filePath } = useParams<"path">();
   const { openFolderDialog, selectedToolchain, hasLimitedRam, initialized } =
     useIDE();
   const [sourcekitStartup, setSourcekitStartup] = useStore<boolean | null>(
@@ -57,7 +59,7 @@ export default () => {
     false
   );
 
-  if (!path) {
+  if (!filePath) {
     throw new Error("Path parameter is required in IDE component");
   }
 
@@ -68,27 +70,65 @@ export default () => {
   const [editor, setEditor] = useState<IStandaloneCodeEditor | null>(null);
   const { addToast } = useToast();
 
+  const hasAttemptedToReadOpenFiles = useRef<string | null>(null);
+
   useEffect(() => {
     (async () => {
-      if (!store || !storeInitialized || !path) return;
-      await store.set("last-opened-project", encodeURIComponent(path!));
+      if (!filePath) return;
+      const savePath = await path.join(
+        filePath,
+        ".crosscode",
+        "openFiles.json"
+      );
+      try {
+        let text = await readTextFile(savePath);
+        console.log(text);
+        if (!text) return;
+        let files = JSON.parse(text) as string[];
+        setOpenFiles(files);
+      } catch (e) {
+        void e;
+      } finally {
+        hasAttemptedToReadOpenFiles.current = filePath;
+      }
     })();
-  }, [path, store, storeInitialized]);
+  }, [filePath]);
+
+  useEffect(() => {
+    (async () => {
+      if (!filePath || hasAttemptedToReadOpenFiles.current !== filePath) return;
+      const savePath = await path.join(
+        filePath,
+        ".crosscode",
+        "openFiles.json"
+      );
+      writeTextFile(savePath, JSON.stringify(openFiles)).catch((err) => {
+        console.error("Error writing openFiles.json:", err);
+      });
+    })();
+  }, [openFiles, filePath]);
+
+  useEffect(() => {
+    (async () => {
+      if (!store || !storeInitialized || !filePath) return;
+      await store.set("last-opened-project", encodeURIComponent(filePath!));
+    })();
+  }, [filePath, store, storeInitialized]);
 
   useEffect(() => {
     if (
-      path === undefined ||
-      path === null ||
+      filePath === undefined ||
+      filePath === null ||
       selectedToolchain === null ||
       !initialized
     )
       return;
     setProjectValidation(null);
     (async () => {
-      if (path) {
+      if (filePath) {
         const toolchainPath = selectedToolchain?.path ?? "";
         const validation = await invoke<ProjectValidation>("validate_project", {
-          projectPath: path,
+          projectPath: filePath,
           toolchainPath: toolchainPath,
         });
         if (validation) {
@@ -96,7 +136,7 @@ export default () => {
         }
       }
     })();
-  }, [path, selectedToolchain, initialized]);
+  }, [filePath, selectedToolchain, initialized]);
 
   useEffect(() => {
     if (openFiles.length === 0) {
@@ -110,7 +150,7 @@ export default () => {
   useEffect(() => {
     let dispose = () => {};
 
-    if (path) {
+    if (filePath) {
       const provider = new TauriFileSystemProvider(false);
       const overlayDisposable = registerFileSystemOverlay(1, provider);
       dispose = () => {
@@ -121,7 +161,7 @@ export default () => {
     return () => {
       dispose();
     };
-  }, [path]);
+  }, [filePath]);
 
   useEffect(() => {
     let autoEnable = async () => {
@@ -136,9 +176,9 @@ export default () => {
     if (!sourcekitStartup || selectedToolchain == null) return;
     requestAnimationFrame(async () => {
       try {
-        if (autoStartedLsp === path) return;
-        autoStartedLsp = path;
-        await restartServer(path, selectedToolchain);
+        if (autoStartedLsp === filePath) return;
+        autoStartedLsp = filePath;
+        await restartServer(filePath, selectedToolchain);
       } catch (e) {
         console.error("Failed to start SourceKit-LSP:", e);
         addToast.error(
@@ -146,7 +186,7 @@ export default () => {
         );
       }
     });
-  }, [sourcekitStartup, path, selectedToolchain]);
+  }, [sourcekitStartup, filePath, selectedToolchain]);
 
   const openNewFile = useCallback((file: string) => {
     setOpenFile(file);
@@ -184,7 +224,7 @@ export default () => {
         initialSizes={[20, 80]}
       >
         <Tile className="file-explorer-tile">
-          <FileExplorer openFolder={path} setOpenFile={openNewFile} />
+          <FileExplorer openFolder={filePath} setOpenFile={openNewFile} />
         </Tile>
         <Splitter
           gutterTheme={theme === "dark" ? GutterTheme.Dark : GutterTheme.Light}

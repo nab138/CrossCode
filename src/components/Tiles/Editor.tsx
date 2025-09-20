@@ -15,8 +15,6 @@ import "@codingame/monaco-vscode-swift-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import { platform } from "@tauri-apps/plugin-os";
 import { TabLike } from "../TabLike";
-import { useParams } from "react-router";
-import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
@@ -95,8 +93,6 @@ export default ({
 
   const { mode } = useColorScheme();
 
-  const { path: filePath } = useParams<"path">();
-
   const monacoEl = useRef(null);
   const [initialized, setInitialized] = useState(false);
   const currentTabsRef = useRef(tabs);
@@ -105,8 +101,10 @@ export default ({
   const openNewFileRef = useRef(openNewFile);
   const selectionOverrideRef = useRef<ITextEditorOptions | null>(null);
   const hasInitializedRef = useRef(false);
-
-  let [hoveredOnBtn, setHoveredOnBtn] = useState<number | null>(null);
+  const scrollStates = useRef<{
+    [key: string]: [number, number];
+  }>({});
+  const [hoveredOnBtn, setHoveredOnBtn] = useState<number | null>(null);
 
   useEffect(() => {
     globalEditorServiceCallbacks.currentTabsRef = currentTabsRef;
@@ -115,44 +113,6 @@ export default ({
     globalEditorServiceCallbacks.openNewFileRef = openNewFileRef;
     globalEditorServiceCallbacks.selectionOverrideRef = selectionOverrideRef;
   });
-
-  const hasAttemptedToReadOpenFiles = useRef<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      if (!filePath) return;
-      const savePath = await path.join(
-        filePath,
-        ".crosscode",
-        "openFiles.json"
-      );
-      try {
-        let text = await readTextFile(savePath);
-        console.log(text);
-        if (!text) return;
-        let files = JSON.parse(text) as string[];
-        setOpenFiles(files);
-      } catch (e) {
-        void e;
-      } finally {
-        hasAttemptedToReadOpenFiles.current = filePath;
-      }
-    })();
-  }, [filePath]);
-
-  useEffect(() => {
-    (async () => {
-      if (!filePath || hasAttemptedToReadOpenFiles.current !== filePath) return;
-      const savePath = await path.join(
-        filePath,
-        ".crosscode",
-        "openFiles.json"
-      );
-      writeTextFile(savePath, JSON.stringify(openFiles)).catch((err) => {
-        console.error("Error writing openFiles.json:", err);
-      });
-    })();
-  }, [openFiles, filePath]);
 
   useEffect(() => {
     editorRef.current = editor;
@@ -270,6 +230,18 @@ export default ({
       newEditor.dispose();
     };
   }, [initialized]);
+
+  useEffect(() => {
+    if (editor === null) return;
+    let listener = editor.onDidScrollChange((e) => {
+      if (focused !== undefined) {
+        scrollStates.current[tabs[focused].file] = [e.scrollTop, e.scrollLeft];
+      }
+    });
+    return () => {
+      listener.dispose();
+    };
+  }, [editor, focused, tabs]);
 
   useEffect(() => {
     if (!editor || !initialized) return;
@@ -421,6 +393,12 @@ export default ({
       setSaveFile(() => modelRef.object.save.bind(modelRef.object));
 
       editor.setModel(modelRef.object.textEditorModel);
+
+      if (scrollStates.current && scrollStates.current[filePath]) {
+        const [scrollTop, scrollLeft] = scrollStates.current[filePath];
+        editor.setScrollTop(scrollTop);
+        editor.setScrollLeft(scrollLeft);
+      }
 
       // I don't love doing it like this but it seems to improve consistency over just running it directly
       requestAnimationFrame(() => {
