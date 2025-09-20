@@ -16,6 +16,7 @@ import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import { platform } from "@tauri-apps/plugin-os";
 import { TabLike } from "../TabLike";
 import { useParams } from "react-router";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
@@ -115,11 +116,43 @@ export default ({
     globalEditorServiceCallbacks.selectionOverrideRef = selectionOverrideRef;
   });
 
+  const hasAttemptedToReadOpenFiles = useRef<string | null>(null);
+
   useEffect(() => {
-    setOpenFiles([]);
-    setTabs([]);
-    setFocused(undefined);
+    (async () => {
+      if (!filePath) return;
+      const savePath = await path.join(
+        filePath,
+        ".crosscode",
+        "openFiles.json"
+      );
+      try {
+        let text = await readTextFile(savePath);
+        console.log(text);
+        if (!text) return;
+        let files = JSON.parse(text) as string[];
+        setOpenFiles(files);
+      } catch (e) {
+        void e;
+      } finally {
+        hasAttemptedToReadOpenFiles.current = filePath;
+      }
+    })();
   }, [filePath]);
+
+  useEffect(() => {
+    (async () => {
+      if (!filePath || hasAttemptedToReadOpenFiles.current !== filePath) return;
+      const savePath = await path.join(
+        filePath,
+        ".crosscode",
+        "openFiles.json"
+      );
+      writeTextFile(savePath, JSON.stringify(openFiles)).catch((err) => {
+        console.error("Error writing openFiles.json:", err);
+      });
+    })();
+  }, [openFiles, filePath]);
 
   useEffect(() => {
     editorRef.current = editor;
