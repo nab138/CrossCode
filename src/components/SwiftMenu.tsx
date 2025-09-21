@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import ErrorIcon from "@mui/icons-material/Error";
 import { invoke } from "@tauri-apps/api/core";
+import { SWIFT_VERSION_PREFIX } from "../utilities/constants";
 
 export default () => {
   const {
@@ -92,7 +93,7 @@ export default () => {
               fontFamily: "monospace",
             }}
           >
-            swiftly install 6.1
+            swiftly install {SWIFT_VERSION_PREFIX}
           </span>
           " or manually. If you have already done so, but it is not showing up,
           your toolchain installation may be broken. For help, refer to the{" "}
@@ -108,6 +109,13 @@ export default () => {
             troubleshooting guide
           </Link>
           .
+        </Typography>
+      )}
+      {selectedToolchain !== null && !isCompatable(selectedToolchain) && (
+        <Typography level="body-md" color="danger">
+          Your selected toolchain is not compatible. Please select a swift{" "}
+          {SWIFT_VERSION_PREFIX}
+          toolchain.
         </Typography>
       )}
       {toolchains !== null && allToolchains.length > 0 && (
@@ -195,9 +203,9 @@ export default () => {
   );
 };
 
-function isCompatable(toolchain: Toolchain | null): boolean {
+export function isCompatable(toolchain: Toolchain | null): boolean {
   if (!toolchain) return false;
-  return toolchain.version.startsWith("6.1");
+  return toolchain.version.startsWith(SWIFT_VERSION_PREFIX);
 }
 
 function stringifyToolchain(toolchain: Toolchain | null): string | null {

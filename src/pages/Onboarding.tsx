@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-shell";
 import "./Onboarding.css";
 import { Button, Card, CardContent, Divider, Link, Typography } from "@mui/joy";
 import { useIDE } from "../utilities/IDEContext";
 import logo from "../assets/logo.png";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import SwiftMenu from "../components/SwiftMenu";
 import SDKMenu from "../components/SDKMenu";
@@ -14,34 +14,15 @@ import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "react-toast-plus";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { SWIFT_VERSION_PREFIX } from "../utilities/constants";
 
 export interface OnboardingProps {}
 
 export default ({}: OnboardingProps) => {
-  const {
-    selectedToolchain,
-    toolchains,
-    hasWSL,
-    isWindows,
-    openFolderDialog,
-    hasDarwinSDK,
-  } = useIDE();
-  const [ready, setReady] = useState(false);
+  const { ready, hasWSL, isWindows, openFolderDialog } = useIDE();
   const [version, setVersion] = useState<string>("");
   const navigate = useNavigate();
   const { addToast } = useToast();
-
-  useEffect(() => {
-    if (toolchains !== null && isWindows !== null && hasWSL !== null) {
-      setReady(
-        selectedToolchain !== null &&
-          (isWindows ? hasWSL : true) &&
-          hasDarwinSDK
-      );
-    } else {
-      setReady(false);
-    }
-  }, [selectedToolchain, toolchains, hasWSL, isWindows, hasDarwinSDK]);
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -50,6 +31,18 @@ export default ({}: OnboardingProps) => {
     };
     fetchVersion();
   }, []);
+
+  const location = useLocation();
+  const darwinSdkRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    console.log(location.hash);
+    if (location.hash === "#install-sdk" && darwinSdkRef.current) {
+      darwinSdkRef.current.scrollIntoView({
+        block: "start",
+      });
+    }
+  }, [location.hash]);
 
   return (
     <div className="onboarding">
@@ -250,23 +243,23 @@ export default ({}: OnboardingProps) => {
         <Card variant="soft">
           <Typography level="h3">Swift</Typography>
           <Typography level="body-sm">
-            You will need a Swift 6.1 toolchain to use CrossCode. It is
-            recommended to install it using swiftly, but you can also install it
-            manually.
+            You will need a Swift {SWIFT_VERSION_PREFIX} toolchain to use
+            CrossCode. It is recommended to install it using swiftly, but you
+            can also install it manually.
           </Typography>
           <Divider />
           <CardContent>
             <SwiftMenu />
           </CardContent>
         </Card>
-        <Card variant="soft">
+        <Card variant="soft" id="install-sdk">
           <Typography level="h3">Darwin SDK</Typography>
           <Typography level="body-sm">
             CrossCode requires a special swift SDK to build apps for iOS. It can
-            be generated from a copy of Xcode 16 or later. To install it,
+            be generated from a copy of Xcode 26 or later. To install it,
             download Xcode.xip using the link below, click the "Install SDK"
             button, then select the downloaded file. Note that installing the
-            SDK will temporarily require a lot of disk space (~10GB) and may
+            SDK will temporarily require a lot of disk space (~11GB) and may
             take a while.
           </Typography>
           <Divider />
@@ -275,6 +268,7 @@ export default ({}: OnboardingProps) => {
           </CardContent>
         </Card>
       </div>
+      <div style={{ width: 0, height: 0 }} ref={darwinSdkRef}></div>
     </div>
   );
 };

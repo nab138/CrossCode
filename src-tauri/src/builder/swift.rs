@@ -159,24 +159,61 @@ impl SwiftBin {
 }
 
 #[tauri::command]
-pub fn has_darwin_sdk(toolchain_path: &str) -> bool {
+pub fn has_darwin_sdk(toolchain_path: &str) -> String {
     let swift_bin = SwiftBin::new(toolchain_path);
     if swift_bin.is_err() {
-        return false;
+        return "none".to_string();
     }
     let swift_bin = swift_bin.unwrap();
 
     let output = swift_bin.output(&["sdk", "list"]);
     if output.is_err() {
-        return false;
+        return "none".to_string();
     }
     let output = output.unwrap();
     if !output.status.success() {
-        return false;
+        return "none".to_string();
     }
     let output_str = String::from_utf8_lossy(&output.stdout);
+    if !output_str.contains("darwin") {
+        return "none".to_string();
+    }
 
-    output_str.contains("darwin")
+    let output = swift_bin.output(&[
+        "sdk",
+        "configure",
+        "--show-configuration",
+        "darwin",
+        "arm64-apple-ios",
+    ]);
+    if output.is_err() {
+        return "none".to_string();
+    }
+    let output = output.unwrap();
+    if !output.status.success() {
+        return "none".to_string();
+    }
+
+    let output_str = String::from_utf8_lossy(&output.stdout);
+
+    let sdk_version = output_str.lines().find_map(|line| {
+        if line.starts_with("sdkRootPath:") {
+            let parts: Vec<&str> = line.split('/').collect();
+            for part in parts {
+                if part.starts_with("iPhoneOS") && part.ends_with(".sdk") {
+                    let version = part.trim_start_matches("iPhoneOS").trim_end_matches(".sdk");
+                    return Some(version.to_string());
+                }
+            }
+        }
+        None
+    });
+
+    if let Some(version) = sdk_version {
+        version
+    } else {
+        "none".to_string()
+    }
 }
 
 #[tauri::command]

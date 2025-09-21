@@ -27,14 +27,17 @@ import { StoreContext, useStore } from "./StoreContext";
 import { Operation, OperationState, OperationUpdate } from "./operations";
 import OperationView from "../components/OperationView";
 import { UpdateContext } from "./UpdateContext";
+import { isCompatable } from "../components/SwiftMenu";
 
 let isMainWindow = getCurrentWindow().label === "main";
 
 export interface IDEContextType {
   initialized: boolean;
+  ready: boolean | null;
   isWindows: boolean;
   hasWSL: boolean;
   hasDarwinSDK: boolean;
+  darwinSDKVersion: string;
   hasLimitedRam: boolean;
   toolchains: ListToolchainResponse | null;
   selectedToolchain: Toolchain | null;
@@ -98,7 +101,9 @@ export const IDEProvider: React.FC<{
     null
   );
   const [hasDarwinSDK, setHasDarwinSDK] = useState<boolean>(false);
+  const [darwinSDKVersion, setDarwinSDKVersion] = useState<string>("none");
   const [initialized, setInitialized] = useState(false);
+  const [ready, setReady] = useState<boolean | null>(null);
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [consoleLines, setConsoleLines] = useState<string[]>([]);
   const [selectedToolchain, setSelectedToolchain] = useStore<Toolchain | null>(
@@ -157,24 +162,28 @@ export const IDEProvider: React.FC<{
 
   const checkSDK = useCallback(async () => {
     try {
-      let result = await invoke<boolean>("has_darwin_sdk", {
+      let result = await invoke<string>("has_darwin_sdk", {
         toolchainPath: selectedToolchain?.path || "",
       });
-      setHasDarwinSDK(result);
+      setHasDarwinSDK(result != "none");
+      setDarwinSDKVersion(result);
     } catch (e) {
       console.error("Failed to check for SDK:", e);
       setHasDarwinSDK(false);
+      setDarwinSDKVersion("none");
     }
   }, [selectedToolchain]);
 
   const scanToolchains = useCallback(() => {
-    return invoke<ListToolchainResponse>("get_swiftly_toolchains").then(
-      (response) => {
-        if (response) {
-          setToolchains(response);
-        }
+    return new Promise<void>(async (resolve) => {
+      let response = await invoke<ListToolchainResponse>(
+        "get_swiftly_toolchains"
+      );
+      if (response) {
+        setToolchains(response);
+        resolve();
       }
-    );
+    });
   }, []);
 
   const locateToolchain = useCallback(async () => {
@@ -221,6 +230,31 @@ export const IDEProvider: React.FC<{
   }, [isWindows]);
 
   useEffect(() => {
+    if (!initialized) return setReady(null);
+    if (toolchains !== null && isWindows !== null && hasWSL !== null) {
+      setReady(
+        selectedToolchain !== null &&
+          isCompatable(selectedToolchain) &&
+          (isWindows ? hasWSL : true) &&
+          hasDarwinSDK
+      );
+    } else {
+      setReady(false);
+    }
+  }, [
+    selectedToolchain,
+    toolchains,
+    hasWSL,
+    isWindows,
+    hasDarwinSDK,
+    initialized,
+  ]);
+
+  let startedInitializing = useRef(false);
+
+  useEffect(() => {
+    if (startedInitializing.current) return;
+    startedInitializing.current = true;
     let initPromises: Promise<void>[] = [];
     initPromises.push(scanToolchains());
     initPromises.push(
@@ -234,10 +268,11 @@ export const IDEProvider: React.FC<{
       })
     );
     initPromises.push(
-      invoke("has_darwin_sdk", {
+      invoke<string>("has_darwin_sdk", {
         toolchainPath: selectedToolchain?.path ?? "",
       }).then((response) => {
-        setHasDarwinSDK(response as boolean);
+        setHasDarwinSDK(response != "none");
+        setDarwinSDKVersion(response);
       })
     );
     initPromises.push(
@@ -473,6 +508,8 @@ export const IDEProvider: React.FC<{
       selectedDevice,
       setSelectedDevice,
       mountDdi,
+      ready,
+      darwinSDKVersion,
     }),
     [
       isWindows,
@@ -494,6 +531,8 @@ export const IDEProvider: React.FC<{
       selectedDevice,
       setSelectedDevice,
       mountDdi,
+      ready,
+      darwinSDKVersion,
     ]
   );
 
