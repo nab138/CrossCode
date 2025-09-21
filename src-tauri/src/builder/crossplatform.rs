@@ -118,30 +118,31 @@ pub fn linux_path(path: &str) -> Result<String, String> {
     }
 }
 
+#[cfg(target_os = "windows")]
 pub fn is_linux_dir(path: &str) -> Result<bool, String> {
-    #[cfg(not(target_os = "windows"))]
-    {
-        let p = Path::new(path);
-        return Ok(p.is_dir());
+    // #[cfg(not(target_os = "windows"))]
+    // {
+    //     let p = Path::new(path);
+    //     return Ok(p.is_dir());
+    // }
+    // #[cfg(target_os = "windows")]
+    // {
+    if !has_wsl() {
+        return Err("WSL is not available".to_string());
     }
-    #[cfg(target_os = "windows")]
-    {
-        if !has_wsl() {
-            return Err("WSL is not available".to_string());
-        }
-        let output = Command::new("wsl")
-            .arg("test")
-            .arg("-d")
-            .arg(&path)
-            .creation_flags(CREATE_NO_WINDOW)
-            .output()
-            .expect("failed to execute process");
-        if output.status.success() {
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+    let output = Command::new("wsl")
+        .arg("test")
+        .arg("-d")
+        .arg(&path)
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .expect("failed to execute process");
+    if output.status.success() {
+        Ok(true)
+    } else {
+        Ok(false)
     }
+    //}
 }
 
 pub fn linux_temp_dir() -> Result<PathBuf, String> {

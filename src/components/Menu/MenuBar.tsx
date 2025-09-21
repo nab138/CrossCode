@@ -15,6 +15,7 @@ import {
   PhonelinkSetup,
   Refresh,
   CleaningServices,
+  CameraAlt,
 } from "@mui/icons-material";
 import { useParams } from "react-router-dom";
 import { Divider, Option, Select } from "@mui/joy";
@@ -34,13 +35,30 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
 
   const resetMenuIndex = useCallback(() => setMenuIndex(null), []);
   const { path } = useParams<"path">();
-  const { devices, selectedToolchain, selectedDevice, setSelectedDevice } =
-    useIDE();
+  const {
+    devices,
+    selectedToolchain,
+    selectedDevice,
+    setSelectedDevice,
+    setScreenshot,
+    mountDdi,
+  } = useIDE();
   const [anisetteServer] = useStore<string>(
     "apple-id/anisette-server",
     "ani.sidestore.io"
   );
   const { addToast } = useToast();
+
+  const updateScreenshot = useCallback(
+    (data: number[]) => {
+      const blob = new Blob([new Uint8Array(data)], {
+        type: "image/png",
+      });
+      const url = URL.createObjectURL(blob);
+      setScreenshot(url);
+    },
+    [setScreenshot]
+  );
 
   useEffect(() => {
     const items: {
@@ -311,6 +329,25 @@ export default function MenuBar({ callbacks, editor }: MenuBarProps) {
             return true;
           }}
           sx={{ marginRight: 0 }}
+        />
+        <CommandButton
+          disabled={!selectedDevice}
+          tooltip="Take Screenshot"
+          variant="plain"
+          command="take_screenshot"
+          icon={<CameraAlt />}
+          parameters={{
+            device: selectedDevice,
+          }}
+          after={updateScreenshot}
+          validateAsync={async () => {
+            if (!selectedDevice) {
+              addToast.error("Please select a device to take a screenshot of.");
+              return false;
+            }
+            return await mountDdi(true);
+          }}
+          sx={{ marginRight: 0, marginLeft: 0 }}
         />
       </div>
     </List>

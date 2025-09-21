@@ -31,6 +31,7 @@ use sideloader::{
         reset_anisette, revoke_certificate,
     },
     device::{is_ddi_mounted, mount_ddi},
+    screenshot::take_screenshot,
     sideload::refresh_idevice,
     stdout::{is_streaming_stdout, start_stream_stdout, stop_stream_stdout, StdoutStream},
     syslog::{is_streaming_syslog, start_stream_syslog, stop_stream_syslog, SyslogStream},
@@ -146,6 +147,7 @@ fn main() {
             install_wsl,
             is_ddi_mounted,
             mount_ddi,
+            take_screenshot,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

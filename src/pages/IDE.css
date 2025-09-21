@@ -7,3 +7,41 @@
 .file-explorer-tile {
   padding-right: 0.5rem;
 }
+
+.screenshot-tile {
+  padding: 0;
+  margin: var(--padding-md);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  align-items: center;
+  box-sizing: border-box;
+  width: calc(100% - var(--padding-md) * 2 - var(--padding-xs));
+}
+
+.screenshot-tile > div {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--padding-lg);
+  margin-bottom: var(--padding-lg);
+}
+
+.screenshot-img-container {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  min-width: 0;
+  /* No padding or margin here */
+}
+
+.screenshot-img-container > img {
+  max-width: 100%;
+  max-height: calc(100% - var(--padding-md) * 2);
+  object-fit: contain;
+  display: block;
+}

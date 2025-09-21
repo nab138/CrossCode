@@ -23,9 +23,10 @@ import { ErrorIcon, useToast, WarningIcon } from "react-toast-plus";
 import SwiftMenu from "../components/SwiftMenu";
 import { restartServer } from "../utilities/lsp-client";
 import BottomBar from "../components/Tiles/BottomBar";
-import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+import { open as openFileDialog, save } from "@tauri-apps/plugin-dialog";
 import { IStandaloneCodeEditor } from "@codingame/monaco-vscode-api/vscode/vs/editor/standalone/browser/standaloneCodeEditor";
 import { DARWIN_SDK_VERSION } from "../utilities/constants";
+import { writeFile } from "@tauri-apps/plugin-fs";
 
 export interface IDEProps {}
 
@@ -54,6 +55,8 @@ export default () => {
     initialized,
     ready,
     darwinSDKVersion,
+    screenshot,
+    setScreenshot,
   } = useIDE();
   const [sourcekitStartup, setSourcekitStartup] = useStore<boolean | null>(
     "sourcekit/startup",
@@ -206,7 +209,7 @@ export default () => {
       <Splitter
         gutterTheme={theme === "dark" ? GutterTheme.Dark : GutterTheme.Light}
         direction={SplitDirection.Horizontal}
-        initialSizes={[20, 80]}
+        initialSizes={screenshot ? [20, 50, 30] : [20, 80]}
       >
         <Tile className="file-explorer-tile">
           <FileExplorer openFolder={path} setOpenFile={openNewFile} />
@@ -228,6 +231,40 @@ export default () => {
           />
           <BottomBar />
         </Splitter>
+        {screenshot && (
+          <div className="screenshot-tile">
+            <div>
+              <Typography level="h3">Screenshot</Typography>
+              <Button
+                variant="outlined"
+                onClick={async () => {
+                  const blob = await (await fetch(screenshot)).blob();
+                  const arrayBuffer = await blob.arrayBuffer();
+                  const uint8Array = new Uint8Array(arrayBuffer);
+                  const savePath = await save({
+                    title: "Save Screenshot",
+                    defaultPath: "screenshot.png",
+                    filters: [
+                      { name: "PNG Image", extensions: ["png"] },
+                      { name: "All Files", extensions: ["*"] },
+                    ],
+                  });
+                  if (!savePath) return;
+                  await writeFile(savePath, uint8Array);
+                  addToast.success("Saved screenshot to " + savePath);
+                }}
+              >
+                Save
+              </Button>
+              <Button variant="outlined" onClick={() => setScreenshot(null)}>
+                Close
+              </Button>
+            </div>
+            <div className="screenshot-img-container">
+              <img src={screenshot} alt="screenshot" />
+            </div>
+          </div>
+        )}
       </Splitter>
       {initialized &&
         selectedToolchain !== null &&

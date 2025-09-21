@@ -45,20 +45,23 @@ export function useCommandRunner() {
   } = context;
 
   // Define the run command function inside the hook
-  const runCommand = async (
+  const runCommand = (
     command: string,
     parameters?: Record<string, unknown>
   ) => {
-    const release = await commandRunnerMutex.acquire();
-    setIsRunningCommand(true);
-    setCurrentCommand(command);
-    try {
-      await invoke(command, parameters);
-    } finally {
-      release();
-      setIsRunningCommand(false);
-      setCurrentCommand(null);
-    }
+    return new Promise<any>(async (resolve) => {
+      const release = await commandRunnerMutex.acquire();
+      setIsRunningCommand(true);
+      setCurrentCommand(command);
+      try {
+        let res = await invoke(command, parameters);
+        resolve(res as any);
+      } finally {
+        release();
+        setIsRunningCommand(false);
+        setCurrentCommand(null);
+      }
+    });
   };
 
   // Define the cancel command function inside the hook

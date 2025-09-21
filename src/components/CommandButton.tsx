@@ -14,7 +14,7 @@ export interface CommandButtonProps {
   clearConsole?: boolean;
   validate?: () => boolean;
   validateAsync?: () => Promise<boolean>;
-  after?: () => void;
+  after?: (data: any) => void;
   disabled?: boolean;
   useMenuItem?: boolean;
   shortcut?: React.ReactNode;
@@ -33,7 +33,7 @@ export default function CommandButton({
   clearConsole = true,
   validate = () => true,
   validateAsync = () => Promise.resolve(true),
-  after = () => {},
+  after = (_: any) => {},
   disabled = false,
   useMenuItem = false,
   size = "md",

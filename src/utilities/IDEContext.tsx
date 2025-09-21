@@ -58,6 +58,8 @@ export interface IDEContextType {
   selectedDevice: DeviceInfo | null;
   setSelectedDevice: React.Dispatch<React.SetStateAction<DeviceInfo | null>>;
   mountDdi: (ask: boolean) => Promise<boolean>;
+  setScreenshot: React.Dispatch<React.SetStateAction<string | null>>;
+  screenshot: string | null;
 }
 
 export type DeviceInfo = {
@@ -117,6 +119,7 @@ export const IDEProvider: React.FC<{
 
   const [ddiOpen, setDdiOpen] = useState(false);
   const [ddiProgress, setDdiProgress] = useState(0);
+  const [screenshot, setScreenshot] = useState<string | null>(null);
 
   const { checkForUpdates } = useContext(UpdateContext);
   const { store, storeInitialized } = useContext(StoreContext);
@@ -510,6 +513,8 @@ export const IDEProvider: React.FC<{
       mountDdi,
       ready,
       darwinSDKVersion,
+      screenshot,
+      setScreenshot,
     }),
     [
       isWindows,
@@ -533,6 +538,8 @@ export const IDEProvider: React.FC<{
       mountDdi,
       ready,
       darwinSDKVersion,
+      screenshot,
+      setScreenshot,
     ]
   );
 
