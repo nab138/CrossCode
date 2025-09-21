@@ -15,6 +15,9 @@ import "@codingame/monaco-vscode-swift-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import { platform } from "@tauri-apps/plugin-os";
 import { TabLike } from "../TabLike";
+import { useStore } from "../../utilities/StoreContext";
+import { useParams } from "react-router";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
 export type WorkerLoader = () => Worker;
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
@@ -47,7 +50,7 @@ export interface EditorProps {
   openFiles: string[];
   setOpenFiles: Dispatch<SetStateAction<string[]>>;
   focusedFile: string | null;
-  setSaveFile: Dispatch<SetStateAction<(() => void) | null>>;
+  setSaveFile: Dispatch<SetStateAction<(() => Promise<void>) | null>>;
   setUndo: Dispatch<SetStateAction<(() => void) | null>>;
   setRedo: Dispatch<SetStateAction<(() => void) | null>>;
   openNewFile: (file: string) => void;
@@ -105,6 +108,65 @@ export default ({
     [key: string]: [number, number];
   }>({});
   const [hoveredOnBtn, setHoveredOnBtn] = useState<number | null>(null);
+  const [formatOnSave] = useStore<boolean>("sourcekit/format", true);
+
+  const { path: filePath } = useParams<"path">();
+  const hasAttemptedToReadOpenFiles = useRef<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (!filePath || hasAttemptedToReadOpenFiles.current === filePath) return;
+      const savePath = await path.join(
+        filePath,
+        ".crosscode",
+        "openFiles.json"
+      );
+      try {
+        let text = await readTextFile(savePath);
+        if (!text) return;
+        let data = JSON.parse(text) as { files: string[]; focused: number };
+        // make sure that types are as expected
+        if (
+          !data ||
+          typeof data !== "object" ||
+          !Array.isArray(data.files) ||
+          typeof data.focused !== "number"
+        )
+          return;
+        data.files = data.files.filter((file) => typeof file === "string");
+        if (data.files.length === 0) return;
+        if (data.focused < 0 || data.focused >= data.files.length) {
+          data.focused = 0;
+        }
+        setOpenFiles(data.files);
+        setTimeout(() => {
+          setFocused(data.focused);
+        }, 100);
+      } catch (e) {
+        void e;
+      } finally {
+        hasAttemptedToReadOpenFiles.current = filePath;
+      }
+    })();
+  }, [filePath, setOpenFiles, setFocused]);
+
+  useEffect(() => {
+    (async () => {
+      if (!filePath || hasAttemptedToReadOpenFiles.current !== filePath) return;
+      const savePath = await path.join(
+        filePath,
+        ".crosscode",
+        "openFiles.json"
+      );
+      let data = {
+        files: openFiles,
+        focused: focused ?? 0,
+      };
+      writeTextFile(savePath, JSON.stringify(data)).catch((err) => {
+        console.error("Error writing openFiles.json:", err);
+      });
+    })();
+  }, [openFiles, filePath, focused]);
 
   useEffect(() => {
     globalEditorServiceCallbacks.currentTabsRef = currentTabsRef;
@@ -390,7 +452,13 @@ export default ({
           }
         });
       });
-      setSaveFile(() => modelRef.object.save.bind(modelRef.object));
+
+      setSaveFile(() => async () => {
+        if (formatOnSave) {
+          await editor.getAction("editor.action.formatDocument")?.run();
+        }
+        await modelRef.object.save();
+      });
 
       editor.setModel(modelRef.object.textEditorModel);
 
@@ -429,7 +497,7 @@ export default ({
       });
     };
     switchFile();
-  }, [focused, editor, tabs]);
+  }, [focused, editor, tabs, formatOnSave]);
 
   return (
     <div className={"editor"}>

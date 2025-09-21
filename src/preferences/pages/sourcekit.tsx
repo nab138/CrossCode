@@ -2,7 +2,7 @@ import { createPreferencePage, createItems } from "../helpers";
 
 export const sourceKitPage = createPreferencePage(
   "sourcekit",
-  "SourceKit LSP",
+  "Language Features",
   [
     createItems.checkbox(
       "startup",
@@ -10,9 +10,15 @@ export const sourceKitPage = createPreferencePage(
       "Automatically start sourcekit-lsp when you open a project",
       true
     ),
+    createItems.checkbox(
+      "format",
+      "Format on save",
+      "Automatically format your code when you save",
+      true
+    ),
   ],
   {
-    description: "Customize the look and feel of the application",
-    category: "general",
+    description: "Configure SourceKit-LSP and other language features",
+    category: "swift",
   }
 );
