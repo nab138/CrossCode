@@ -5,7 +5,7 @@ import { createCustomPreferencePage } from "../helpers";
 
 export const swiftPage = createCustomPreferencePage(
   "swift",
-  "Swift",
+  "Swift Setup",
   () => (
     <div
       style={{

@@ -42,7 +42,7 @@ export default () => {
   const { storeInitialized, store } = useContext(StoreContext);
   const [openFile, setOpenFile] = useState<string | null>(null);
   const [openFiles, setOpenFiles] = useState<string[]>([]);
-  const [saveFile, setSaveFile] = useState<(() => void) | null>(null);
+  const [saveFile, setSaveFile] = useState<(() => Promise<void>) | null>(null);
   const [undo, setUndo] = useState<(() => void) | null>(null);
   const [redo, setRedo] = useState<(() => void) | null>(null);
   const [theme] = useStore<"light" | "dark">("appearance/theme", "dark");
@@ -73,7 +73,9 @@ export default () => {
     throw new Error("Path parameter is required in IDE component");
   }
 
-  const [callbacks, setCallbacks] = useState<Record<string, () => void>>({});
+  const [callbacks, setCallbacks] = useState<
+    Record<string, (() => void) | (() => Promise<void>)>
+  >({});
   const navigate = useNavigate();
   const [projectValidation, setProjectValidation] =
     useState<ProjectValidation | null>(null);
@@ -188,7 +190,7 @@ export default () => {
 
   useEffect(() => {
     setCallbacks({
-      save: saveFile ?? (() => {}),
+      save: saveFile ?? (async () => {}),
       openFolderDialog,
       newProject: () => navigate("/new"),
       welcomePage: () => navigate("/"),
