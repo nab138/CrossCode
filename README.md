@@ -14,7 +14,7 @@
 
 iOS Swift development IDE for Windows/Linux. Create, build, and test apps without owning a Mac.
 
-Supports Swift 6.1 and the Swift Package Manager.
+Supports Swift 6.2 and the Swift Package Manager.
 
 ### Demo
 
@@ -30,7 +30,7 @@ Check out the [Getting Started](https://github.com/nab138/CrossCode/wiki#getting
 
 ## Features
 
-- Generate a Darwin SDK for linux from a user provided copy of Xcode 16.3 to build the apps
+- Generate a Darwin SDK for linux from a user provided copy of Xcode 26 to build the apps
 - Build apps using swift package manager
 - Log in with your Apple ID to sign apps
 - Install apps on device
@@ -49,7 +49,7 @@ Please note that I am one person, so development may be slow. If you want to hel
 
 ## How it works
 
-- A darwin SDK is generated from a user provided copy of Xcode 16.3 (extracted with [unxip-rs](https://github.com/nab138/unxip-rs)) and darwin tools from [darwin-tools-linux-llvm](https://github.com/xtool-org/darwin-tools-linux-llvm)
+- A darwin SDK is generated from a user provided copy of Xcode 26 (extracted with [unxip-rs](https://github.com/nab138/unxip-rs)) and darwin tools from [darwin-tools-linux-llvm](https://github.com/xtool-org/darwin-tools-linux-llvm)
 - Swift uses the darwin SDK to build an executable which is packaged into an .app bundle.
 - The code to sign and install apps onto a device has been removed from CrossCode's source and moved to a standalone package, [isideload](https://github.com/nab138/isideload). It was built on a lot of other libraries, so check out its README for more info.
 

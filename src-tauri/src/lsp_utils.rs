@@ -32,7 +32,7 @@ pub fn validate_project(project_path: String, toolchain_path: String) -> Project
 //     let config_path = project_path.join(".sourcekit-lsp").join("config.json");
 //     if !config_path.exists() {
 //         fs::write(config_path, "{
-//   \"$schema\": \"https://raw.githubusercontent.com/swiftlang/sourcekit-lsp/refs/heads/release/6.1/config.schema.json\",
+//   \"$schema\": \"https://raw.githubusercontent.com/swiftlang/sourcekit-lsp/refs/heads/release/6.2/config.schema.json\",
 //   \"swiftPM\": {
 //     \"swiftSDK\": \"arm64-apple-ios\"
 //   }
