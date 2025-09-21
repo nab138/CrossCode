@@ -125,7 +125,6 @@ export default ({
         let text = await readTextFile(savePath);
         if (!text) return;
         let data = JSON.parse(text) as { files: string[]; focused: number };
-        // make sure that types are as expected
         if (
           !data ||
           typeof data !== "object" ||
