@@ -77,10 +77,13 @@ export default function BottomBar() {
           size="sm"
           sx={{
             minHeight: 33,
+
+            overflowX: "auto",
             "& .MuiTab-root": {
               fontSize: 12,
               minHeight: 24,
               padding: "2px 8px",
+              flexShrink: 0,
             },
           }}
         >
@@ -243,6 +246,7 @@ function BottomBarFilter({
           sx={{
             marginRight: "var(--padding-xs)",
             fontSize: "12px",
+            flexShrink: 0,
           }}
           size="sm"
         />
@@ -256,6 +260,7 @@ function BottomBarFilter({
           }}
           sx={{
             width: "200px",
+            minWidth: "150px",
             marginRight: "var(--padding-xs)",
             fontSize: "12px",
           }}
@@ -271,6 +276,7 @@ function BottomBarFilter({
           sx={{
             marginRight: "var(--padding-xs)",
             fontSize: "12px",
+            flexShrink: 0,
           }}
           after={() => {
             setRefresh((prev) => prev + 1);
