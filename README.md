@@ -18,7 +18,7 @@ Supports Swift 6.2 and the Swift Package Manager.
 
 ### Demo
 
-https://github.com/user-attachments/assets/d0f23971-4711-4de5-be58-ce2e6a66523e
+https://github.com/user-attachments/assets/9cbe2b71-d765-46c6-aa25-ef16b539deec
 
 ## Installation
 
