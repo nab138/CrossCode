@@ -23,7 +23,6 @@ use builder::swift::{
     has_darwin_sdk, validate_toolchain,
 };
 use lsp_utils::{has_limited_ram, validate_project};
-use rustls::crypto::{ring, CryptoProvider};
 use serde_json::Value;
 use sideloader::{
     apple_commands::{
@@ -47,8 +46,6 @@ use tokio::sync::Mutex;
 use windows::{has_wsl, install_wsl, is_windows};
 
 fn main() {
-    CryptoProvider::install_default(ring::default_provider()).unwrap();
-
     let syslog_stream: SyslogStream = SyslogStream(Arc::new(Mutex::new(None)));
     let stdout_stream: StdoutStream = Arc::new(Mutex::new(None));
 
