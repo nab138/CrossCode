@@ -14,6 +14,8 @@ mod sideloader;
 mod sourcekit_lsp;
 #[macro_use]
 mod lsp_utils;
+#[macro_use]
+mod terminal;
 
 use builder::crossplatform::{linux_path, windows_path};
 use builder::icon::import_icon;
@@ -43,6 +45,7 @@ use tauri::Manager;
 use tauri_plugin_cli::CliExt;
 use tauri_plugin_store::StoreExt;
 use templates::create_template;
+use terminal::{create_terminal, write_terminal, TermManager};
 use tokio::sync::Mutex;
 use windows::{has_wsl, install_wsl, is_windows};
 
@@ -51,6 +54,7 @@ fn main() {
 
     let syslog_stream: SyslogStream = SyslogStream(Arc::new(Mutex::new(None)));
     let stdout_stream: StdoutStream = Arc::new(Mutex::new(None));
+    let terminal_state: TermManager = TermManager::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -65,6 +69,7 @@ fn main() {
         .manage(sourcekit_lsp::create_server_state())
         .manage(syslog_stream)
         .manage(stdout_stream)
+        .manage(terminal_state)
         .setup(|app| {
             match app.cli().matches() {
                 Ok(matches) => {
@@ -148,6 +153,8 @@ fn main() {
             is_ddi_mounted,
             mount_ddi,
             take_screenshot,
+            create_terminal,
+            write_terminal,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
