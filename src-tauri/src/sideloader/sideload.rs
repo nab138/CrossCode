@@ -37,7 +37,7 @@ pub async fn sideload_app(
 
     let config = SideloadConfiguration::new()
         .set_store_dir(store_dir.clone())
-        .set_logger(Box::new(logger))
+        .set_logger(&logger)
         .set_machine_name("CrossCode".to_string());
 
     let provider = get_provider(&device).await?;
