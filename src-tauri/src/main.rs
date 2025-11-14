@@ -46,6 +46,14 @@ use tokio::sync::Mutex;
 use windows::{has_wsl, install_wsl, is_windows};
 
 fn main() {
+    #[cfg(target_os = "linux")]
+    {
+        use std::env;
+        if env::var_os("__NV_DISABLE_EXPLICIT_SYNC").is_none() {
+            env::set_var("__NV_DISABLE_EXPLICIT_SYNC", "1");
+        }
+    }
+
     let syslog_stream: SyslogStream = SyslogStream(Arc::new(Mutex::new(None)));
     let stdout_stream: StdoutStream = Arc::new(Mutex::new(None));
 
