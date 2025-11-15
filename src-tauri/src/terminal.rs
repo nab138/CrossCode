@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{split, AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf},
     sync::{Mutex, RwLock},
 };
 
@@ -16,7 +16,7 @@ pub struct TermManager {
 }
 
 pub struct TermInfo {
-    pub pty: Arc<Mutex<Pty>>,
+    pub writer: Arc<Mutex<WriteHalf<Pty>>>,
     pub child: Arc<Mutex<Option<Child>>>,
 }
 
@@ -29,9 +29,9 @@ impl TermManager {
 }
 
 impl TermInfo {
-    pub fn new(pty: Pty, child: Child) -> Self {
+    pub fn new(writer: WriteHalf<Pty>, child: Child) -> Self {
         TermInfo {
-            pty: Arc::new(Mutex::new(pty)),
+            writer: Arc::new(Mutex::new(writer)),
             child: Arc::new(Mutex::new(Some(child))),
         }
     }
@@ -48,32 +48,29 @@ pub async fn create_terminal(
         .spawn(pts)
         .map_err(|e| format!("Failed to spawn shell: {}", e))?;
 
-    let (term_id, pty_ref) = {
+    let (reader, writer) = split(pty);
+
+    let (term_id, writer_ref) = {
         let mut terms = term_info.terminals.write().await;
         let term_id = format!("term-{}", terms.len() + 1);
-        let info = TermInfo::new(pty, child);
-        let pty_ref = info.pty.clone();
+        let info = TermInfo::new(writer, child);
+        let writer_ref = info.writer.clone();
         terms.insert(term_id.clone(), info);
-        (term_id, pty_ref)
+        (term_id, writer_ref)
     };
 
     let window = window.clone();
     let term_id_clone = term_id.clone();
     tokio::spawn(async move {
+        let mut reader: ReadHalf<Pty> = reader;
         let mut buffer = [0u8; 4096];
 
         loop {
-            let read_result = {
-                let mut pty_guard = pty_ref.lock().await;
-                pty_guard.read(&mut buffer).await
-            };
-
-            match read_result {
-                Ok(0) => break, // EOF
+            match reader.read(&mut buffer).await {
+                Ok(0) => break,
                 Ok(n) => {
-                    let data = String::from_utf8_lossy(&buffer[..n]).into_owned();
-                    if !data.is_empty() {
-                        let _ = window.emit("terminal", (&term_id_clone, &data));
+                    if let Ok(data) = std::str::from_utf8(&buffer[..n]) {
+                        let _ = window.emit("terminal", (&term_id_clone, data));
                     }
                 }
                 Err(_) => break,
@@ -90,22 +87,17 @@ pub async fn write_terminal(
     id: String,
     data: String,
 ) -> Result<(), String> {
-    println!("Writing to terminal {}: {}", id, data);
-
-    let pty_ref = {
+    let writer = {
         let terms = term_info.terminals.read().await;
-        match terms.get(&id) {
-            Some(info) => info.pty.clone(),
-            None => return Err("Terminal ID not found".to_string()),
-        }
+        terms
+            .get(&id)
+            .map(|info| info.writer.clone())
+            .ok_or_else(|| "Terminal ID not found".to_string())?
     };
 
-    let mut pty_guard = pty_ref.lock().await;
-    println!("PTY found, writing data");
-    pty_guard
+    let mut guard = writer.lock().await;
+    guard
         .write_all(data.as_bytes())
         .await
-        .map_err(|e| format!("Failed to write to terminal: {}", e))?;
-
-    Ok(())
+        .map_err(|e| format!("Failed to write to terminal: {}", e))
 }
