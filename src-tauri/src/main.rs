@@ -46,6 +46,8 @@ use tokio::sync::Mutex;
 use windows::{has_wsl, install_wsl, is_windows};
 
 fn main() {
+    let _ = fix_path_env::fix();
+
     #[cfg(target_os = "linux")]
     {
         use std::env;

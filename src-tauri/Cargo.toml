@@ -41,6 +41,7 @@ tokio-util = "0.7.16"
 image = "0.25.6"
 unxip-rs = "0.1.1"
 tokio-tungstenite = "0.28.0"
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
 [target.'cfg(unix)'.dependencies]
 sdkmover = { path = "../sdkmover" }
