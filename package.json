@@ -29,7 +29,7 @@
     "@mui/icons-material": "^7.0.2",
     "@mui/joy": "^5.0.0-beta.52",
     "@mui/material": "^7.0.2",
-    "@tauri-apps/api": "^2",
+    "@tauri-apps/api": "^2.9.0",
     "@tauri-apps/plugin-cli": "^2.4.0",
     "@tauri-apps/plugin-dialog": "^2",
     "@tauri-apps/plugin-fs": "^2",
@@ -54,7 +54,7 @@
     "vscode-ws-jsonrpc": "^3.4.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2",
+    "@tauri-apps/cli": "^2.9.4",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@types/vscode": "^1.102.0",

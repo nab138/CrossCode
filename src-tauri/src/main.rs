@@ -25,7 +25,6 @@ use builder::swift::{
     has_darwin_sdk, validate_toolchain,
 };
 use lsp_utils::{has_limited_ram, validate_project};
-use rustls::crypto::{ring, CryptoProvider};
 use serde_json::Value;
 use sideloader::{
     apple_commands::{
@@ -50,7 +49,15 @@ use tokio::sync::Mutex;
 use windows::{has_wsl, install_wsl, is_windows};
 
 fn main() {
-    CryptoProvider::install_default(ring::default_provider()).unwrap();
+    let _ = fix_path_env::fix();
+
+    #[cfg(target_os = "linux")]
+    {
+        use std::env;
+        if env::var_os("__NV_DISABLE_EXPLICIT_SYNC").is_none() {
+            env::set_var("__NV_DISABLE_EXPLICIT_SYNC", "1");
+        }
+    }
 
     let syslog_stream: SyslogStream = SyslogStream(Arc::new(Mutex::new(None)));
     let stdout_stream: StdoutStream = Arc::new(Mutex::new(None));
