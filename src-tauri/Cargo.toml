@@ -42,7 +42,7 @@ image = "0.25.6"
 unxip-rs = "0.1.1"
 tokio-tungstenite = "0.28.0"
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
-pty-process = { version = "0.5.3", features = ["async"] }
+portable-pty = "0.9.0"
 
 [target.'cfg(unix)'.dependencies]
 sdkmover = { path = "../sdkmover" }

@@ -51,7 +51,8 @@
     "react-toast-plus": "^0.1.2",
     "react-virtuoso": "^4.12.6",
     "vscode": "npm:@codingame/monaco-vscode-extension-api@~20.2.1",
-    "vscode-ws-jsonrpc": "^3.4.0"
+    "vscode-ws-jsonrpc": "^3.4.0",
+    "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.9.4",

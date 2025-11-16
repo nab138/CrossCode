@@ -1,29 +1,53 @@
 import { Terminal } from "@xterm/xterm";
+import { FitAddon } from "xterm-addon-fit";
 import { useEffect, useRef } from "react";
 import "@xterm/xterm/css/xterm.css";
 import { invoke } from "@tauri-apps/api/core";
 import { useStore } from "../../utilities/StoreContext";
 
 export default ({ id }: { id: string }) => {
-  const elem = useRef<HTMLDivElement>(null);
+  const termElemRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal>();
+  const fitAddonRef = useRef<FitAddon>();
   const [font] = useStore<string | null>("terminal/font-family", null);
 
   useEffect(() => {
-    if (!elem.current) return;
+    if (!termElemRef.current) return;
     if (!window.terminals) window.terminals = {};
 
     const term = new Terminal({
       fontFamily: font !== "" ? font || undefined : undefined,
     });
     window.terminals[id] = term;
-    term.open(elem.current);
+    const fitAddon = new FitAddon();
+    fitAddonRef.current = fitAddon;
+    term.loadAddon(fitAddon);
+    term.open(termElemRef.current);
+
+    const resizeObserver = new ResizeObserver(async () => {
+      fitAddon.fit();
+      await invoke("resize_terminal", {
+        id,
+        cols: term.cols,
+        rows: term.rows,
+      });
+    });
+    resizeObserver.observe(termElemRef.current);
+
     term.onData(async (data) => {
-      await invoke("write_terminal", { id: id, data: data });
+      await invoke("write_terminal", { id, data });
     });
     termRef.current = term;
 
+    fitAddon.fit();
+    void invoke("resize_terminal", {
+      id,
+      cols: term.cols,
+      rows: term.rows,
+    });
+
     return () => {
+      resizeObserver.disconnect();
       term.dispose();
     };
   }, [id]);
@@ -36,5 +60,5 @@ export default ({ id }: { id: string }) => {
     }
   }, [font]);
 
-  return <div ref={elem}></div>;
+  return <div ref={termElemRef} style={{ height: "100%" }} />;
 };

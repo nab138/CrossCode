@@ -141,7 +141,7 @@ export default function BottomBar() {
           <TabPanel
             value={index}
             key={tab.name}
-            sx={{ padding: 0 }}
+            sx={{ padding: 0, height: "100%" }}
             keepMounted
           >
             {tab.component}
