@@ -26,7 +26,7 @@ export default ({ id }: { id: string }) => {
 
     const resizeObserver = new ResizeObserver(async () => {
       fitAddon.fit();
-      await invoke("resize_terminal", {
+      void invoke("resize_terminal", {
         id,
         cols: term.cols,
         rows: term.rows,
@@ -60,5 +60,10 @@ export default ({ id }: { id: string }) => {
     }
   }, [font]);
 
-  return <div ref={termElemRef} style={{ height: "100%" }} />;
+  return (
+    <div
+      ref={termElemRef}
+      style={{ height: "calc(100% - 0.55em)", width: "100%" }}
+    />
+  );
 };

@@ -48,8 +48,20 @@ export default function MultiTerminal({}: {}) {
   }, []);
 
   return (
-    <div id="terminal-container" style={{ height: "100%" }}>
-      <Tabs orientation="vertical" sx={{ height: "100%" }}>
+    <div
+      id="terminal-container"
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+    >
+      <Tabs
+        orientation="vertical"
+        sx={{
+          width: "100%",
+          height: "100%",
+        }}
+      >
         <TabList>
           {terminals.map((t) => (
             <Tab key={t} value={t}>
@@ -68,7 +80,8 @@ export default function MultiTerminal({}: {}) {
             sx={{
               backgroundColor: "black",
               padding: "4px",
-              height: "calc(100% - 1em)",
+              height: "100%",
+              width: "100%",
             }}
           >
             <TerminalComponent id={t} />
