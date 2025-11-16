@@ -4,6 +4,7 @@ import { Button, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
 import TerminalComponent from "./Terminal";
 import { listen } from "@tauri-apps/api/event";
 import { Terminal } from "@xterm/xterm";
+import { useStore } from "../../utilities/StoreContext";
 
 declare global {
   interface Window {
@@ -14,13 +15,16 @@ declare global {
 export default function MultiTerminal({}: {}) {
   const [terminals, setTerminals] = useState<string[]>([]);
   const isListening = useRef<boolean>(false);
+  const [shell] = useStore<string | null>("terminal/shell", null);
 
   const createTerm = useCallback(async () => {
-    const id = await invoke<string>("create_terminal");
+    const id = await invoke<string>("create_terminal", {
+      shell: shell !== "" ? shell : null,
+    });
     setTerminals((old) => {
       return [...old, id];
     });
-  }, []);
+  }, [shell]);
 
   useEffect(() => {
     let unlisten: () => void = () => {};

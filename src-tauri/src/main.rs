@@ -44,7 +44,7 @@ use tauri::Manager;
 use tauri_plugin_cli::CliExt;
 use tauri_plugin_store::StoreExt;
 use templates::create_template;
-use terminal::{create_terminal, write_terminal, TermManager};
+use terminal::{close_terminal, create_terminal, write_terminal, TermManager};
 use tokio::sync::Mutex;
 use windows::{has_wsl, install_wsl, is_windows};
 
@@ -162,6 +162,7 @@ fn main() {
             take_screenshot,
             create_terminal,
             write_terminal,
+            close_terminal,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
