@@ -11,11 +11,16 @@ import Console from "./Console";
 import FilteredConsole, { FilteredConsoleHandle } from "./FilteredConsole";
 import { useParams } from "react-router";
 import { useStore } from "../../utilities/StoreContext";
+import TerminalComponent from "./MultiTerminal";
 
 const staticTabs = [
   {
     name: "Build Output",
     component: <CommandConsole />,
+  },
+  {
+    name: "Terminal",
+    component: <TerminalComponent />,
   },
   {
     name: "SourceKit-LSP",
@@ -136,7 +141,7 @@ export default function BottomBar() {
           <TabPanel
             value={index}
             key={tab.name}
-            sx={{ padding: 0 }}
+            sx={{ padding: 0, width: "100%", height: "100%" }}
             keepMounted
           >
             {tab.component}

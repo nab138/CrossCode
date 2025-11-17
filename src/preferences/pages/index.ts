@@ -9,11 +9,12 @@ import { appIdsPage } from "./appIds";
 import { developerPage } from "./developer";
 import { swiftPage } from "./swift";
 import { sourceKitPage } from "./sourcekit";
+import { terminalPage } from "./terminal";
 
 const generalCategory: PreferenceCategory = {
   id: "general",
   name: "General",
-  pages: [generalPage, appearancePage],
+  pages: [generalPage, appearancePage, terminalPage],
 };
 
 const appleCategory: PreferenceCategory = {

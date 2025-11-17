@@ -11,7 +11,7 @@ edition = "2021"
 tauri-build = { version = "2.4.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.8.3", features = ["devtools"] }
+tauri = { version = "2.9.0", features = ["devtools"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-shell = "2.3.0"
@@ -42,6 +42,7 @@ image = "0.25.6"
 unxip-rs = "0.1.1"
 tokio-tungstenite = "0.28.0"
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
+portable-pty = "0.9.0"
 
 [target.'cfg(unix)'.dependencies]
 sdkmover = { path = "../sdkmover" }
