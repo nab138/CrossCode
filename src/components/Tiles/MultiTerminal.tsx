@@ -18,9 +18,11 @@ export default function MultiTerminal({}: {}) {
   const [shell] = useStore<string | null>("terminal/shell", null);
 
   const createTerm = useCallback(async () => {
+    console.log("creating terminal with shell:", shell);
     const id = await invoke<string>("create_terminal", {
       shell: shell !== "" ? shell : null,
     });
+    console.log("Created terminal with ID:", id);
     setTerminals((old) => {
       return [...old, id];
     });
@@ -62,7 +64,13 @@ export default function MultiTerminal({}: {}) {
           height: "100%",
         }}
       >
-        <TabList>
+        <TabList
+          sx={{
+            "& .MuiTab-root": {
+              whiteSpace: "nowrap",
+            },
+          }}
+        >
           {terminals.map((t) => (
             <Tab key={t} value={t}>
               {t}

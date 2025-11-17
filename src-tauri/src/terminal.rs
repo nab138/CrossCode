@@ -32,7 +32,12 @@ pub async fn create_terminal(
     window: Window,
     term_info: State<'_, TermManager>,
     shell: Option<String>,
+    directory: Option<String>,
 ) -> Result<String, String> {
+    println!(
+        "Creating terminal with shell: {:?} and directory: {:?}",
+        shell, directory
+    );
     let pty_system = native_pty_system();
     let pair = pty_system
         .openpty(PtySize {
@@ -56,11 +61,17 @@ pub async fn create_terminal(
             }
         }
     };
-    let cmd = CommandBuilder::new(command);
+    let mut cmd = CommandBuilder::new(command);
+    cmd.cwd(directory.unwrap_or_else(|| String::from(".")));
     let child = pair
         .slave
         .spawn_command(cmd)
         .map_err(|e| format!("Failed to spawn shell command in pty: {}", e.to_string()))?;
+
+    println!(
+        "Spawned terminal process with PID: {:?}",
+        child.process_id()
+    );
 
     let mut reader = pair.master.try_clone_reader().unwrap();
     let writer = pair.master.take_writer().unwrap();
